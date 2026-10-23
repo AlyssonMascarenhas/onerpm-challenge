@@ -1,3 +1,4 @@
+import { Clipboard } from '@angular/cdk/clipboard';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LookupStatus } from '../../../../contract/tracks.enums';
 import { Language } from '../../../core/i18n/i18n.enums';
@@ -24,6 +25,41 @@ const text = (fixture: ComponentFixture<IsrcCard>, selector: string) =>
 
 describe('IsrcCard', () => {
   beforeEach(() => localStorage.clear());
+
+  describe('copy button', () => {
+    it('copies the code of the ISRC, whether Spotify does not know it or the lookup failed', async () => {
+      for (const status of [LookupStatus.NOT_FOUND, LookupStatus.ERROR] as const) {
+        TestBed.resetTestingModule();
+        const copy = vi.fn(() => true);
+        TestBed.configureTestingModule({
+          imports: [IsrcCard],
+          providers: [...i18nTestProviders, { provide: Clipboard, useValue: { copy } }],
+        });
+        await useLanguage(Language.EN);
+        const fixture = TestBed.createComponent(IsrcCard);
+        fixture.componentRef.setInput('isrc', 'BR1SP1200070');
+        fixture.componentRef.setInput('status', status);
+        await fixture.whenStable();
+
+        (root(fixture).querySelector('orp-copy-button button') as HTMLButtonElement).click();
+
+        expect(copy).toHaveBeenCalledExactlyOnceWith('BR1SP1200070');
+      }
+    });
+
+    it('is named after the ISRC, in the visitor language', async () => {
+      const english = await render(LookupStatus.NOT_FOUND);
+      expect(
+        root(english).querySelector('orp-copy-button button')?.getAttribute('aria-label'),
+      ).toBe('Copy ISRC BR1SP1200070');
+      TestBed.resetTestingModule();
+
+      const portuguese = await render(LookupStatus.NOT_FOUND, Language.PT);
+      expect(
+        root(portuguese).querySelector('orp-copy-button button')?.getAttribute('aria-label'),
+      ).toBe('Copiar o ISRC BR1SP1200070');
+    });
+  });
 
   describe('an ISRC Spotify does not know', () => {
     it('shows the code and says it was not found', async () => {

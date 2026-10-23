@@ -30,6 +30,11 @@
   color: var(--p-primary-color);
 }
 
+.card__text {
+  flex: 1;
+  min-width: 0;
+}
+
 .card__isrc {
   margin: 0;
   font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;

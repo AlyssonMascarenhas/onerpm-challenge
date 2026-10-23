@@ -127,6 +127,24 @@ describe('TracksStore', () => {
       expect(store.failedIsrcs()).toEqual(['BR1SP1200070', 'BR1SP1200071']);
     });
 
+    it('counts what was found, what is not in the database and the total', () => {
+      const { store, requests } = setup();
+      store.load();
+
+      requests[0].next([
+        foundResult('Louca'),
+        foundResult('Quase Nua'),
+        notFoundResult('XX1AA0000002'),
+        notFoundResult('XX1AA0000001'),
+        errorResult('BR1SP1200070'),
+      ]);
+
+      expect(store.foundCount()).toBe(2);
+      expect(store.notFoundCount()).toBe(2);
+      expect(store.totalCount()).toBe(5);
+      expect(store.notFoundIsrcs()).toEqual(['XX1AA0000001', 'XX1AA0000002']);
+    });
+
     it('has no failures when everything loaded', () => {
       const { store, requests } = setup();
       store.load();

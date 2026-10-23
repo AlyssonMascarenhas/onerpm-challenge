@@ -48,5 +48,21 @@
     "builtFor": "Desenvolvido para o desafio técnico de front-end da ONErpm.",
     "sourceCode": "Código-fonte",
     "dataFrom": "Dados das faixas da Spotify Web API."
+  },
+  "list": {
+    "filterLabel": "Filtrar por nome da música ou ISRC",
+    "filterPlaceholder": "Nome da música ou ISRC",
+    "filterClear": "Limpar o filtro",
+    "filterCount": "Mostrando {{shown}} de {{total}}",
+    "filterEmpty": "Nada corresponde a “{{query}}”.",
+    "summary": "{{found}} de {{total}} ISRCs encontrados",
+    "missingButton": "ISRCs que não constam na nossa base: {{count}}",
+    "missingTitle": "ISRCs que não constam na nossa base",
+    "missingHint": "O Spotify não tem faixa para estes ISRCs. Copie-os para procurar em outro lugar."
+  },
+  "copy": {
+    "copyIsrc": "Copiar o ISRC {{isrc}}",
+    "copied": "Copiado",
+    "copyAll": "Copiar todos"
   }
 }

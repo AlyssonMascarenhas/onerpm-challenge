@@ -31,6 +31,19 @@ export class TracksStore {
   );
   public readonly failedCount = computed(() => this.failedIsrcs().length);
 
+  /** ISRCs Spotify has no track for: they are not in the database, as the page says (in display order). */
+  public readonly notFoundIsrcs = computed(() =>
+    this.items()
+      .filter((result) => result.status === LookupStatus.NOT_FOUND)
+      .map((result) => result.isrc),
+  );
+  public readonly notFoundCount = computed(() => this.notFoundIsrcs().length);
+
+  public readonly foundCount = computed(
+    () => this._results().filter((result) => result.status === LookupStatus.FOUND).length,
+  );
+  public readonly totalCount = computed(() => this._results().length);
+
   constructor() {
     inject(DestroyRef).onDestroy(() => this._inflight?.unsubscribe());
   }

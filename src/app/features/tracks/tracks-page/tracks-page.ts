@@ -1,31 +1,52 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   afterNextRender,
   computed,
   inject,
   signal,
+  viewChild,
 } from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
 import { Button } from 'primeng/button';
-import { Dialog } from 'primeng/dialog';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { LookupStatus } from '../../../../contract/tracks.enums';
+import { filterResults } from '../filter-results';
 import { IsrcCard } from '../isrc-card/isrc-card';
+import { IsrcListDialog } from '../isrc-list-dialog/isrc-list-dialog';
 import { TrackCard } from '../track-card/track-card';
 import { TracksStore } from '../tracks-store';
 
-/** The page: a hero, then the tracks (or why there are none). */
+/** The page: a hero, then the tracks (or why there are none), with a filter and the ISRCs that are missing. */
 @Component({
   selector: 'orp-tracks-page',
-  imports: [Button, Dialog, Message, Skeleton, TrackCard, IsrcCard],
+  imports: [
+    Button,
+    IconField,
+    InputIcon,
+    InputText,
+    IsrcCard,
+    IsrcListDialog,
+    Message,
+    Skeleton,
+    TrackCard,
+  ],
   templateUrl: './tracks-page.html',
   styleUrl: './tracks-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TracksPage {
   protected readonly store = inject(TracksStore);
+
+  private readonly _missingTrigger = viewChild<ElementRef<HTMLElement>>('missingTrigger');
+
+  /** What the visitor typed to filter the list by track title or ISRC. */
+  protected readonly query = signal('');
 
   protected readonly title = translateSignal('app.title');
   protected readonly subtitle = translateSignal('app.subtitle');
@@ -38,16 +59,43 @@ export class TracksPage {
   protected readonly affectedTitle = translateSignal('status.affectedTitle');
   protected readonly affectedList = translateSignal('status.affectedList');
   protected readonly affectedHint = translateSignal('status.affectedHint');
-  protected readonly close = translateSignal('status.close');
+  protected readonly filterLabel = translateSignal('list.filterLabel');
+  protected readonly filterPlaceholder = translateSignal('list.filterPlaceholder');
+  protected readonly filterClear = translateSignal('list.filterClear');
+  protected readonly missingTitle = translateSignal('list.missingTitle');
+  protected readonly missingHint = translateSignal('list.missingHint');
   protected readonly partialFailure = translateSignal('status.partialFailure', {
     count: computed(() => String(this.store.failedCount())),
   });
+  protected readonly missingButton = translateSignal('list.missingButton', {
+    count: computed(() => String(this.store.notFoundCount())),
+  });
+
+  /** The results the filter lets through, in display order. */
+  protected readonly visibleItems = computed(() => filterResults(this.store.items(), this.query()));
+
+  private readonly _foundSummary = translateSignal('list.summary', {
+    found: computed(() => String(this.store.foundCount())),
+    total: computed(() => String(this.store.totalCount())),
+  });
+  private readonly _filteredSummary = translateSignal('list.filterCount', {
+    shown: computed(() => String(this.visibleItems().length)),
+    total: computed(() => String(this.store.totalCount())),
+  });
+
+  /** "8 of 10 ISRCs found", or, while filtering, how many of the list the filter shows. */
+  protected readonly summary = computed(() =>
+    this.query().trim() === '' ? this._foundSummary() : this._filteredSummary(),
+  );
+  protected readonly filterEmpty = translateSignal('list.filterEmpty', { query: this.query });
 
   /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */
   protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());
 
   /** Whether the list of ISRCs that failed is open. */
   protected readonly affectedOpen = signal(false);
+  /** Whether the list of ISRCs that are not in the database is open. */
+  protected readonly missingOpen = signal(false);
 
   protected readonly LookupStatus = LookupStatus;
   protected readonly placeholders = [1, 2, 3, 4];
@@ -64,5 +112,18 @@ export class TracksPage {
   protected retryAffected(): void {
     this.affectedOpen.set(false);
     this.store.load();
+  }
+
+  protected onQuery(event: Event): void {
+    this.query.set((event.target as HTMLInputElement).value);
+  }
+
+  protected clearQuery(): void {
+    this.query.set('');
+  }
+
+  /** The list of missing ISRCs closed: the focus goes back to the button that opened it. */
+  protected focusMissingTrigger(): void {
+    this._missingTrigger()?.nativeElement.focus();
   }
 }

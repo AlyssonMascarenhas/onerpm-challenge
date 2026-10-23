@@ -48,5 +48,21 @@
     "builtFor": "Разработано для технического задания ONErpm по фронтенду.",
     "sourceCode": "Исходный код",
     "dataFrom": "Данные о треках — Spotify Web API."
+  },
+  "list": {
+    "filterLabel": "Фильтр по названию трека или ISRC",
+    "filterPlaceholder": "Название трека или ISRC",
+    "filterClear": "Сбросить фильтр",
+    "filterCount": "Показано {{shown}} из {{total}}",
+    "filterEmpty": "Ничего не найдено по запросу «{{query}}».",
+    "summary": "Найдено ISRC: {{found}} из {{total}}",
+    "missingButton": "ISRC, которых нет в нашей базе: {{count}}",
+    "missingTitle": "ISRC, которых нет в нашей базе",
+    "missingHint": "В Spotify нет треков для этих ISRC. Скопируйте их, чтобы поискать в другом месте."
+  },
+  "copy": {
+    "copyIsrc": "Копировать ISRC {{isrc}}",
+    "copied": "Скопировано",
+    "copyAll": "Копировать все"
   }
 }

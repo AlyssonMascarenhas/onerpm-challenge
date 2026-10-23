@@ -48,5 +48,21 @@
     "builtFor": "Developed for the ONErpm front-end technical challenge.",
     "sourceCode": "Source code",
     "dataFrom": "Track data from the Spotify Web API."
+  },
+  "list": {
+    "filterLabel": "Filter by track name or ISRC",
+    "filterPlaceholder": "Track name or ISRC",
+    "filterClear": "Clear the filter",
+    "filterCount": "Showing {{shown}} of {{total}}",
+    "filterEmpty": "Nothing matches “{{query}}”.",
+    "summary": "{{found}} of {{total}} ISRCs found",
+    "missingButton": "ISRCs not in our database: {{count}}",
+    "missingTitle": "ISRCs not in our database",
+    "missingHint": "Spotify has no track for these ISRCs. Copy them to look them up elsewhere."
+  },
+  "copy": {
+    "copyIsrc": "Copy ISRC {{isrc}}",
+    "copied": "Copied",
+    "copyAll": "Copy all"
   }
 }

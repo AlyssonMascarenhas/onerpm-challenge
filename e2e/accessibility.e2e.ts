@@ -96,6 +96,33 @@ for (const theme of ['light', 'dark'] as const) {
       await expectNoViolations(page);
     });
 
+    test('with the list of ISRCs that are not in our database open', async ({ page }) => {
+      await setTheme(page, theme);
+      await mockTracks(page, [
+        ...challengeResults().slice(0, 2),
+        notFound('XX1AA0000001'),
+        notFound('XX1AA0000002'),
+        failed('XX9ZZ0000001'),
+      ]);
+      await page.goto('/');
+      await expect(page.locator('orp-track-card')).toHaveCount(2);
+      await page.getByRole('button', { name: 'ISRCs not in our database: 2' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+
+      await expectNoViolations(page);
+    });
+
+    test('with a filter that matches nothing', async ({ page }) => {
+      await setTheme(page, theme);
+      await mockTracks(page);
+      await page.goto('/');
+      await expect(page.locator('orp-track-card')).toHaveCount(10);
+      await page.getByRole('textbox', { name: 'Filter by track name or ISRC' }).fill('zzzz');
+      await expect(page.locator('.empty')).toBeVisible();
+
+      await expectNoViolations(page);
+    });
+
     test('with a Spotify player opened', async ({ page }) => {
       await setTheme(page, theme);
       await mockTracks(page);

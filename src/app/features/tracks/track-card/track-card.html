@@ -55,7 +55,14 @@
       </div>
       <div>
         <dt>{{ labels.isrc() }}</dt>
-        <dd class="card__isrc">{{ track().isrc }}</dd>
+        <dd class="card__isrc">
+          <span>{{ track().isrc }}</span>
+          <orp-copy-button
+            [value]="track().isrc"
+            [label]="labels.copyIsrc()"
+            [copiedLabel]="labels.copied()"
+          />
+        </dd>
       </div>
     </dl>
 

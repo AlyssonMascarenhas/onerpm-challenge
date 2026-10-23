@@ -1,3 +1,4 @@
+import { Clipboard } from '@angular/cdk/clipboard';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { ReleaseDatePrecision } from '../../../../contract/tracks.enums';
@@ -246,6 +247,45 @@ describe('TrackCard', () => {
 
       expect(player.componentInstance.track().id).toBe('7q7QtMiK9jhob0Md7p715D');
       expect(player.componentInstance.track().title).toBe('...É pra Você');
+    });
+  });
+
+  describe('copy ISRC', () => {
+    const copyButton = (fixture: ComponentFixture<TrackCard>) =>
+      root(fixture).querySelector('.card__isrc orp-copy-button button') as HTMLButtonElement | null;
+
+    it('is next to the ISRC, named after it', async () => {
+      const fixture = await render();
+
+      expect(copyButton(fixture)?.getAttribute('aria-label')).toBe('Copy ISRC BR1SP1200071');
+    });
+
+    it('is named in the visitor language', async () => {
+      const fixture = await render({}, Language.ES);
+
+      expect(copyButton(fixture)?.getAttribute('aria-label')).toBe('Copiar el ISRC BR1SP1200071');
+    });
+
+    it('copies the ISRC of the track', async () => {
+      const copy = vi.fn(() => true);
+      TestBed.configureTestingModule({
+        imports: [TrackCard],
+        providers: [...i18nTestProviders, { provide: Clipboard, useValue: { copy } }],
+      });
+      await useLanguage(Language.EN);
+      const fixture = TestBed.createComponent(TrackCard);
+      fixture.componentRef.setInput('track', track({ ...SAMPLE }));
+      await fixture.whenStable();
+
+      copyButton(fixture)?.click();
+
+      expect(copy).toHaveBeenCalledExactlyOnceWith('BR1SP1200071');
+    });
+
+    it('does not change what the card shows as its ISRC', async () => {
+      const fixture = await render();
+
+      expect(facts(fixture)['ISRC']).toBe('BR1SP1200071');
     });
   });
 
