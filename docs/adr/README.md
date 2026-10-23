@@ -23,3 +23,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0007 | [Estrutura do BFF e estratégia de testes do servidor](0007-estrutura-do-bff-e-testes.md) | Aceito |
 | 0008 | [Convenções de organização e estilo de código](0008-convencoes-de-organizacao-de-codigo.md) | Aceito |
 | 0009 | [CI com GitHub Actions em PRs para `main`](0009-ci-com-github-actions.md) | Aceito |
+| 0010 | [Domínio de faixas no front: ordenação, duração e estado](0010-dominio-de-faixas-no-front.md) | Aceito |

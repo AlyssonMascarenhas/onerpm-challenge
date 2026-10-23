@@ -13,7 +13,7 @@ automatizáveis e revisão em partes pequenas.
 - **Conventional Commits** validados por `commitlint` (`@commitlint/config-conventional`) com **escopos fechados**
   (`bootstrap`, `ci`, `deps`, `docs`, `bff`, `tracks`, `i18n`, `theme`, `ui`, `e2e`, `docker`, `release`).
 - **Husky**: hook `commit-msg` (commitlint) e `pre-commit` (lint-staged: ESLint + Prettier nos arquivos staged).
-- **Uma branch por etapa** (`chore/`, `feat/`, `ci/`, `test/`) e um PR pequeno para `main`, com squash merge.
+- **Uma branch por etapa** (`chore/`, `feat/`, `ci/`, `test/`) e um PR pequeno para `main`, integrado com **merge commit** (mantém o histórico granular de commits semânticos; squash só serviria a PRs de um único commit). A `main` é protegida: exige os checks `CI OK` e `PR title`.
 - O mesmo commitlint roda no CI, para pegar quem pular os hooks.
 
 ## Alternativas consideradas
