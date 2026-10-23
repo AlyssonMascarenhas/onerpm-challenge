@@ -6,6 +6,9 @@ export const SEARCH_URL = 'https://api.spotify.com/v1/search';
 /** Search `limit` is capped at 10 since the February 2026 API changes. */
 export const SEARCH_LIMIT = 10;
 
+/** Simultaneous searches allowed against Spotify across all visitors (shared limiter). */
+export const MAX_CONCURRENT_SEARCHES = 5;
+
 /** An ISRC lives on a handful of releases; this caps paging at 50 tracks so a bad query cannot loop. */
 export const MAX_SEARCH_PAGES = 5;
 export const REQUEST_TIMEOUT_MS = 8_000;

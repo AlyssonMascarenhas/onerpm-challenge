@@ -1,21 +1,21 @@
 import { LookupErrorCode, LookupStatus } from '../../contract/tracks.enums';
 import { TrackLookupResult } from '../../contract/tracks.types';
 import { Logger } from '../shared/shared.interfaces';
-import { mapWithConcurrency } from '../shared/map-with-concurrency';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
-import { DEFAULT_LOOKUP_CONCURRENCY } from './tracks.constants';
 import { TrackFinder } from './tracks.interfaces';
 
-/** Looks up many ISRCs, isolating failures so one bad ISRC never hides the others. */
+/**
+ * Looks up many ISRCs, isolating failures so one bad ISRC never hides the others.
+ * Parallelism is bounded where Spotify is called (see LimitedTrackSearch), not here.
+ */
 export class TracksService {
   constructor(
     private readonly _finder: TrackFinder,
     private readonly _logger: Logger,
-    private readonly _concurrency = DEFAULT_LOOKUP_CONCURRENCY,
   ) {}
 
   public lookup(isrcs: readonly string[]): Promise<TrackLookupResult[]> {
-    return mapWithConcurrency(isrcs, this._concurrency, (isrc) => this._lookupOne(isrc));
+    return Promise.all(isrcs.map((isrc) => this._lookupOne(isrc)));
   }
 
   private async _lookupOne(isrc: string): Promise<TrackLookupResult> {

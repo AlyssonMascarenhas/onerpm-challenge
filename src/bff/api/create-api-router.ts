@@ -1,8 +1,11 @@
 import { Router } from 'express';
 import { readSpotifyCredentials } from '../config';
 import { Logger } from '../shared/shared.interfaces';
+import { ConcurrencyLimiter } from '../shared/concurrency-limiter';
+import { LimitedTrackSearch } from '../spotify/limited-track-search';
 import { SpotifyClient } from '../spotify/spotify-client';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
+import { MAX_CONCURRENT_SEARCHES } from '../spotify/spotify.constants';
 import { SpotifyFailureReason } from '../spotify/spotify.enums';
 import { SpotifyTokenProvider } from '../spotify/token-provider';
 import { CachingTrackFinder } from '../tracks/caching-track-finder';
@@ -46,7 +49,9 @@ function createTrackFinder(options: ApiRouterOptions, logger: Logger): TrackFind
     sleep: options.sleep,
     now: options.now,
   });
-  return new CachingTrackFinder(new SpotifyTrackFinder(client), {
+  // One limiter for the whole process: concurrent visitors share Spotify's quota.
+  const search = new LimitedTrackSearch(client, new ConcurrencyLimiter(MAX_CONCURRENT_SEARCHES));
+  return new CachingTrackFinder(new SpotifyTrackFinder(search), {
     ttlMs: TRACK_CACHE_TTL_MS,
     maxEntries: TRACK_CACHE_MAX_ENTRIES,
     now: options.now,

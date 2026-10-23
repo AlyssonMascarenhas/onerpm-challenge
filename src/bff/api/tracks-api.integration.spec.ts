@@ -212,6 +212,27 @@ describe('GET /api/tracks', () => {
     expect(text).not.toContain('SPOTIFY');
   });
 
+  it('bounds simultaneous Spotify searches across overlapping requests', async () => {
+    const isrcs = (prefix: string) =>
+      Array.from({ length: 10 }, (_, i) => `${prefix}${String(i).padStart(5, '0')}`).join(',');
+    const fake = await startApi({
+      search: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        return [spotifyTrack()];
+      },
+    });
+
+    const [first, second] = await Promise.all([
+      get(`/api/tracks?isrc=${isrcs('BR1SP12')}`),
+      get(`/api/tracks?isrc=${isrcs('BR1SP13')}`),
+    ]);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(fake.searches).toHaveLength(20);
+    expect(fake.peakConcurrentSearches()).toBe(5);
+  });
+
   it('serves repeated lookups from cache, without calling Spotify again', async () => {
     const fake = await startApi();
 
