@@ -97,6 +97,63 @@ describe('LanguageSelect', () => {
     ).toBe('Idioma');
   });
 
+  describe('with a real option selection (open the list, click a language)', () => {
+    // PrimeNG's overlay asks the window about media queries, which jsdom does not implement.
+    beforeEach(() => {
+      Object.defineProperty(window, 'matchMedia', {
+        configurable: true,
+        value: (query: string) =>
+          ({
+            matches: false,
+            media: query,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+          }) as unknown as MediaQueryList,
+      });
+    });
+    afterEach(() => Reflect.deleteProperty(window, 'matchMedia'));
+
+    /** The way a visitor does it: opens the list and clicks the option with that name. */
+    async function choose(fixture: ComponentFixture<LanguageSelect>, name: string) {
+      (fixture.nativeElement.querySelector('.p-select') as HTMLElement).click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const option = [...document.querySelectorAll('[role="option"]')].find(
+        (candidate) => candidate.textContent?.trim() === name,
+      ) as HTMLElement;
+      option.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('switches the page and shows the chosen language', async () => {
+      const fixture = await render(Language.EN);
+      const i18n = TestBed.inject(I18n);
+
+      await choose(fixture, 'Русский');
+      await vi.waitFor(() => expect(i18n.language()).toBe(Language.RU));
+      fixture.detectChanges();
+
+      expect(text(fixture)).toBe('Русский');
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
+    });
+
+    it('puts the picker back on the active language when the chosen one cannot be loaded', async () => {
+      const fixture = await render(Language.ES);
+      const i18n = TestBed.inject(I18n);
+      const failing = vi.spyOn(i18n, 'setLanguage').mockRejectedValue(new Error('chunk failed'));
+
+      await choose(fixture, 'Русский');
+      await vi.waitFor(() => expect(failing).toHaveBeenCalledWith(Language.RU));
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(i18n.language()).toBe(Language.ES);
+      expect(text(fixture)).toBe('Español');
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).not.toBe('ru');
+    });
+  });
+
   it('stays on the current language, quietly, when the chosen one cannot be loaded', async () => {
     const fixture = await render(Language.ES);
     const i18n = TestBed.inject(I18n);

@@ -1,5 +1,5 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { ChangeDetectionStrategy, Component, inject, viewChild } from '@angular/core';
+import { FormsModule, NgModel } from '@angular/forms';
 import { translateSignal } from '@jsverse/transloco';
 import { Select } from 'primeng/select';
 import { I18n } from '../../core/i18n/i18n';
@@ -17,9 +17,13 @@ export class LanguageSelect {
   protected readonly label = translateSignal('app.language');
   /** PrimeNG types its options as a mutable array. */
   protected readonly options = [...this.i18n.options];
+  private readonly _model = viewChild(NgModel);
 
   protected select(language: Language): void {
-    // A language that fails to load simply leaves the current one in place.
-    this.i18n.setLanguage(language).catch(() => undefined);
+    this.i18n.setLanguage(language).catch(() => {
+      // The picker already shows the rejected language while the page kept the old one:
+      // put the control back on the language that is really active.
+      this._model()?.control.setValue(this.i18n.language());
+    });
   }
 }
