@@ -8,7 +8,7 @@ ordenadas por título. Sem persistência. O enunciado original está no `README.
 - Angular 21 (standalone, zoneless, signals, OnPush) + SSR com Express; PrimeNG 21 para UI; Transloco para i18n.
 - BFF em `src/bff/` (rotas `/api`, montadas em `src/server.ts`): o Client Secret do Spotify **nunca** vai ao browser.
 - Testes com Vitest (`npm test`); lint com angular-eslint; Prettier.
-- Node >= 22.12; use npm >= 11.6 (o npm 11.4 falha com `edgesOut` ao resolver peers).
+- Node `^22.22.1 || >=24` (limitado por lint-staged 17 e ESLint 10; o Angular 21 aceita `>=22.12`); use npm >= 11.6 (o npm 11.4 falha com `edgesOut` ao resolver peers).
 
 ## Convenções
 
