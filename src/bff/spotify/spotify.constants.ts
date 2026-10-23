@@ -1,3 +1,5 @@
+import { ReleaseDatePrecision } from '../../contract/tracks.enums';
+
 export const TOKEN_URL = 'https://accounts.spotify.com/api/token';
 export const SEARCH_URL = 'https://api.spotify.com/v1/search';
 
@@ -11,3 +13,6 @@ export const TOKEN_EXPIRY_MARGIN_MS = 60_000;
 /** Longer waits are not worth holding a user request open for: fail fast instead. */
 export const MAX_RATE_LIMIT_WAIT_MS = 5_000;
 export const MAX_RATE_LIMIT_RETRIES = 1;
+
+/** Values Spotify may send in `release_date_precision`; anything else is a malformed payload. */
+export const RELEASE_DATE_PRECISIONS: readonly unknown[] = Object.values(ReleaseDatePrecision);

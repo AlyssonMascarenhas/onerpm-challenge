@@ -1,4 +1,5 @@
 import { systemSleep } from './http';
+import { isSpotifyTrack } from './is-spotify-track';
 import { FetchFn, Sleep } from './http.types';
 import { SpotifyUnavailableError } from './spotify-errors';
 import {
@@ -89,7 +90,7 @@ export class SpotifyClient implements TrackSearch {
   private async _parseTracks(response: Response): Promise<readonly SpotifyTrack[]> {
     const body = (await response.json().catch(() => null)) as Partial<SpotifySearchResponse> | null;
     const items = body?.tracks?.items;
-    if (!Array.isArray(items)) {
+    if (!Array.isArray(items) || !items.every(isSpotifyTrack)) {
       throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_RESPONSE_MALFORMED);
     }
     return items;

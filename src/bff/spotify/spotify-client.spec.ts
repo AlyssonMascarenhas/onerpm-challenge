@@ -161,6 +161,19 @@ describe('SpotifyClient.searchByIsrc', () => {
     ['not JSON', () => new Response('oops', { status: 200 })],
     ['no tracks object', () => jsonResponse({})],
     ['items is not a list', () => jsonResponse({ tracks: { items: null } })],
+    ['a null item', () => jsonResponse({ tracks: { items: [null] } })],
+    [
+      'an item without artists',
+      () => jsonResponse({ tracks: { items: [{ ...spotifyTrack(), artists: undefined }] } }),
+    ],
+    [
+      'an item without duration',
+      () => jsonResponse({ tracks: { items: [{ ...spotifyTrack(), duration_ms: undefined }] } }),
+    ],
+    [
+      'one bad item among valid ones',
+      () => jsonResponse({ tracks: { items: [spotifyTrack(), { id: 'broken' }] } }),
+    ],
   ])('rejects a malformed payload (%s)', async (_label, respond) => {
     const { client } = setup([respond]);
 
