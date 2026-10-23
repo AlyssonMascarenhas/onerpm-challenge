@@ -18,7 +18,8 @@ chegaria em inglês e "piscaria" para o idioma do visitante.
   uso é baixado (~1 KB cada) e o build quebra se um arquivo sumir.
 - **Qual idioma usar** (`detectLanguage`), em ordem: escolha salva (`localStorage`) → `navigator.languages` → inglês.
   Variantes regionais casam pelo idioma primário (`pt-PT`→`pt`, `ru-RU`→`ru`). No **servidor**, vale o cabeçalho
-  `Accept-Language` da requisição, respeitando pesos `q` (e descartando `q=0`, valor malformado e `*`).
+  `Accept-Language` da requisição, respeitando pesos `q` (e descartando `q=0`, `*` e valores fora da gramática HTTP: 0 a 1, no máximo três casas
+  decimais — `q=2`, `q=1.5` ou `q=0.1234` invalidam a entrada).
 - **SSR por requisição** (`RenderMode.Server`, antes `Prerender`): o HTML já sai no idioma do visitante e
   `<html lang>` correto, sem _flash_. O servidor responde `Vary: Accept-Language` para que caches não misturem idiomas.
   Se a escolha salva do visitante diferir do HTML do servidor, o cliente apenas atualiza os textos na hidratação.
@@ -28,6 +29,10 @@ chegaria em inglês e "piscaria" para o idioma do visitante.
 - **Inicialização** (`provideAppInitializer` → `I18n.init()`) carrega o idioma **antes da primeira renderização** e
   **nunca rejeita**: se o chunk do idioma falhar, usa inglês; se tudo falhar, a página ainda renderiza (com as chaves).
   `setLanguage()` mantém o idioma atual e não salva nada se o novo não carregar.
+- **Só a última seleção vale**: os chunks terminam em qualquer ordem, então cada pedido recebe um número e só o mais
+  recente pode ativar o idioma, atualizar `<html lang>` e gravar a preferência; um pedido antigo que termina depois (ou
+  falha depois) é descartado em silêncio. Vale também para a inicialização: o idioma que o visitante escolhe durante o
+  carregamento inicial prevalece sobre o detectado.
 - **Chaves aninhadas** (`app.*`, `tracks.*`, `status.*`) e **sem plural dependente de idioma**: textos como
   "ISRCs afetados: {{count}}" evitam as quatro formas de plural do russo sem trazer ICU. Nomes de idiomas aparecem
   **no próprio idioma** (Русский, Türkçe), para quem não lê o atual achar o seu.
