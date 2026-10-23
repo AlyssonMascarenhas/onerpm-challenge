@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Language } from '../../../core/i18n/i18n.enums';
 import { DARK_MODE_CLASS } from '../../../core/theme/theme.constants';
@@ -135,6 +137,37 @@ describe('TrackPlayer', () => {
       it('shows the embed and drops the placeholder once Spotify has loaded it', async () => {
         const fixture = await render();
         await listen(fixture);
+
+        await finishLoading(fixture);
+
+        expect(loading(fixture)).toBeNull();
+        expect(iframe(fixture)?.classList).not.toContain('player__frame--pending');
+      });
+
+      it('hides the frame that is not ready from the keyboard and assistive technology', () => {
+        const styles = readFileSync(
+          join(process.cwd(), 'src/app/features/tracks/track-player/track-player.scss'),
+          'utf8',
+        );
+        const pending = /\.player__frame--pending\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+
+        expect(pending).toContain('visibility: hidden');
+        expect(pending).not.toContain('opacity');
+      });
+
+      it('waits again for the embed that replaces it when the page theme changes', async () => {
+        const fixture = await render();
+        await listen(fixture);
+        await finishLoading(fixture);
+        expect(loading(fixture)).toBeNull();
+
+        TestBed.inject(Theme).setMode(ThemeMode.DARK);
+        await fixture.whenStable();
+        fixture.detectChanges();
+
+        expect(iframe(fixture)?.src).toBe(`https://open.spotify.com/embed/track/${ID}?theme=0`);
+        expect(loading(fixture)).not.toBeNull();
+        expect(iframe(fixture)?.classList).toContain('player__frame--pending');
 
         await finishLoading(fixture);
 

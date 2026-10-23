@@ -26,7 +26,8 @@ export class TrackPlayer {
   private readonly _theme = inject(Theme);
   private readonly _sanitizer = inject(DomSanitizer);
   private readonly _requested = signal(false);
-  private readonly _frameLoaded = signal(false);
+  /** The address of the embed that has finished loading (it changes with the theme, and then loads again). */
+  private readonly _loadedUrl = signal<string | null>(null);
 
   protected readonly height = SPOTIFY_EMBED_HEIGHT;
   protected readonly playIcon = ActionIcon.Play;
@@ -39,14 +40,23 @@ export class TrackPlayer {
   protected readonly available = computed(() => buildEmbedUrl(this.trackId(), false) !== null);
 
   /** Set only once the visitor asked to listen. */
+  private readonly _embedAddress = computed(() =>
+    this._requested() ? buildEmbedUrl(this.trackId(), this._theme.isDark()) : null,
+  );
+
   protected readonly embedUrl = computed(() => {
-    const url = this._requested() ? buildEmbedUrl(this.trackId(), this._theme.isDark()) : null;
+    const url = this._embedAddress();
     // Trusted because it is our fixed Spotify origin plus an id validated by `buildEmbedUrl`.
     return url ? this._sanitizer.bypassSecurityTrustResourceUrl(url) : null;
   });
 
-  /** The embed has finished loading: until then a placeholder of the same size holds its place. */
-  protected readonly frameLoaded = this._frameLoaded.asReadonly();
+  /**
+   * The embed in place has finished loading: until then a placeholder of the same size holds its place.
+   * Readiness belongs to one address, so a reload (another theme) waits for its own `load`.
+   */
+  protected readonly frameLoaded = computed(
+    () => this._embedAddress() !== null && this._loadedUrl() === this._embedAddress(),
+  );
 
   protected load(): void {
     this._requested.set(true);
@@ -54,8 +64,9 @@ export class TrackPlayer {
 
   protected onFrameLoad(event: Event): void {
     // Some browsers fire an initial `load` for the blank frame, before the embed's address is applied.
-    if ((event.target as HTMLIFrameElement).src.startsWith(SPOTIFY_EMBED_URL)) {
-      this._frameLoaded.set(true);
+    const { src } = event.target as HTMLIFrameElement;
+    if (src.startsWith(SPOTIFY_EMBED_URL)) {
+      this._loadedUrl.set(src);
     }
   }
 }
