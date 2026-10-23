@@ -100,23 +100,49 @@
   font-size: 0.85rem;
 }
 
+/* The link sits at the bottom of the card, whatever the height of the sections above it. */
 .card__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  align-self: flex-start;
   margin-top: auto;
-  font-weight: 600;
-  color: var(--p-primary-color);
-  text-decoration: none;
 }
 
-.card__link:hover {
-  text-decoration: underline;
-}
+/*
+ * Aligned sections. Cards of one row would otherwise differ in height section by section (a title or a
+ * date wrapping to two lines pushes everything below it). With subgrid, every card spans the same 8 rows
+ * of the page grid, so each row is as tall as the tallest card needs and the same section starts at the
+ * same height in every card, at any width. The rows are: cover, badge, title, artists, two for the facts
+ * (released/duration, album/ISRC), player, link. Browsers without subgrid keep the flex layout above.
+ */
+@supports (grid-template-rows: subgrid) {
+  :host {
+    display: contents;
+  }
 
-.card__link:focus-visible {
-  outline: 2px solid var(--p-primary-color);
-  outline-offset: 3px;
-  border-radius: 0.25rem;
+  .card {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: 1 / -1;
+    row-gap: 0;
+  }
+
+  .card__cover {
+    grid-row: 1;
+  }
+
+  .card__body {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: 2 / -1;
+    row-gap: 0.75rem;
+  }
+
+  .card__meta {
+    grid-template-rows: subgrid;
+    grid-row: span 2;
+    row-gap: 0.6rem;
+  }
+
+  .card__link {
+    align-self: end;
+    margin-top: 0;
+  }
 }

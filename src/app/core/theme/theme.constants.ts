@@ -42,5 +42,25 @@ export const SURFACE_PALETTE = {
   950: '#0c0c11',
 } as const;
 
+/**
+ * The page's call-to-action (`ActionButton`), in the look of Spotify's "Listen on" badges: black on the
+ * light theme, white on the dark one, with Spotify's mark in its green on black and black on white. They
+ * become the `--p-action-*` variables, switched by the same `app-dark` class as every other token.
+ */
+export const ACTION_COLORS = {
+  light: {
+    background: '#121212',
+    hoverBackground: '#000000',
+    color: '#ffffff',
+    spotify: '#1ed760',
+  },
+  dark: {
+    background: '#ffffff',
+    hoverBackground: '#e8e8e8',
+    color: '#121212',
+    spotify: '#121212',
+  },
+} as const;
+
 /** CSS layers: PrimeNG's styles sit below ours, so our rules win without `!important`. */
 export const PRIMENG_CSS_LAYER = { name: 'primeng', order: 'theme, base, primeng' } as const;

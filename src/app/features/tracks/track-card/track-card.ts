@@ -3,6 +3,8 @@ import { translateSignal } from '@jsverse/transloco';
 import { Tag } from 'primeng/tag';
 import { Track } from '../../../../contract/tracks.interfaces';
 import { I18n } from '../../../core/i18n/i18n';
+import { ActionButton } from '../../../shared/action-button/action-button';
+import { ActionIcon } from '../../../shared/action-button/action-button.enums';
 import { formatDuration } from '../format-duration';
 import { formatReleaseDate } from '../format-release-date';
 import { TrackPlayer } from '../track-player/track-player';
@@ -10,7 +12,7 @@ import { TrackPlayer } from '../track-player/track-player';
 /** One track: cover, title, artists, release date, duration, Brazil availability, player and link. */
 @Component({
   selector: 'orp-track-card',
-  imports: [Tag, TrackPlayer],
+  imports: [ActionButton, Tag, TrackPlayer],
   templateUrl: './track-card.html',
   styleUrl: './track-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,6 +23,7 @@ export class TrackCard {
   private readonly _i18n = inject(I18n);
   private readonly _coverFailed = signal(false);
 
+  protected readonly spotifyIcon = ActionIcon.Spotify;
   protected readonly titleId = computed(() => `track-${this.track().id}`);
   protected readonly artists = computed(() => this.track().artists.join(', '));
   protected readonly released = computed(() =>
@@ -45,7 +48,7 @@ export class TrackCard {
     available: translateSignal('tracks.availableInBR'),
     unavailable: translateSignal('tracks.unavailableInBR'),
     openOnSpotify: translateSignal('tracks.openOnSpotify'),
-    newTab: translateSignal('tracks.newTab'),
+    newTab: translateSignal('app.newTab'),
   };
 
   protected onCoverError(): void {

@@ -48,6 +48,17 @@ body {
   background: var(--p-surface-950);
 }
 
+/* The footer sits at the bottom of short pages and below the content on long ones. */
+orp-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
 /* The page's own landmark receives focus from the skip link; no outline needed for a non-control. */
 main:focus {
   outline: none;

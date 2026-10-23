@@ -1,6 +1,8 @@
 :host {
   display: block;
   height: 100%;
+  /* Inside a page-grid entry that spans the rows of a track card, fill all of them. */
+  grid-row: 1 / -1;
 }
 
 .card {

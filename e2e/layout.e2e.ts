@@ -19,7 +19,8 @@ test('never scrolls horizontally, at any width the project covers', async ({ pag
 test('cards fit inside the viewport and are never cut off', async ({ page }) => {
   const viewport = page.viewportSize()!;
 
-  for (const card of await page.locator('orp-track-card').all()) {
+  // `orp-track-card` is `display: contents` (its article takes part in the page grid): measure the article.
+  for (const card of await page.locator('orp-track-card .card').all()) {
     const box = (await card.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
@@ -28,7 +29,7 @@ test('cards fit inside the viewport and are never cut off', async ({ page }) => 
 
 test('lays the cards out in as many columns as fit', async ({ page }, testInfo) => {
   const lefts = await page
-    .locator('orp-track-card')
+    .locator('orp-track-card .card')
     .evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().left)));
   const columns = new Set(lefts).size;
 

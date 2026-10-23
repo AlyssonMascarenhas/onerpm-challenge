@@ -24,6 +24,18 @@ describe('App', () => {
     expect(root.querySelector('main#main router-outlet')).not.toBeNull();
   });
 
+  it('shows the footer after the main content, as the last thing on the page', async () => {
+    const root = await render();
+
+    const footer = root.querySelector('orp-app-footer footer');
+
+    expect(footer).not.toBeNull();
+    expect(root.lastElementChild).toBe(root.querySelector('orp-app-footer'));
+    expect(root.querySelector('main')?.nextElementSibling?.tagName.toLowerCase()).toBe(
+      'orp-app-footer',
+    );
+  });
+
   it('shows the header', async () => {
     const root = await render();
 

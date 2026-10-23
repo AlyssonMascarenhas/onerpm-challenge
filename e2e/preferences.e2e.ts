@@ -24,20 +24,20 @@ test.describe('language', () => {
   }) => {
     await openLoaded(page);
     const cases = [
-      ['Português', 'ISRCs ausentes', 'pt-BR'],
-      ['Español', 'ISRC ausentes', 'es'],
-      ['Русский', 'Отсутствующие ISRC', 'ru'],
-      ['Français', 'ISRC manquants', 'fr'],
-      ['Türkçe', "Eksik ISRC'ler", 'tr'],
-      ['English', 'Missing ISRCs', 'en'],
+      ['Português', 'ISRCs ausentes', 'pt-BR', 'Consulta de ISRC'],
+      ['Español', 'ISRC ausentes', 'es', 'Consulta de ISRC'],
+      ['Русский', 'Отсутствующие ISRC', 'ru', 'Поиск по ISRC'],
+      ['Français', 'ISRC manquants', 'fr', 'Recherche par ISRC'],
+      ['Türkçe', "Eksik ISRC'ler", 'tr', 'ISRC sorgusu'],
+      ['English', 'Missing ISRCs', 'en', 'ISRC lookup'],
     ] as const;
 
-    for (const [name, heading, lang] of cases) {
+    for (const [name, heading, lang, tab] of cases) {
       await chooseLanguage(page, name);
 
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
       await expect(page.locator('html')).toHaveAttribute('lang', lang);
-      await expect(page).toHaveTitle(heading);
+      await expect(page).toHaveTitle(tab);
     }
   });
 

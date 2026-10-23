@@ -80,6 +80,22 @@ for (const theme of ['light', 'dark'] as const) {
       await expectNoViolations(page);
     });
 
+    test('with the list of affected ISRCs open', async ({ page }) => {
+      await setTheme(page, theme);
+      await mockTracks(page, [
+        ...challengeResults().slice(0, 2),
+        ...Array.from({ length: 30 }, (_, index) =>
+          failed(`XX1AA${String(index).padStart(7, '0')}`),
+        ),
+      ]);
+      await page.goto('/');
+      await expect(page.locator('orp-track-card')).toHaveCount(2);
+      await page.getByRole('button', { name: 'Show affected ISRCs' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+
+      await expectNoViolations(page);
+    });
+
     test('with a Spotify player opened', async ({ page }) => {
       await setTheme(page, theme);
       await mockTracks(page);
@@ -106,22 +122,25 @@ for (const theme of ['light', 'dark'] as const) {
 }
 
 test.describe('every language', () => {
-  for (const [language, label] of [
-    ['pt', 'Português'],
-    ['es', 'Español'],
-    ['ru', 'Русский'],
-    ['fr', 'Français'],
-    ['tr', 'Türkçe'],
-  ]) {
-    test(`${label}: page with tracks has no violations and the right lang`, async ({ page }) => {
+  /** [saved choice, name, expected <html lang>, expected heading]: each case must audit ITS language. */
+  for (const [language, label, htmlLang, heading] of [
+    ['pt', 'Português', 'pt-BR', 'ISRCs ausentes'],
+    ['es', 'Español', 'es', 'ISRC ausentes'],
+    ['ru', 'Русский', 'ru', 'Отсутствующие ISRC'],
+    ['fr', 'Français', 'fr', 'ISRC manquants'],
+    ['tr', 'Türkçe', 'tr', "Eksik ISRC'ler"],
+  ] as const) {
+    test(`${label}: the page is in ${label} and has no violations`, async ({ page }) => {
       await setLanguage(page, language);
       await mockTracks(page);
       await page.goto('/');
       await expect(page.locator('orp-track-card')).toHaveCount(10);
       await page.waitForLoadState('networkidle');
 
+      // Prove the page really is in this language before auditing it.
+      await expect(page.locator('html')).toHaveAttribute('lang', htmlLang);
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText(heading);
       await expectNoViolations(page);
-      await expect(page.locator('html')).toHaveAttribute('lang', /^(pt-BR|es|ru|fr|tr)$/);
     });
   }
 });

@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Включить тёмную тему",
       "toLight": "Включить светлую тему"
-    }
+    },
+    "newTab": "откроется в новой вкладке"
   },
   "tracks": {
     "listLabel": "Треки",
@@ -26,7 +27,7 @@
     "failed": "Не удалось загрузить этот ISRC",
     "listen": "Послушать фрагмент",
     "playerTitle": "Плеер Spotify: {{title}}",
-    "newTab": "откроется в новой вкладке"
+    "loadingPlayer": "Загрузка плеера…"
   },
   "status": {
     "loading": "Загрузка треков…",
@@ -34,6 +35,16 @@
     "partialFailure": "Некоторые ISRC не удалось загрузить. Затронуто ISRC: {{count}}",
     "unavailableTitle": "Музыкальные данные недоступны",
     "unavailableMessage": "Сейчас не удаётся связаться со Spotify. Повторите попытку чуть позже.",
-    "retry": "Повторить"
+    "retry": "Повторить",
+    "showAffected": "Показать затронутые ISRC",
+    "affectedTitle": "ISRC, которые не удалось загрузить",
+    "affectedList": "Затронутые ISRC",
+    "affectedHint": "Spotify не ответил для этих кодов. Повторите попытку, чтобы запросить их снова.",
+    "close": "Закрыть"
+  },
+  "footer": {
+    "builtFor": "Разработано для технического задания ONErpm по фронтенду.",
+    "sourceCode": "Исходный код",
+    "dataFrom": "Данные о треках — Spotify Web API."
   }
 }

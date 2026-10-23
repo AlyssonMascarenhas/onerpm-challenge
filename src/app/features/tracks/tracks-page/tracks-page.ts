@@ -4,9 +4,11 @@ import {
   afterNextRender,
   computed,
   inject,
+  signal,
 } from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
 import { Button } from 'primeng/button';
+import { Dialog } from 'primeng/dialog';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { LookupStatus } from '../../../../contract/tracks.enums';
@@ -17,7 +19,7 @@ import { TracksStore } from '../tracks-store';
 /** The page: a hero, then the tracks (or why there are none). */
 @Component({
   selector: 'orp-tracks-page',
-  imports: [Button, Message, Skeleton, TrackCard, IsrcCard],
+  imports: [Button, Dialog, Message, Skeleton, TrackCard, IsrcCard],
   templateUrl: './tracks-page.html',
   styleUrl: './tracks-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,12 +34,20 @@ export class TracksPage {
   protected readonly unavailableMessage = translateSignal('status.unavailableMessage');
   protected readonly retry = translateSignal('status.retry');
   protected readonly listLabel = translateSignal('tracks.listLabel');
+  protected readonly showAffected = translateSignal('status.showAffected');
+  protected readonly affectedTitle = translateSignal('status.affectedTitle');
+  protected readonly affectedList = translateSignal('status.affectedList');
+  protected readonly affectedHint = translateSignal('status.affectedHint');
+  protected readonly close = translateSignal('status.close');
   protected readonly partialFailure = translateSignal('status.partialFailure', {
     count: computed(() => String(this.store.failedCount())),
   });
 
   /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */
   protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());
+
+  /** Whether the list of ISRCs that failed is open. */
+  protected readonly affectedOpen = signal(false);
 
   protected readonly LookupStatus = LookupStatus;
   protected readonly placeholders = [1, 2, 3];
@@ -48,6 +58,11 @@ export class TracksPage {
   }
 
   protected reload(): void {
+    this.store.load();
+  }
+
+  protected retryAffected(): void {
+    this.affectedOpen.set(false);
     this.store.load();
   }
 }

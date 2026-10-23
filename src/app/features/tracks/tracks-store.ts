@@ -23,10 +23,13 @@ export class TracksStore {
   public readonly isLoading = computed(() => this._status() === TracksLoadStatus.LOADING);
   public readonly isUnavailable = computed(() => this._status() === TracksLoadStatus.UNAVAILABLE);
 
-  /** ISRCs that failed while the rest loaded: worth a warning, not a blocking alert. */
-  public readonly failedCount = computed(
-    () => this._results().filter((result) => result.status === LookupStatus.ERROR).length,
+  /** ISRCs that failed while the rest loaded (in display order): worth a warning, not a blocking alert. */
+  public readonly failedIsrcs = computed(() =>
+    this.items()
+      .filter((result) => result.status === LookupStatus.ERROR)
+      .map((result) => result.isrc),
   );
+  public readonly failedCount = computed(() => this.failedIsrcs().length);
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this._inflight?.unsubscribe());

@@ -9,3 +9,51 @@
   border-radius: 0.75rem;
   color-scheme: normal;
 }
+
+/* The stage has the embed's height from the first moment, so the card does not jump when the embed arrives. */
+.player__stage {
+  position: relative;
+}
+
+.player__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.75rem;
+  background: var(--p-content-background);
+  color: var(--orp-text-muted);
+  font-size: 0.9rem;
+}
+
+.player__spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--p-content-border-color);
+  border-top-color: var(--p-primary-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/*
+ * Loads in the background, hidden until it has something to show. `visibility` (not `opacity`) so the frame
+ * keeps its place but cannot be focused or reached by assistive technology while it is not ready.
+ */
+.player__frame--pending {
+  visibility: hidden;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player__spinner {
+    animation: none;
+  }
+}

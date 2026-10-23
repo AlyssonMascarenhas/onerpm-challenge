@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Switch to the dark theme",
       "toLight": "Switch to the light theme"
-    }
+    },
+    "newTab": "opens in a new tab"
   },
   "tracks": {
     "listLabel": "Tracks",
@@ -26,7 +27,7 @@
     "failed": "Could not load this ISRC",
     "listen": "Listen to a preview",
     "playerTitle": "Spotify player for {{title}}",
-    "newTab": "opens in a new tab"
+    "loadingPlayer": "Loading the player…"
   },
   "status": {
     "loading": "Loading tracks…",
@@ -34,6 +35,16 @@
     "partialFailure": "Some ISRCs could not be loaded. ISRCs affected: {{count}}",
     "unavailableTitle": "Music data unavailable",
     "unavailableMessage": "We could not reach Spotify right now. Please try again in a moment.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "showAffected": "Show affected ISRCs",
+    "affectedTitle": "ISRCs that could not be loaded",
+    "affectedList": "Affected ISRCs",
+    "affectedHint": "Spotify did not answer for these. Try again to look them up once more.",
+    "close": "Close"
+  },
+  "footer": {
+    "builtFor": "Developed for the ONErpm front-end technical challenge.",
+    "sourceCode": "Source code",
+    "dataFrom": "Track data from the Spotify Web API."
   }
 }

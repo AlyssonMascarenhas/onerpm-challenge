@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Passer au thème sombre",
       "toLight": "Passer au thème clair"
-    }
+    },
+    "newTab": "s'ouvre dans un nouvel onglet"
   },
   "tracks": {
     "listLabel": "Titres",
@@ -26,7 +27,7 @@
     "failed": "Impossible de charger cet ISRC",
     "listen": "Écouter un extrait",
     "playerTitle": "Lecteur Spotify pour {{title}}",
-    "newTab": "s'ouvre dans un nouvel onglet"
+    "loadingPlayer": "Chargement du lecteur…"
   },
   "status": {
     "loading": "Chargement des titres…",
@@ -34,6 +35,16 @@
     "partialFailure": "Certains ISRC n'ont pas pu être chargés. ISRC concernés : {{count}}",
     "unavailableTitle": "Données musicales indisponibles",
     "unavailableMessage": "Impossible de joindre Spotify pour le moment. Veuillez réessayer dans un instant.",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "showAffected": "Voir les ISRC concernés",
+    "affectedTitle": "ISRC qui n'ont pas pu être chargés",
+    "affectedList": "ISRC concernés",
+    "affectedHint": "Spotify n'a pas répondu pour ceux-ci. Réessayez pour les interroger de nouveau.",
+    "close": "Fermer"
+  },
+  "footer": {
+    "builtFor": "Développé pour le défi technique front-end d'ONErpm.",
+    "sourceCode": "Code source",
+    "dataFrom": "Données des titres issues de la Spotify Web API."
   }
 }

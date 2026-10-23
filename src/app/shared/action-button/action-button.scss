@@ -1,0 +1,54 @@
+:host {
+  display: block;
+}
+
+/*
+ * A black pill on the light theme and a white one on the dark theme (colors in `ACTION_COLORS`, exposed as
+ * `--p-action-*`), so it always stands out from the card.
+ */
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--p-action-background);
+  border-radius: var(--p-border-radius-md, 0.5rem);
+  background: var(--p-action-background);
+  font: inherit;
+  font-weight: 700;
+  color: var(--p-action-color);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.action:hover {
+  background: var(--p-action-hover-background);
+}
+
+.action:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 3px;
+}
+
+.action__mark {
+  flex: none;
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: currentColor;
+}
+
+.action__mark--spotify {
+  width: 1.6rem;
+  height: 1.6rem;
+  fill: var(--p-action-spotify);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action {
+    transition: none;
+  }
+}

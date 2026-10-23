@@ -112,10 +112,13 @@ describe('I18n', () => {
     });
 
     it.each([
-      [Language.EN, 'Missing ISRCs'],
-      [Language.PT, 'ISRCs ausentes'],
-      [Language.RU, 'Отсутствующие ISRC'],
-    ])('translates the document title (%s)', async (language, title) => {
+      [Language.EN, 'ISRC lookup'],
+      [Language.PT, 'Consulta de ISRC'],
+      [Language.ES, 'Consulta de ISRC'],
+      [Language.RU, 'Поиск по ISRC'],
+      [Language.FR, 'Recherche par ISRC'],
+      [Language.TR, 'ISRC sorgusu'],
+    ])('puts the product name, translated, in the tab title (%s)', async (language, title) => {
       const { i18n } = setup();
 
       await i18n.setLanguage(language);

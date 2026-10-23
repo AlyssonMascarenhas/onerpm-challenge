@@ -194,13 +194,102 @@ describe('TracksPage', () => {
 
       const warning = root(fixture).querySelectorAll('p-message');
       expect(warning).toHaveLength(1);
-      expect(warning[0].textContent?.trim()).toBe(
-        'Some ISRCs could not be loaded. ISRCs affected: 2',
+      expect(text(warning[0])).toBe(
+        'Some ISRCs could not be loaded. ISRCs affected: 2 Show affected ISRCs',
       );
       expect(items(fixture).slice(1)).toEqual([
         'BR1SP1200070 Could not load this ISRC',
         'BR1SP1200071 Could not load this ISRC',
       ]);
+    });
+
+    describe('the list of affected ISRCs', () => {
+      const failures = async (language?: Language) => {
+        const page = await render({ language });
+        page.requests[0].next([
+          foundResult('Louca'),
+          errorResult('BR1SP1200070'),
+          notFoundResult('XX1AA0000001'),
+          errorResult('BR1SP1200071'),
+        ]);
+        await settle(page.fixture);
+        return page;
+      };
+      const trigger = (fixture: ComponentFixture<TracksPage>) =>
+        root(fixture).querySelector('button.alert__link') as HTMLButtonElement;
+      const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement | null;
+      const open = async (fixture: ComponentFixture<TracksPage>) => {
+        trigger(fixture).click();
+        await settle(fixture);
+      };
+
+      afterEach(() => document.body.querySelectorAll('p-dialog').forEach((d) => d.remove()));
+
+      it('is behind a button in the warning, closed at first', async () => {
+        const { fixture } = await failures();
+
+        expect(text(trigger(fixture))).toBe('Show affected ISRCs');
+        expect(trigger(fixture).getAttribute('aria-haspopup')).toBe('dialog');
+        expect(dialog()).toBeNull();
+      });
+
+      it('opens a modal dialog listing only the ISRCs that failed', async () => {
+        const { fixture } = await failures();
+
+        await open(fixture);
+
+        expect(text(dialog()?.querySelector('.p-dialog-title, [id$="_header"]'))).toBe(
+          'ISRCs that could not be loaded',
+        );
+        expect(
+          [...(dialog()?.querySelectorAll('.affected__isrc') ?? [])].map((item) => text(item)),
+        ).toEqual(['BR1SP1200070', 'BR1SP1200071']);
+      });
+
+      it('names the list and makes it reachable by keyboard, since a long one scrolls', async () => {
+        const { fixture } = await failures();
+
+        await open(fixture);
+
+        const list = dialog()?.querySelector('ul.affected__list') as HTMLElement;
+        expect(list.getAttribute('aria-label')).toBe('Affected ISRCs');
+        expect(list.getAttribute('tabindex')).toBe('0');
+      });
+
+      it('is translated, including the close button label', async () => {
+        const { fixture } = await failures(Language.PT);
+
+        await open(fixture);
+
+        expect(text(trigger(fixture))).toBe('Ver ISRCs afetados');
+        expect(text(dialog())).toContain('ISRCs que não puderam ser carregados');
+        expect(dialog()?.querySelector('[aria-label="Fechar"]')).not.toBeNull();
+      });
+
+      it('asks Spotify again for everything, and closes, when the visitor tries again', async () => {
+        const { fixture, lookup, requests } = await failures();
+        await open(fixture);
+
+        [...(dialog()?.querySelectorAll('button') ?? [])]
+          .find((button) => text(button) === 'Try again')
+          ?.click();
+        await settle(fixture);
+
+        expect(lookup).toHaveBeenCalledTimes(2);
+        expect(dialog()).toBeNull();
+        requests[1].next([foundResult('Louca')]);
+        await settle(fixture);
+        expect(root(fixture).querySelector('button.alert__link')).toBeNull();
+      });
+
+      it('is not offered when nothing failed', async () => {
+        const { fixture, requests } = await render();
+
+        requests[0].next([foundResult('Louca'), notFoundResult('XX1AA0000001')]);
+        await settle(fixture);
+
+        expect(trigger(fixture)).toBeNull();
+      });
     });
 
     it('is not an alert when only some ISRCs failed', async () => {
