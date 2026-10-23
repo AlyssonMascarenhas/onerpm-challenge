@@ -15,7 +15,6 @@
     "released": "Lanzamiento",
     "duration": "Duración",
     "isrc": "ISRC",
-    "artists": "Artistas",
     "album": "Álbum",
     "openOnSpotify": "Abrir en Spotify",
     "preview": "Vista previa del audio",
@@ -24,7 +23,10 @@
     "availableInBR": "Disponible en Brasil",
     "unavailableInBR": "No disponible en Brasil",
     "notFound": "ISRC no encontrado en Spotify",
-    "failed": "No se pudo cargar este ISRC"
+    "failed": "No se pudo cargar este ISRC",
+    "listen": "Escuchar una vista previa",
+    "playerTitle": "Reproductor de Spotify para {{title}}",
+    "newTab": "se abre en una pestaña nueva"
   },
   "status": {
     "loading": "Cargando pistas…",

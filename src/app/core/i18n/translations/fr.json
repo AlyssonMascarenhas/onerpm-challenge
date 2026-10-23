@@ -15,7 +15,6 @@
     "released": "Sortie",
     "duration": "Durée",
     "isrc": "ISRC",
-    "artists": "Artistes",
     "album": "Album",
     "openOnSpotify": "Ouvrir dans Spotify",
     "preview": "Extrait audio",
@@ -24,7 +23,10 @@
     "availableInBR": "Disponible au Brésil",
     "unavailableInBR": "Indisponible au Brésil",
     "notFound": "ISRC introuvable sur Spotify",
-    "failed": "Impossible de charger cet ISRC"
+    "failed": "Impossible de charger cet ISRC",
+    "listen": "Écouter un extrait",
+    "playerTitle": "Lecteur Spotify pour {{title}}",
+    "newTab": "s'ouvre dans un nouvel onglet"
   },
   "status": {
     "loading": "Chargement des titres…",
