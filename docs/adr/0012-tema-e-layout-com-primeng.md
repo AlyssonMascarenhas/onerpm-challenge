@@ -24,7 +24,10 @@ não expõe cores oficiais), então não dá para afirmar fidelidade à marca.
 - **Modo escuro por classe** `app-dark` no `<html>` (`darkModeSelector`). Prioridade: escolha salva → preferência do
   sistema → claro. **Um script inline no `index.html`** aplica a classe antes da primeira pintura (sem _flash_ branco para
   quem usa escuro); como não pode importar as constantes, testes garantem que chave, classe e _media query_ não divirjam,
-  e executam o script para provar o comportamento. O serviço `Theme` mantém a classe sincronizada depois.
+  e executam o script para provar o comportamento. O script decide **exatamente como o serviço `Theme`**: só `light` e
+  `dark` valem como escolha salva (qualquer outro valor é ignorado) e, se o armazenamento estiver bloqueado ou o valor for
+  inválido, vale a preferência do sistema, nunca "claro" por padrão. Um teste de paridade compara os dois em todas as
+  combinações de valor salvo × preferência do sistema. O serviço `Theme` mantém a classe sincronizada depois.
 - **`cssLayer`**: o PrimeNG fica numa camada abaixo do nosso CSS, então sobrescrevemos sem `!important`.
 - **Fonte Inter variável auto-hospedada** (`@fontsource-variable/inter`): sem requisição a terceiros, e o navegador baixa
   só os blocos de caracteres usados (latino, latino estendido e **cirílico** — necessário para o russo — e vietnamita).
@@ -35,7 +38,8 @@ não expõe cores oficiais), então não dá para afirmar fidelidade à marca.
 - **Componentes de UI do PrimeNG**: `p-select` (idioma), `p-button` (tema e "tentar novamente"), `p-message` (alertas),
   `p-skeleton` (carregamento). Textos via `translateSignal`, que combina com `OnPush` e _zoneless_.
 - **Estados da página**: placeholders enquanto carrega (anunciados por `role="status"`), alerta `role="alert"` com
-  botão de nova tentativa quando o provedor está fora, aviso `role="status"` quando só algumas ISRCs falham. A busca roda
+  botão de nova tentativa quando o provedor está fora (a região só fica `aria-busy` enquanto carrega — com a falha ela já
+  não está ocupada, senão leitores de tela podem adiar o anúncio do alerta), aviso `role="status"` quando só algumas ISRCs falham. A busca roda
   só no navegador (`afterNextRender`), para o servidor não esperar o Spotify. A lista de faixas desta etapa é simples; os
   cartões (capa, data, player, link, selo do Brasil) vêm no próximo PR.
 - **Orçamento de _bundle_ inicial** subiu de 500 kB/1 MB para **800 kB/1,2 MB** (753 kB brutos, **171 kB** comprimidos):
