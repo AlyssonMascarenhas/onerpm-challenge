@@ -17,6 +17,7 @@ ordenadas por título. Sem persistência. O enunciado original está no `README.
 - **ADRs**: toda decisão técnica relevante ganha um registro em `docs/adr/` (template em `0000-template.md`), no mesmo PR que a introduz, e entra no índice do `docs/adr/README.md`.
 - Segredos só em `.env` (ignorado) e secrets do GitHub. Use `.env.example` como referência.
 - Código: sem `any`; funções puras no domínio; mappers isolam o formato do Spotify (anti-corruption layer).
+- **CI** (`.github/workflows/ci.yml` e `pr-title.yml`, ADR 0009): em PRs para `main` roda commitlint (commits e título), lint, Prettier, typecheck, testes com cobertura mínima e build. Antes de abrir PR, rode `npm run lint && npm run format:check && npm run typecheck && npm run test:ci && npm run build`.
 - Siga `.claude/skills/angular-developer` e `.claude/skills/angular-new-app` (instaladas de https://github.com/angular/skills).
 
 ## Angular — regras do projeto
