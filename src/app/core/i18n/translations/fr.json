@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "ISRC manquants",
+    "subtitle": "Titres du contrat du producteur qui ne figurent pas encore dans nos bases de données.",
+    "language": "Langue"
+  },
+  "tracks": {
+    "listLabel": "Titres",
+    "released": "Sortie",
+    "duration": "Durée",
+    "isrc": "ISRC",
+    "artists": "Artistes",
+    "album": "Album",
+    "openOnSpotify": "Ouvrir dans Spotify",
+    "preview": "Extrait audio",
+    "coverAlt": "Pochette de l'album {{album}}",
+    "coverMissing": "Pochette indisponible",
+    "availableInBR": "Disponible au Brésil",
+    "unavailableInBR": "Indisponible au Brésil",
+    "notFound": "ISRC introuvable sur Spotify",
+    "failed": "Impossible de charger cet ISRC"
+  },
+  "status": {
+    "loading": "Chargement des titres…",
+    "empty": "Aucun titre à afficher.",
+    "partialFailure": "Certains ISRC n'ont pas pu être chargés. ISRC concernés : {{count}}",
+    "unavailableTitle": "Données musicales indisponibles",
+    "unavailableMessage": "Impossible de joindre Spotify pour le moment. Veuillez réessayer dans un instant.",
+    "retry": "Réessayer"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "ISRCs ausentes",
+    "subtitle": "Faixas do contrato do produtor que ainda não constam em nossas bases.",
+    "language": "Idioma"
+  },
+  "tracks": {
+    "listLabel": "Faixas",
+    "released": "Lançamento",
+    "duration": "Duração",
+    "isrc": "ISRC",
+    "artists": "Artistas",
+    "album": "Álbum",
+    "openOnSpotify": "Abrir no Spotify",
+    "preview": "Prévia do áudio",
+    "coverAlt": "Capa do álbum {{album}}",
+    "coverMissing": "Capa indisponível",
+    "availableInBR": "Disponível no Brasil",
+    "unavailableInBR": "Indisponível no Brasil",
+    "notFound": "ISRC não encontrado no Spotify",
+    "failed": "Não foi possível carregar este ISRC"
+  },
+  "status": {
+    "loading": "Carregando faixas…",
+    "empty": "Nenhuma faixa para exibir.",
+    "partialFailure": "Alguns ISRCs não puderam ser carregados. ISRCs afetados: {{count}}",
+    "unavailableTitle": "Dados musicais indisponíveis",
+    "unavailableMessage": "Não foi possível acessar o Spotify agora. Tente novamente em instantes.",
+    "retry": "Tentar novamente"
+  }
+}

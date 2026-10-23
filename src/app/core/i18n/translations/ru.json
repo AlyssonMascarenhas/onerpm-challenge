@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "Отсутствующие ISRC",
+    "subtitle": "Треки из контракта продюсера, которых пока нет в наших базах данных.",
+    "language": "Язык"
+  },
+  "tracks": {
+    "listLabel": "Треки",
+    "released": "Дата выпуска",
+    "duration": "Длительность",
+    "isrc": "ISRC",
+    "artists": "Исполнители",
+    "album": "Альбом",
+    "openOnSpotify": "Открыть в Spotify",
+    "preview": "Фрагмент аудио",
+    "coverAlt": "Обложка альбома «{{album}}»",
+    "coverMissing": "Обложка недоступна",
+    "availableInBR": "Доступен в Бразилии",
+    "unavailableInBR": "Недоступен в Бразилии",
+    "notFound": "ISRC не найден в Spotify",
+    "failed": "Не удалось загрузить этот ISRC"
+  },
+  "status": {
+    "loading": "Загрузка треков…",
+    "empty": "Нет треков для отображения.",
+    "partialFailure": "Некоторые ISRC не удалось загрузить. Затронуто ISRC: {{count}}",
+    "unavailableTitle": "Музыкальные данные недоступны",
+    "unavailableMessage": "Сейчас не удаётся связаться со Spotify. Повторите попытку чуть позже.",
+    "retry": "Повторить"
+  }
+}
