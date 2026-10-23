@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  max-width: var(--orp-page-width);
+  max-width: min(var(--orp-page-width), 64rem);
   margin: 0 auto;
   padding: 0.5rem var(--orp-gutter);
 }

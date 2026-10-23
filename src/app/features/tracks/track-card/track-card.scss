@@ -208,3 +208,94 @@
     margin-top: 0;
   }
 }
+
+/*
+ * Alone in its row (a phone), a tall card would fill the whole screen and still need scrolling. The card turns
+ * into a compact one: a small cover beside the badge, title and artists, then the facts, then the two actions.
+ * The body stops being a box of its own so its parts can sit in the card's grid.
+ */
+@container (width < 34.25rem) {
+  :host {
+    display: block;
+    height: auto;
+  }
+
+  .card {
+    --action-min-height: 2.5rem;
+
+    display: grid;
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-row: auto;
+    gap: 0.5rem 0.75rem;
+    height: auto;
+    padding: 0.75rem;
+    border-radius: 1rem;
+  }
+
+  .card__cover {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
+    overflow: hidden;
+    border-radius: 0.75rem;
+  }
+
+  .card__fallback {
+    font-size: 2rem;
+  }
+
+  .card__play {
+    right: 0.35rem;
+    bottom: 0.35rem;
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .card__play svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .card__body {
+    display: contents;
+  }
+
+  .card__badge {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+  }
+
+  .card__title {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 1.05rem;
+  }
+
+  .card__artists {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .card__meta {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    grid-template-rows: none;
+    gap: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .card__player {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+
+  .card__link {
+    grid-column: 1 / -1;
+    grid-row: 6;
+    align-self: stretch;
+  }
+}

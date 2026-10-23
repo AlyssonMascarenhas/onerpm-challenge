@@ -50,7 +50,7 @@ export class TracksPage {
   protected readonly affectedOpen = signal(false);
 
   protected readonly LookupStatus = LookupStatus;
-  protected readonly placeholders = [1, 2, 3];
+  protected readonly placeholders = [1, 2, 3, 4];
 
   constructor() {
     // Browser only: the server render shows the placeholders instead of waiting on Spotify.

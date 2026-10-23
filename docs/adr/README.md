@@ -30,3 +30,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0014 | [Testes de ponta a ponta e auditoria de acessibilidade](0014-testes-e2e-e-acessibilidade.md) | Aceito |
 | 0015 | [Acabamento da interface: alinhamento, aba, rodapé e ações](0015-acabamento-da-interface.md) | Aceito |
 | 0016 | [Barra de reprodução fixa, com início automático](0016-barra-de-reproducao-fixa.md) | Aceito |
+| 0017 | [Grade de 4 colunas e cartão compacto no celular](0017-grade-de-4-colunas-e-cartao-compacto.md) | Aceito |
