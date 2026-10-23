@@ -1,7 +1,7 @@
 import { ApplicationInitStatus, PLATFORM_ID, REQUEST } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { TranslocoService } from '@jsverse/transloco';
-import { throwError } from 'rxjs';
+import { Translation, TranslocoService } from '@jsverse/transloco';
+import { ReplaySubject, throwError } from 'rxjs';
 import { I18n } from './i18n';
 import { LANGUAGE_STORAGE_KEY } from './i18n.constants';
 import { Language } from './i18n.enums';
@@ -29,6 +29,33 @@ function setup({ platform = 'browser', acceptLanguage, browserLanguages = [] }: 
     ],
   });
   return { i18n: TestBed.inject(I18n), transloco: TestBed.inject(TranslocoService) };
+}
+
+/**
+ * Makes the loading of some languages wait until the test releases (or fails) it, to reproduce
+ * lazy chunks that finish in a different order than they were requested.
+ */
+function deferLoads(transloco: TranslocoService, languages: readonly Language[]) {
+  const realLoad = transloco.load.bind(transloco);
+  const pending = new Map<string, ReplaySubject<Translation>>();
+  const subjectOf = (language: string) => {
+    const subject = pending.get(language) ?? new ReplaySubject<Translation>(1);
+    pending.set(language, subject);
+    return subject;
+  };
+
+  vi.spyOn(transloco, 'load').mockImplementation((path, options) =>
+    languages.includes(path as Language) ? subjectOf(path) : realLoad(path, options),
+  );
+
+  return {
+    release: (language: Language) =>
+      realLoad(language).subscribe((translation) => {
+        subjectOf(language).next(translation);
+        subjectOf(language).complete();
+      }),
+    fail: (language: Language, error: Error) => subjectOf(language).error(error),
+  };
 }
 
 describe('I18n', () => {
@@ -217,6 +244,94 @@ describe('I18n', () => {
       expect(i18n.language()).toBe(Language.ES);
       expect(document.documentElement.lang).toBe('es');
       expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('es');
+    });
+  });
+
+  describe('overlapping language switches: only the latest selection takes effect', () => {
+    it('keeps the newer language when an older one finishes loading last', async () => {
+      const { i18n, transloco } = setup();
+      await i18n.init();
+      const loads = deferLoads(transloco, [Language.RU]);
+
+      const older = i18n.setLanguage(Language.RU); // still waiting for its chunk
+      await i18n.setLanguage(Language.FR); // newer, completes first
+      loads.release(Language.RU); // the older one finally arrives
+      await older;
+
+      expect(i18n.language()).toBe(Language.FR);
+      expect(transloco.getActiveLang()).toBe('fr');
+      expect(document.documentElement.lang).toBe('fr');
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('fr');
+      expect(transloco.translate('status.retry')).toBe('Réessayer');
+    });
+
+    it('still applies and saves a language that finishes in order', async () => {
+      const { i18n, transloco } = setup();
+      const loads = deferLoads(transloco, [Language.RU]);
+
+      const pending = i18n.setLanguage(Language.RU);
+      loads.release(Language.RU);
+      await pending;
+
+      expect(i18n.language()).toBe(Language.RU);
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
+    });
+
+    it('does not report an error for an older request that failed after being superseded', async () => {
+      const { i18n, transloco } = setup();
+      await i18n.init();
+      const loads = deferLoads(transloco, [Language.RU]);
+
+      const older = i18n.setLanguage(Language.RU);
+      await i18n.setLanguage(Language.FR);
+      loads.fail(Language.RU, new Error('chunk failed'));
+
+      await expect(older).resolves.toBeUndefined();
+      expect(i18n.language()).toBe(Language.FR);
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('fr');
+    });
+
+    it('keeps the current language when the newest selection fails, instead of resurrecting an older one', async () => {
+      const { i18n, transloco } = setup();
+      await i18n.init();
+      const loads = deferLoads(transloco, [Language.RU, Language.FR]);
+
+      const older = i18n.setLanguage(Language.RU);
+      const newest = i18n.setLanguage(Language.FR);
+      loads.fail(Language.FR, new Error('chunk failed'));
+      await expect(newest).rejects.toThrow('chunk failed');
+      loads.release(Language.RU);
+      await older;
+
+      expect(i18n.language()).toBe(Language.EN);
+      expect(document.documentElement.lang).toBe('en');
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+    });
+
+    it('lets a language chosen during startup win over the detected one', async () => {
+      const { i18n, transloco } = setup({ browserLanguages: ['ru'] });
+      const loads = deferLoads(transloco, [Language.RU]);
+
+      const startup = i18n.init(); // detected Russian, still loading
+      await i18n.setLanguage(Language.TR); // the visitor already picked Turkish
+      loads.release(Language.RU);
+      await startup;
+
+      expect(i18n.language()).toBe(Language.TR);
+      expect(transloco.getActiveLang()).toBe('tr');
+      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('tr');
+    });
+
+    it('does not fall back to English when startup was superseded', async () => {
+      const { i18n, transloco } = setup({ browserLanguages: ['ru'] });
+      const loads = deferLoads(transloco, [Language.RU]);
+
+      const startup = i18n.init();
+      await i18n.setLanguage(Language.ES);
+      loads.fail(Language.RU, new Error('chunk failed'));
+      await startup;
+
+      expect(i18n.language()).toBe(Language.ES);
     });
   });
 

@@ -17,6 +17,8 @@ export class I18n {
   /** Only present while rendering on the server. */
   private readonly _request = inject(REQUEST, { optional: true });
   private readonly _language = signal(DEFAULT_LANGUAGE);
+  /** Identifier of the newest language request; older ones must not commit. */
+  private _latestRequest = 0;
 
   public readonly options = LANGUAGE_OPTIONS;
   public readonly language = this._language.asReadonly();
@@ -40,10 +42,15 @@ export class I18n {
     }
   }
 
-  /** Switches language and remembers the choice. Rejects (keeping the current language) if it cannot load. */
+  /**
+   * Switches language and remembers the choice. Rejects (keeping the current language) if it cannot
+   * load. Only the latest selection takes effect: if the visitor picks another language while this
+   * one is still loading, this call resolves without applying or saving anything.
+   */
   public async setLanguage(language: Language): Promise<void> {
-    await this._apply(language);
-    this._storage.write(language);
+    if (await this._apply(language)) {
+      this._storage.write(language);
+    }
   }
 
   /** Saved choice first, then the browser's preferences; on the server, the request's `Accept-Language`. */
@@ -54,11 +61,28 @@ export class I18n {
     return [this._storage.read(), ...(this._document.defaultView?.navigator.languages ?? [])];
   }
 
-  private async _apply(language: Language): Promise<void> {
-    await firstValueFrom(this._transloco.load(language));
+  /**
+   * Loads and activates a language, unless a newer request superseded it while it was loading
+   * (lazy chunks finish in any order). Returns whether this request was the one applied.
+   */
+  private async _apply(language: Language): Promise<boolean> {
+    const request = ++this._latestRequest;
+    try {
+      await firstValueFrom(this._transloco.load(language));
+    } catch (error) {
+      if (request !== this._latestRequest) {
+        return false; // Nobody is waiting for this language any more: its failure is irrelevant.
+      }
+      throw error;
+    }
+    if (request !== this._latestRequest) {
+      return false;
+    }
+
     this._transloco.setActiveLang(language);
     this._language.set(language);
     this._document.documentElement.lang = this._localeOf(language);
+    return true;
   }
 
   private _localeOf(language: Language): string {
