@@ -21,10 +21,15 @@ export const ISRC_QUERY_PARAM = 'isrc';
 export const TRACKS_REQUEST_TIMEOUT_MS = 20_000;
 
 /**
- * Titles are compared with the root collation, not the UI language: the order must not change
- * when the visitor switches language (Latin always sorts before Cyrillic, for instance).
+ * Titles are compared with one fixed, explicitly supported locale, never the UI language nor the
+ * runtime default: the order must not change when the visitor switches language, nor differ
+ * between the server render and the browser (Latin sorts before Cyrillic, `Ä` next to `A`).
+ *
+ * `en` has no collation tailoring, so it yields the CLDR root order. Do not use `und`: it is
+ * not a supported locale, so `Intl.Collator` silently falls back to the runtime default
+ * (with `ru` Cyrillic would sort first, with `sv` `Ä` would sort after `Z`).
  */
-export const TITLE_SORT_LOCALE = 'und';
+export const TITLE_SORT_LOCALE = 'en';
 
 /** Where each kind of result lands in the list: real tracks first, then the ones we could not show. */
 export const RESULT_ORDER: Readonly<Record<LookupStatus, number>> = {

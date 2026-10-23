@@ -1,5 +1,6 @@
 import { LookupStatus } from '../../../contract/tracks.enums';
 import { sortResults } from './sort-results';
+import { TITLE_SORT_LOCALE } from './tracks.constants';
 import { errorResult, foundResult, notFoundResult, titles } from './testing/builders';
 
 describe('sortResults', () => {
@@ -119,6 +120,50 @@ describe('sortResults', () => {
 
   it('handles an empty list', () => {
     expect(sortResults([])).toEqual([]);
+  });
+
+  describe('collation locale', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it('is a locale the runtime really supports, so Intl never falls back to its default', () => {
+      expect(new Intl.Collator(TITLE_SORT_LOCALE).resolvedOptions().locale).toBe(TITLE_SORT_LOCALE);
+    });
+
+    it('sorts with that fixed locale unless another one is requested', () => {
+      const RealCollator = Intl.Collator;
+      const collator = vi.spyOn(Intl, 'Collator').mockImplementation(function (locales, options) {
+        return new RealCollator(locales, options);
+      } as typeof Intl.Collator);
+
+      sortResults([foundResult('b'), foundResult('a')]);
+
+      expect(collator).toHaveBeenCalledWith(TITLE_SORT_LOCALE, expect.any(Object));
+    });
+
+    /**
+     * Intl falls back to the runtime default locale when a tag is not supported (e.g. `und`).
+     * Emulates servers/browsers whose default is Russian, Swedish, ...: the order must not move.
+     */
+    it.each(['ru', 'sv', 'tr', 'pt-BR'])(
+      'gives the same order when the runtime default locale is %s',
+      (runtimeDefault) => {
+        const RealCollator = Intl.Collator;
+        vi.spyOn(Intl, 'Collator').mockImplementation(function (locales, options) {
+          const supported =
+            locales !== undefined && RealCollator.supportedLocalesOf(locales).length > 0;
+          return new RealCollator(supported ? locales : runtimeDefault, options);
+        } as typeof Intl.Collator);
+
+        const sorted = sortResults([
+          foundResult('Zebra'),
+          foundResult('Ä'),
+          foundResult('Нам не нравится'),
+          foundResult('Repente'),
+        ]);
+
+        expect(titles(sorted)).toEqual(['Ä', 'Repente', 'Zebra', 'Нам не нравится']);
+      },
+    );
   });
 
   it('accepts another locale, e.g. to follow a language-specific alphabet', () => {
