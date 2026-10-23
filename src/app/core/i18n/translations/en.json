@@ -2,7 +2,13 @@
   "app": {
     "title": "Missing ISRCs",
     "subtitle": "Tracks from the producer's contract that are not in our database yet.",
-    "language": "Language"
+    "language": "Language",
+    "eyebrow": "ISRC lookup",
+    "skipToContent": "Skip to content",
+    "theme": {
+      "toDark": "Switch to the dark theme",
+      "toLight": "Switch to the light theme"
+    }
   },
   "tracks": {
     "listLabel": "Tracks",

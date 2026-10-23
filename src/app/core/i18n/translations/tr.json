@@ -2,7 +2,13 @@
   "app": {
     "title": "Eksik ISRC'ler",
     "subtitle": "Yapımcı sözleşmesindeki ve henüz veri tabanlarımızda bulunmayan parçalar.",
-    "language": "Dil"
+    "language": "Dil",
+    "eyebrow": "ISRC sorgusu",
+    "skipToContent": "İçeriğe geç",
+    "theme": {
+      "toDark": "Koyu temaya geç",
+      "toLight": "Açık temaya geç"
+    }
   },
   "tracks": {
     "listLabel": "Parçalar",
