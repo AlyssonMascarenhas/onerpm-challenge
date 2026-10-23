@@ -88,31 +88,7 @@ test.describe('the page with the 10 tracks of the challenge', () => {
     );
     await expect(player).toHaveAttribute('title', /Spotify player for /);
     await expect(page.getByRole('button', { name: 'Listen to a preview' })).toHaveCount(9);
-  });
-
-  test('holds the place of the player while it loads: a spinner, and no jump when it arrives', async ({
-    page,
-  }) => {
-    let release!: () => void;
-    const gate = new Promise<void>((resolve) => (release = resolve));
-    await page.route('https://open.spotify.com/**', async (route) => {
-      await gate;
-      await route.fulfill({ contentType: 'text/html', body: '<!doctype html><p>player</p>' });
-    });
-    const card = page.locator('orp-track-card .card').first();
-
-    await page.getByRole('button', { name: 'Listen to a preview' }).first().click();
-
-    const loading = card.getByRole('status');
-    await expect(loading).toHaveText('Loading the player…');
-    const stage = await card.locator('.player__stage').boundingBox();
-    expect(stage?.height).toBe(152);
-    const heightWhileLoading = Math.round((await card.boundingBox())?.height ?? 0);
-
-    release();
-
-    await expect(loading).toHaveCount(0);
-    expect(Math.round((await card.boundingBox())?.height ?? 0)).toBe(heightWhileLoading);
+    await expect(page.getByRole('button', { name: 'Now playing' })).toHaveCount(1);
   });
 });
 

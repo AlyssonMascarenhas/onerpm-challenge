@@ -27,7 +27,9 @@
     "failed": "Не удалось загрузить этот ISRC",
     "listen": "Послушать фрагмент",
     "playerTitle": "Плеер Spotify: {{title}}",
-    "loadingPlayer": "Загрузка плеера…"
+    "loadingPlayer": "Загрузка плеера…",
+    "nowPlaying": "Сейчас играет",
+    "closePlayer": "Закрыть плеер"
   },
   "status": {
     "loading": "Загрузка треков…",

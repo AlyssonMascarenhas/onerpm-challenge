@@ -16,6 +16,18 @@
         <i class="pi pi-image" aria-hidden="true"></i>
       </div>
     }
+    @if (coverPlayable()) {
+      <!-- A pointer shortcut for the "listen" button below, which stays the accessible control. -->
+      <button
+        type="button"
+        class="card__play"
+        tabindex="-1"
+        aria-hidden="true"
+        (click)="playFromCover()"
+      >
+        <svg viewBox="0 0 24 24" focusable="false"><path [attr.d]="playPath" /></svg>
+      </button>
+    }
   </div>
 
   <div class="card__body">
@@ -47,7 +59,7 @@
       </div>
     </dl>
 
-    <orp-track-player [trackId]="track().id" [title]="track().title" />
+    <orp-track-player [track]="track()" />
 
     <orp-action-button
       class="card__link"

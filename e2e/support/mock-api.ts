@@ -57,13 +57,51 @@ export async function mockTracks(
   await page.route('**/api/tracks*', (route) => route.fulfill({ json: body }));
 }
 
-/** Keeps the tests hermetic: no real request to Spotify's player or image CDN. */
+const IFRAME_API_URL = 'https://open.spotify.com/embed/iframe-api/v1';
+
+/**
+ * A stand-in for Spotify's iFrame API script. Like the real one it replaces the element it is given with a
+ * player frame and answers with a controller; unlike it, it plays nothing and records what the page asked in
+ * `window.__spotify` (the tracks `created`, `loaded` after a swap and `played`), so tests can see it.
+ */
+const FAKE_IFRAME_API = `
+  window.__spotify = { created: [], loaded: [], played: [], destroyed: 0 };
+  window.onSpotifyIframeApiReady({
+    createController(element, options, callback) {
+      const frame = document.createElement('iframe');
+      const embed = (uri) => 'https://open.spotify.com/embed/track/' + uri.split(':')[2];
+      frame.src = embed(options.uri);
+      frame.height = options.height;
+      frame.width = options.width;
+      let current = options.uri;
+      const listeners = {};
+      element.replaceWith(frame);
+      window.__spotify.created.push(options);
+      frame.addEventListener('load', () => listeners.ready && listeners.ready());
+      callback({
+        addListener(event, listener) { listeners[event] = listener; },
+        loadUri(uri) {
+          current = uri;
+          window.__spotify.loaded.push(uri);
+          frame.src = embed(uri);
+        },
+        play() { window.__spotify.played.push(current); },
+        destroy() { window.__spotify.destroyed++; frame.remove(); },
+      });
+    },
+  });
+`;
+
+/** Keeps the tests hermetic: no real request to Spotify's player, script or image CDN. */
 export async function isolateSpotify(page: Page) {
   await page.route('https://open.spotify.com/**', (route) =>
     route.fulfill({
       contentType: 'text/html',
       body: '<!doctype html><title>Spotify</title><p>player</p>',
     }),
+  );
+  await page.route(IFRAME_API_URL, (route) =>
+    route.fulfill({ contentType: 'text/javascript', body: FAKE_IFRAME_API }),
   );
   await page.route('https://i.scdn.co/**', (route) =>
     route.fulfill({ contentType: 'image/png', body: PIXEL }),

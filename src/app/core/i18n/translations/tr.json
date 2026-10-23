@@ -27,7 +27,9 @@
     "failed": "Bu ISRC yüklenemedi",
     "listen": "Önizlemeyi dinle",
     "playerTitle": "{{title}} için Spotify oynatıcısı",
-    "loadingPlayer": "Oynatıcı yükleniyor…"
+    "loadingPlayer": "Oynatıcı yükleniyor…",
+    "nowPlaying": "Şimdi çalıyor",
+    "closePlayer": "Oynatıcıyı kapat"
   },
   "status": {
     "loading": "Parçalar yükleniyor…",

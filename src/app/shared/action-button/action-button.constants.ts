@@ -1,7 +1,7 @@
 import { ActionIcon } from './action-button.enums';
 
-/** The `d` of each mark's path, all drawn on a 24x24 canvas. */
-export const ACTION_ICON_PATHS: Readonly<Record<ActionIcon, string>> = {
+/** The `d` of the path of each still mark (the equalizer is drawn as moving bars), on a 24x24 canvas. */
+export const ACTION_ICON_PATHS: Readonly<Partial<Record<ActionIcon, string>>> = {
   [ActionIcon.Play]:
     'M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z',
   [ActionIcon.Spotify]:

@@ -29,3 +29,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0013 | [Cartões de faixa e player de prévia do Spotify](0013-cartoes-de-faixa-e-player-do-spotify.md) | Aceito |
 | 0014 | [Testes de ponta a ponta e auditoria de acessibilidade](0014-testes-e2e-e-acessibilidade.md) | Aceito |
 | 0015 | [Acabamento da interface: alinhamento, aba, rodapé e ações](0015-acabamento-da-interface.md) | Aceito |
+| 0016 | [Barra de reprodução fixa, com início automático](0016-barra-de-reproducao-fixa.md) | Aceito |

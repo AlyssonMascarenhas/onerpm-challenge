@@ -62,5 +62,15 @@ export const ACTION_COLORS = {
   },
 } as const;
 
+/**
+ * The play button that rises over a card's cover on hover, as on Spotify: its green with black ink (10:1),
+ * the same in both color schemes (the cover behind it can be anything). They become `--p-play-*`.
+ */
+export const PLAY_BUTTON_COLORS = {
+  background: '#1ed760',
+  hoverBackground: '#3be477',
+  color: '#000000',
+} as const;
+
 /** CSS layers: PrimeNG's styles sit below ours, so our rules win without `!important`. */
 export const PRIMENG_CSS_LAYER = { name: 'primeng', order: 'theme, base, primeng' } as const;

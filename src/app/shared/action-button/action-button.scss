@@ -52,3 +52,41 @@
     transition: none;
   }
 }
+
+/* The action in effect (the track playing) wears the accent ring, so it is found among ten identical buttons. */
+.action--current {
+  box-shadow:
+    0 0 0 2px var(--p-content-background),
+    0 0 0 4px var(--p-primary-color);
+}
+
+/* The equalizer of the track playing: the bars rise and fall out of step, as in the header's mark. */
+.action__bar {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  animation: equalize 1s ease-in-out infinite;
+}
+
+.action__bar--2 {
+  animation-delay: -0.35s;
+}
+
+.action__bar--3 {
+  animation-delay: -0.7s;
+}
+
+@keyframes equalize {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action__bar {
+    animation: none;
+  }
+}

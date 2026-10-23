@@ -27,7 +27,9 @@
     "failed": "No se pudo cargar este ISRC",
     "listen": "Escuchar una vista previa",
     "playerTitle": "Reproductor de Spotify para {{title}}",
-    "loadingPlayer": "Cargando el reproductor…"
+    "loadingPlayer": "Cargando el reproductor…",
+    "nowPlaying": "Reproduciendo",
+    "closePlayer": "Cerrar el reproductor"
   },
   "status": {
     "loading": "Cargando pistas…",

@@ -22,9 +22,13 @@ export class ActionButton {
   public readonly href = input<string>();
   /** The "(opens in a new tab)" text announced after the label of a link. */
   public readonly newTabLabel = input<string>();
+  /** This action is the one in effect (e.g. the track playing): marked for assistive technology and in color. */
+  public readonly current = input(false);
 
   public readonly pressed = output<void>();
 
-  protected readonly iconPath = computed(() => ACTION_ICON_PATHS[this.icon()]);
+  protected readonly iconPath = computed(() => ACTION_ICON_PATHS[this.icon()] ?? '');
+  /** The equalizer is drawn as bars that move; every other mark is a still path. */
+  protected readonly animated = computed(() => this.icon() === ActionIcon.Equalizer);
   protected readonly iconName = computed(() => `action__mark--${this.icon()}`);
 }
