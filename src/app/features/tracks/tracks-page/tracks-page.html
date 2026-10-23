@@ -25,33 +25,22 @@
       <p-message severity="warn" role="status">{{ partialFailure() }}</p-message>
     }
 
-    <ol class="list">
+    <ul class="grid">
       @for (item of store.items(); track item.isrc + item.status) {
-        <li class="list__item">
-          @switch (item.status) {
-            @case (LookupStatus.FOUND) {
-              <strong>{{ item.track.title }}</strong>
-              <span class="muted">
-                {{ item.track.artists.join(', ') }} · {{ duration(item.track.durationMs) }}
-              </span>
-            }
-            @case (LookupStatus.NOT_FOUND) {
-              <strong>{{ item.isrc }}</strong>
-              <span class="muted">{{ notFound() }}</span>
-            }
-            @default {
-              <strong>{{ item.isrc }}</strong>
-              <span class="muted">{{ failed() }}</span>
-            }
+        <li class="grid__item">
+          @if (item.status === LookupStatus.FOUND) {
+            <orp-track-card [track]="item.track" />
+          } @else {
+            <orp-isrc-card [isrc]="item.isrc" [status]="item.status" />
           }
         </li>
       }
-    </ol>
+    </ul>
   } @else {
     <p class="visually-hidden" role="status">{{ loading() }}</p>
-    <div class="placeholders" aria-hidden="true">
+    <div class="grid" aria-hidden="true">
       @for (placeholder of placeholders; track placeholder) {
-        <p-skeleton height="4.5rem" borderRadius="1rem" />
+        <p-skeleton height="28rem" borderRadius="1.25rem" />
       }
     </div>
   }

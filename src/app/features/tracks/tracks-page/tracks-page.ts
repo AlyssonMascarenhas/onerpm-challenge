@@ -10,13 +10,14 @@ import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { LookupStatus } from '../../../../contract/tracks.enums';
-import { formatDuration } from '../format-duration';
+import { IsrcCard } from '../isrc-card/isrc-card';
+import { TrackCard } from '../track-card/track-card';
 import { TracksStore } from '../tracks-store';
 
 /** The page: a hero, then the tracks (or why there are none). */
 @Component({
   selector: 'orp-tracks-page',
-  imports: [Button, Message, Skeleton],
+  imports: [Button, Message, Skeleton, TrackCard, IsrcCard],
   templateUrl: './tracks-page.html',
   styleUrl: './tracks-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -31,8 +32,6 @@ export class TracksPage {
   protected readonly unavailableMessage = translateSignal('status.unavailableMessage');
   protected readonly retry = translateSignal('status.retry');
   protected readonly listLabel = translateSignal('tracks.listLabel');
-  protected readonly notFound = translateSignal('tracks.notFound');
-  protected readonly failed = translateSignal('tracks.failed');
   protected readonly partialFailure = translateSignal('status.partialFailure', {
     count: computed(() => String(this.store.failedCount())),
   });
@@ -41,7 +40,7 @@ export class TracksPage {
   protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());
 
   protected readonly LookupStatus = LookupStatus;
-  protected readonly placeholders = [1, 2, 3, 4];
+  protected readonly placeholders = [1, 2, 3];
 
   constructor() {
     // Browser only: the server render shows the placeholders instead of waiting on Spotify.
@@ -50,9 +49,5 @@ export class TracksPage {
 
   protected reload(): void {
     this.store.load();
-  }
-
-  protected duration(durationMs: number): string {
-    return formatDuration(durationMs);
   }
 }

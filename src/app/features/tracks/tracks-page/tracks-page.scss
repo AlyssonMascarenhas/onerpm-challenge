@@ -64,24 +64,16 @@
   margin: 0.25rem 0 0;
 }
 
-.placeholders,
-.list {
+/* One column on phones, two on tablets, three on desktops, each card at least 19rem wide. */
+.grid {
   display: grid;
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: 1.25rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.list__item {
-  display: grid;
-  gap: 0.15rem;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 1rem;
-  background: var(--p-content-background);
-}
-
-.muted {
-  color: var(--orp-text-muted);
+.grid__item {
+  min-width: 0;
 }
