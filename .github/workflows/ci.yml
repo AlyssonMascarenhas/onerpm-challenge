@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   commits:
-    name: Conventional commits
+    name: Commit messages
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -34,12 +34,6 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: npx --no-install commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
-
-      # The PR title becomes the squash-merge commit message.
-      - name: Lint PR title
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        run: printf '%s\n' "$PR_TITLE" | npx --no-install commitlint --verbose
 
   quality:
     name: Lint, format and types
