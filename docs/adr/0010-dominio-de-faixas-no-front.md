@@ -15,8 +15,12 @@ Código da feature em `src/app/features/tracks/`, sem componentes ainda (a UI ve
 
 - **Ordenação (`sortResults`)** com `Intl.Collator` e sensibilidade `base`: ignora caixa, acentos **e pontuação**
   (`...É pra Você` fica entre `D` e `L`, não antes de `A`) e compara números por valor (`Track 2` < `Track 10`).
-  Empates mantêm a ordem de entrada. A localidade é a **raiz (`und`)**, não o idioma da interface: trocar de idioma
-  não pode reordenar a lista (latinos sempre antes de cirílicos). A função aceita outra localidade se isso mudar.
+  Empates mantêm a ordem de entrada. A localidade é **fixa e explícita: `en`** (sem _tailoring_, equivale à ordem raiz do CLDR), nem o idioma da
+  interface nem o padrão do runtime: trocar de idioma, ou renderizar no servidor e no navegador, não pode reordenar a
+  lista (latinos antes de cirílicos). **`und` não serve**: não é uma localidade suportada e o `Intl.Collator` cai
+  silenciosamente no padrão do runtime (com `ru` o cirílico viria primeiro; com `sv`, `Ä` depois de `Z`). Testes
+  simulam runtimes com padrão `ru`, `sv`, `tr` e `pt-BR` e garantem que `en` é uma localidade realmente suportada.
+  A função aceita outra localidade se isso mudar.
 - **Quem não tem título** (ISRC não encontrada ou com falha) **não some**: vai depois das faixas — não encontradas
   primeiro, depois as com falha — ordenadas por ISRC. Assim o produtor vê quais das 10 ISRCs não vieram.
 - **Duração (`formatDuration`)** em `mm:ss`, **arredondada ao segundo mais próximo**; os minutos não passam por `59`
@@ -35,6 +39,7 @@ Código da feature em `src/app/features/tracks/`, sem componentes ainda (a UI ve
 
 - **Ordenar com `localeCompare` simples** — pontuação e acentos mudam a posição (`...É pra Você` iria para o topo).
 - **Ordenar conforme o idioma da interface** — a ordem mudaria ao trocar de idioma; surpreende o usuário.
+- **Colação `und` (raiz)** — parece neutra, mas depende do padrão do runtime (ver acima); descoberto na revisão do PR #4.
 - **Truncar a duração (`floor`)** — `2:57` para 177,6 s; o arredondamento é mais fiel ao valor real.
 - **`rxResource`/`resource` do Angular** — ainda experimentais na v21 e escondem os estados de falha parcial que a UI precisa.
 - **NgRx/estado global** — peso e cerimônia desnecessários para uma tela.
