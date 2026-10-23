@@ -84,7 +84,8 @@ export class I18n {
     this._transloco.setActiveLang(language);
     this._language.set(language);
     this._document.documentElement.lang = this._localeOf(language);
-    this._title.setTitle(this._transloco.translate('app.title'));
+    // The tab carries the product name ("Consulta de ISRC"), not the page heading.
+    this._title.setTitle(this._transloco.translate('app.eyebrow'));
     return true;
   }
 

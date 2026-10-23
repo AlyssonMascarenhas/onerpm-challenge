@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Koyu temaya geç",
       "toLight": "Açık temaya geç"
-    }
+    },
+    "newTab": "yeni sekmede açılır"
   },
   "tracks": {
     "listLabel": "Parçalar",
@@ -26,7 +27,7 @@
     "failed": "Bu ISRC yüklenemedi",
     "listen": "Önizlemeyi dinle",
     "playerTitle": "{{title}} için Spotify oynatıcısı",
-    "newTab": "yeni sekmede açılır"
+    "loadingPlayer": "Oynatıcı yükleniyor…"
   },
   "status": {
     "loading": "Parçalar yükleniyor…",
@@ -34,6 +35,16 @@
     "partialFailure": "Bazı ISRC'ler yüklenemedi. Etkilenen ISRC sayısı: {{count}}",
     "unavailableTitle": "Müzik verileri kullanılamıyor",
     "unavailableMessage": "Şu anda Spotify'a ulaşılamıyor. Lütfen biraz sonra tekrar deneyin.",
-    "retry": "Tekrar dene"
+    "retry": "Tekrar dene",
+    "showAffected": "Etkilenen ISRC'leri göster",
+    "affectedTitle": "Yüklenemeyen ISRC'ler",
+    "affectedList": "Etkilenen ISRC'ler",
+    "affectedHint": "Spotify bunlar için yanıt vermedi. Yeniden sorgulamak için tekrar deneyin.",
+    "close": "Kapat"
+  },
+  "footer": {
+    "builtFor": "ONErpm ön yüz teknik görevi için geliştirildi.",
+    "sourceCode": "Kaynak kodu",
+    "dataFrom": "Parça verileri Spotify Web API'den alınmıştır."
   }
 }

@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Mudar para o tema escuro",
       "toLight": "Mudar para o tema claro"
-    }
+    },
+    "newTab": "abre em uma nova aba"
   },
   "tracks": {
     "listLabel": "Faixas",
@@ -26,7 +27,7 @@
     "failed": "Não foi possível carregar este ISRC",
     "listen": "Ouvir uma prévia",
     "playerTitle": "Player do Spotify para {{title}}",
-    "newTab": "abre em uma nova aba"
+    "loadingPlayer": "Carregando o player…"
   },
   "status": {
     "loading": "Carregando faixas…",
@@ -34,6 +35,16 @@
     "partialFailure": "Alguns ISRCs não puderam ser carregados. ISRCs afetados: {{count}}",
     "unavailableTitle": "Dados musicais indisponíveis",
     "unavailableMessage": "Não foi possível acessar o Spotify agora. Tente novamente em instantes.",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "showAffected": "Ver ISRCs afetados",
+    "affectedTitle": "ISRCs que não puderam ser carregados",
+    "affectedList": "ISRCs afetados",
+    "affectedHint": "O Spotify não respondeu para estes. Tente novamente para consultá-los outra vez.",
+    "close": "Fechar"
+  },
+  "footer": {
+    "builtFor": "Desenvolvido para o desafio técnico de front-end da ONErpm.",
+    "sourceCode": "Código-fonte",
+    "dataFrom": "Dados das faixas da Spotify Web API."
   }
 }

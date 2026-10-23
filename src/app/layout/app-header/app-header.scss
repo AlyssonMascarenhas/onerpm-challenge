@@ -1,3 +1,11 @@
+/*
+ * The host element must not create a box of its own: the sticky header needs the whole page as its
+ * containing block, and `orp-root` is a flex column that would otherwise shrink the host to the header's size.
+ */
+:host {
+  display: contents;
+}
+
 .header {
   position: sticky;
   top: 0;

@@ -8,7 +8,8 @@
     "theme": {
       "toDark": "Cambiar al tema oscuro",
       "toLight": "Cambiar al tema claro"
-    }
+    },
+    "newTab": "se abre en una pestaña nueva"
   },
   "tracks": {
     "listLabel": "Pistas",
@@ -26,7 +27,7 @@
     "failed": "No se pudo cargar este ISRC",
     "listen": "Escuchar una vista previa",
     "playerTitle": "Reproductor de Spotify para {{title}}",
-    "newTab": "se abre en una pestaña nueva"
+    "loadingPlayer": "Cargando el reproductor…"
   },
   "status": {
     "loading": "Cargando pistas…",
@@ -34,6 +35,16 @@
     "partialFailure": "No se pudieron cargar algunos ISRC. ISRC afectados: {{count}}",
     "unavailableTitle": "Datos musicales no disponibles",
     "unavailableMessage": "No pudimos conectar con Spotify en este momento. Inténtalo de nuevo en unos instantes.",
-    "retry": "Intentar de nuevo"
+    "retry": "Intentar de nuevo",
+    "showAffected": "Ver los ISRC afectados",
+    "affectedTitle": "ISRC que no se pudieron cargar",
+    "affectedList": "ISRC afectados",
+    "affectedHint": "Spotify no respondió para estos. Inténtalo de nuevo para consultarlos otra vez.",
+    "close": "Cerrar"
+  },
+  "footer": {
+    "builtFor": "Desarrollado para el desafío técnico de front-end de ONErpm.",
+    "sourceCode": "Código fuente",
+    "dataFrom": "Datos de las pistas de la Spotify Web API."
   }
 }
