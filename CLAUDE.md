@@ -19,6 +19,7 @@ ordenadas por título. Sem persistência. O enunciado original está no `README.
 - Código: sem `any`; funções puras no domínio; mappers isolam o formato do Spotify (anti-corruption layer).
 - **Organização do código (ADR 0008, imposto pelo ESLint)**: por domínio (pasta), `interface` → `<domínio>.interfaces.ts`, `type` → `<domínio>.types.ts`, `enum` → `<domínio>.enums.ts`, constantes `UPPER_SNAKE_CASE` → `<domínio>.constants.ts`. Conjuntos fechados de valores são `enum`, nunca _string literals_ soltas.
 - **Classes**: propriedades privadas com prefixo `_` (`private readonly _fetchFn`); modificador de acesso sempre explícito (`public`/`private`/`protected`, exceto no `constructor`); laço infinito com `while (true)`.
+- **CI** (`.github/workflows/ci.yml` e `pr-title.yml`, ADR 0009): em PRs para `main` roda commitlint (commits e título), lint, Prettier, typecheck, testes com cobertura mínima e build. Antes de abrir PR, rode `npm run lint && npm run format:check && npm run typecheck && npm run test:ci && npm run build`.
 - Siga `.claude/skills/angular-developer` e `.claude/skills/angular-new-app` (instaladas de https://github.com/angular/skills).
 
 ## Angular — regras do projeto
