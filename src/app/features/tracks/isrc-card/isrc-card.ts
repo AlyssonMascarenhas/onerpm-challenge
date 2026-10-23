@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
 import { LookupStatus } from '../../../../contract/tracks.enums';
+import { CopyButton } from '../../../shared/copy-button/copy-button';
 import { UnresolvedStatus } from '../tracks.types';
 
 /**
@@ -9,6 +10,7 @@ import { UnresolvedStatus } from '../tracks.types';
  */
 @Component({
   selector: 'orp-isrc-card',
+  imports: [CopyButton],
   templateUrl: './isrc-card.html',
   styleUrl: './isrc-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -19,6 +21,9 @@ export class IsrcCard {
 
   private readonly _notFound = translateSignal('tracks.notFound');
   private readonly _failed = translateSignal('tracks.failed');
+
+  protected readonly copyLabel = translateSignal('copy.copyIsrc', { isrc: this.isrc });
+  protected readonly copied = translateSignal('copy.copied');
 
   protected readonly isNotFound = computed(() => this.status() === LookupStatus.NOT_FOUND);
   protected readonly message = computed(() =>

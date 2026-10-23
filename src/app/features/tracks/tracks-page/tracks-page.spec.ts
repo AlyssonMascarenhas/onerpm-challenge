@@ -292,6 +292,178 @@ describe('TracksPage', () => {
       });
     });
 
+    describe('toolbar: filter, summary and ISRCs not in the database', () => {
+      const LIST = [
+        foundResult('Louca', { isrc: 'BXKZM1900345' }),
+        foundResult('...É pra Você', { isrc: 'BR1SP1200071' }),
+        foundResult('IRON MAIDEN', { isrc: 'NO1R42509310' }),
+        notFoundResult('XX1AA0000002'),
+        notFoundResult('XX1AA0000001'),
+      ];
+      const loaded = async (language?: Language, results = LIST) => {
+        const page = await render({ language });
+        page.requests[0].next(results);
+        await settle(page.fixture);
+        return page;
+      };
+      const input = (fixture: ComponentFixture<TracksPage>) =>
+        root(fixture).querySelector('input.toolbar__input') as HTMLInputElement;
+      const type = async (fixture: ComponentFixture<TracksPage>, value: string) => {
+        input(fixture).value = value;
+        input(fixture).dispatchEvent(new Event('input'));
+        await settle(fixture);
+      };
+      const summary = (fixture: ComponentFixture<TracksPage>) =>
+        text(root(fixture).querySelector('.toolbar__summary'));
+      const missingTrigger = (fixture: ComponentFixture<TracksPage>) =>
+        root(fixture).querySelector('button.toolbar__missing') as HTMLButtonElement | null;
+      const dialog = () => document.body.querySelector('[role="dialog"]') as HTMLElement | null;
+
+      afterEach(() => document.body.querySelectorAll('p-dialog').forEach((d) => d.remove()));
+
+      it('has a labelled filter field inside a search landmark', async () => {
+        const { fixture } = await loaded();
+
+        expect(root(fixture).querySelector('[role="search"]')).not.toBeNull();
+        expect(input(fixture).getAttribute('aria-label')).toBe('Filter by track name or ISRC');
+        expect(input(fixture).placeholder).toBe('Track name or ISRC');
+        expect(input(fixture).value).toBe('');
+      });
+
+      it('says how many ISRCs were found out of the total', async () => {
+        const { fixture } = await loaded();
+
+        expect(summary(fixture)).toBe('3 of 5 ISRCs found');
+      });
+
+      it('has no toolbar before the answer arrives, or when the provider is down', async () => {
+        const { fixture, requests } = await render();
+        expect(root(fixture).querySelector('.toolbar')).toBeNull();
+
+        requests[0].error(new TracksUnavailableError());
+        await settle(fixture);
+
+        expect(root(fixture).querySelector('.toolbar')).toBeNull();
+      });
+
+      it('shows only the tracks whose title matches, and says how many of the list', async () => {
+        const { fixture } = await loaded();
+
+        await type(fixture, 'louc');
+
+        expect(items(fixture)).toEqual(['Louca']);
+        expect(summary(fixture)).toBe('Showing 1 of 5');
+      });
+
+      it('matches an ISRC, with or without separators, and the ISRCs that have no track', async () => {
+        const { fixture } = await loaded();
+
+        await type(fixture, 'br1sp-1200071');
+        expect(items(fixture)).toEqual(['...É pra Você']);
+
+        await type(fixture, 'XX1AA');
+        expect(items(fixture)).toEqual([
+          'XX1AA0000001 ISRC not found on Spotify',
+          'XX1AA0000002 ISRC not found on Spotify',
+        ]);
+      });
+
+      it('says when nothing matches, and the empty text follows the query', async () => {
+        const { fixture } = await loaded();
+
+        await type(fixture, 'zzzz');
+
+        expect(items(fixture)).toEqual([]);
+        expect(text(root(fixture).querySelector('.empty__text'))).toBe('Nothing matches “zzzz”.');
+      });
+
+      it('has no empty message while something matches', async () => {
+        const { fixture } = await loaded();
+
+        await type(fixture, 'louc');
+
+        expect(root(fixture).querySelector('.empty')).toBeNull();
+      });
+
+      it('is cleared by its button, which only exists while there is a query', async () => {
+        const { fixture } = await loaded();
+        expect(root(fixture).querySelector('.toolbar__clear')).toBeNull();
+        await type(fixture, 'louc');
+
+        (root(fixture).querySelector('.toolbar__clear') as HTMLButtonElement).click();
+        await settle(fixture);
+
+        expect(input(fixture).value).toBe('');
+        expect(items(fixture)).toHaveLength(5);
+        expect(root(fixture).querySelector('.toolbar__clear')).toBeNull();
+      });
+
+      it('gives the focus back to the field after clearing, whichever way it was cleared', async () => {
+        const { fixture } = await loaded();
+        await type(fixture, 'louc');
+        (root(fixture).querySelector('.toolbar__clear') as HTMLButtonElement).click();
+        await settle(fixture);
+        expect(document.activeElement).toBe(input(fixture));
+
+        await type(fixture, 'zzzz');
+        (document.activeElement as HTMLElement).blur();
+        (root(fixture).querySelector('.empty button') as HTMLButtonElement).click();
+        await settle(fixture);
+        expect(document.activeElement).toBe(input(fixture));
+      });
+
+      it('is cleared by Escape, and by the button of the empty message', async () => {
+        const { fixture } = await loaded();
+        await type(fixture, 'louc');
+
+        input(fixture).dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+        await settle(fixture);
+        expect(items(fixture)).toHaveLength(5);
+
+        await type(fixture, 'zzzz');
+        (root(fixture).querySelector('.empty button') as HTMLButtonElement).click();
+        await settle(fixture);
+        expect(items(fixture)).toHaveLength(5);
+      });
+
+      it('counts the ISRCs that are not in the database, in a button', async () => {
+        const { fixture } = await loaded();
+
+        expect(text(missingTrigger(fixture))).toBe('ISRCs not in our database: 2');
+        expect(missingTrigger(fixture)?.getAttribute('aria-haspopup')).toBe('dialog');
+      });
+
+      it('offers no such button when every ISRC has a track', async () => {
+        const { fixture } = await loaded(undefined, [foundResult('Louca')]);
+
+        expect(missingTrigger(fixture)).toBeNull();
+      });
+
+      it('opens a dialog with those ISRCs, in order, and nothing else', async () => {
+        const { fixture } = await loaded();
+
+        missingTrigger(fixture)?.click();
+        await settle(fixture);
+
+        expect(text(dialog()?.querySelector('.p-dialog-title, [id$="_header"]'))).toBe(
+          'ISRCs not in our database',
+        );
+        expect(
+          [...(dialog()?.querySelectorAll('.affected__isrc') ?? [])].map((item) => text(item)),
+        ).toEqual(['XX1AA0000001', 'XX1AA0000002']);
+      });
+
+      it('is in the visitor language', async () => {
+        const { fixture } = await loaded(Language.PT);
+
+        expect(summary(fixture)).toBe('3 de 5 ISRCs encontrados');
+        expect(text(missingTrigger(fixture))).toBe('ISRCs que não constam na nossa base: 2');
+        expect(input(fixture).getAttribute('aria-label')).toBe(
+          'Filtrar por nome da música ou ISRC',
+        );
+      });
+    });
+
     it('is not an alert when only some ISRCs failed', async () => {
       const { fixture, requests } = await render();
 

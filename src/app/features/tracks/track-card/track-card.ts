@@ -14,6 +14,7 @@ import { I18n } from '../../../core/i18n/i18n';
 import { ActionButton } from '../../../shared/action-button/action-button';
 import { ACTION_ICON_PATHS } from '../../../shared/action-button/action-button.constants';
 import { ActionIcon } from '../../../shared/action-button/action-button.enums';
+import { CopyButton } from '../../../shared/copy-button/copy-button';
 import { formatDuration } from '../format-duration';
 import { formatReleaseDate } from '../format-release-date';
 import { NowPlaying } from '../now-playing';
@@ -23,7 +24,7 @@ import { TrackPlayer } from '../track-player/track-player';
 /** One track: cover, title, artists, release date, duration, Brazil availability, player and link. */
 @Component({
   selector: 'orp-track-card',
-  imports: [ActionButton, Tag, TrackPlayer],
+  imports: [ActionButton, CopyButton, Tag, TrackPlayer],
   templateUrl: './track-card.html',
   styleUrl: './track-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,6 +69,8 @@ export class TrackCard {
     available: translateSignal('tracks.availableInBR'),
     unavailable: translateSignal('tracks.unavailableInBR'),
     openOnSpotify: translateSignal('tracks.openOnSpotify'),
+    copyIsrc: translateSignal('copy.copyIsrc', { isrc: computed(() => this.track().isrc) }),
+    copied: translateSignal('copy.copied'),
     newTab: translateSignal('app.newTab'),
   };
 

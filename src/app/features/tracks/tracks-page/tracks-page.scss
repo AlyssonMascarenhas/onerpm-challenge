@@ -80,30 +80,98 @@
   border-radius: 0.25rem;
 }
 
-.affected__hint {
-  margin: 0 0 1rem;
+/* Filter, how many were found, and the ISRCs that are not in the database. */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.toolbar__search {
+  flex: 1 1 16rem;
+  max-width: 26rem;
+}
+
+.toolbar__search p-iconfield {
+  position: relative;
+  display: block;
+}
+
+.toolbar__input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.toolbar__clear {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--orp-text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.toolbar__clear:hover {
+  background: var(--p-content-hover-background);
+  color: var(--p-text-color);
+}
+
+.toolbar__clear:focus-visible,
+.toolbar__missing:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+}
+
+.toolbar__summary {
+  flex: 1 1 auto;
+  margin: 0;
   color: var(--orp-text-muted);
 }
 
-/* Many ISRCs scroll inside the dialog; the list takes focus so the keyboard can scroll it. */
-.affected__list {
-  max-height: min(50vh, 20rem);
-  margin: 0;
-  padding: 0.5rem 0.75rem;
-  overflow-y: auto;
-  list-style: none;
+.toolbar__missing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
   border: 1px solid var(--p-content-border-color);
-  border-radius: 0.75rem;
+  border-radius: 999px;
+  background: var(--p-content-background);
+  font: inherit;
+  font-weight: 600;
+  color: var(--p-text-color);
+  cursor: pointer;
 }
 
-.affected__isrc {
-  padding: 0.4rem 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  letter-spacing: 0.02em;
+.toolbar__missing:hover {
+  background: var(--p-content-hover-background);
 }
 
-.affected__isrc + .affected__isrc {
-  border-top: 1px solid var(--p-content-border-color);
+/* Nothing matches the filter. */
+.empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--p-content-border-color);
+  border-radius: 1rem;
+}
+
+.empty__text {
+  margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .alert__title {

@@ -48,5 +48,21 @@
     "builtFor": "Développé pour le défi technique front-end d'ONErpm.",
     "sourceCode": "Code source",
     "dataFrom": "Données des titres issues de la Spotify Web API."
+  },
+  "list": {
+    "filterLabel": "Filtrer par titre du morceau ou ISRC",
+    "filterPlaceholder": "Titre du morceau ou ISRC",
+    "filterClear": "Effacer le filtre",
+    "filterCount": "{{shown}} affichés sur {{total}}",
+    "filterEmpty": "Aucun résultat pour « {{query}} ».",
+    "summary": "{{found}} ISRC trouvés sur {{total}}",
+    "missingButton": "ISRC absents de notre base : {{count}}",
+    "missingTitle": "ISRC absents de notre base",
+    "missingHint": "Spotify n'a pas de morceau pour ces ISRC. Copiez-les pour les chercher ailleurs."
+  },
+  "copy": {
+    "copyIsrc": "Copier l'ISRC {{isrc}}",
+    "copied": "Copié",
+    "copyAll": "Tout copier"
   }
 }
