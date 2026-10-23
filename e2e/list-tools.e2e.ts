@@ -101,6 +101,29 @@ test.describe('filter', () => {
     await expect(filterInput(page)).toHaveValue('');
   });
 
+  test('keeps the focus in the field after clearing, so another filter can be typed at once', async ({
+    page,
+  }) => {
+    await filterInput(page).fill('louc');
+    await page.getByRole('button', { name: 'Clear the filter' }).click();
+    await expect(filterInput(page)).toBeFocused();
+
+    await page.keyboard.type('quase');
+
+    await expect(page.locator('orp-track-card')).toHaveCount(1);
+
+    await filterInput(page).fill('zzzz');
+    await page.locator('.empty').getByRole('button', { name: 'Clear the filter' }).click();
+    await expect(filterInput(page)).toBeFocused();
+  });
+
+  test('does not confuse a title in another alphabet with an ISRC', async ({ page }) => {
+    await filterInput(page).fill('Песня 1');
+
+    await expect(page.locator('orp-track-card')).toHaveCount(0);
+    await expect(page.locator('orp-isrc-card')).toHaveCount(0);
+  });
+
   test('keeps the order of the list', async ({ page }) => {
     await filterInput(page).fill('a');
 

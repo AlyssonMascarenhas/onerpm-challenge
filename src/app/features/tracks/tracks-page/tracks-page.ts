@@ -44,6 +44,7 @@ export class TracksPage {
   protected readonly store = inject(TracksStore);
 
   private readonly _missingTrigger = viewChild<ElementRef<HTMLElement>>('missingTrigger');
+  private readonly _filterInput = viewChild<ElementRef<HTMLInputElement>>('filterInput');
 
   /** What the visitor typed to filter the list by track title or ISRC. */
   protected readonly query = signal('');
@@ -118,8 +119,10 @@ export class TracksPage {
     this.query.set((event.target as HTMLInputElement).value);
   }
 
+  /** Clears the filter and keeps the focus in the field: the button that was used goes away with the text. */
   protected clearQuery(): void {
     this.query.set('');
+    this._filterInput()?.nativeElement.focus();
   }
 
   /** The list of missing ISRCs closed: the focus goes back to the button that opened it. */

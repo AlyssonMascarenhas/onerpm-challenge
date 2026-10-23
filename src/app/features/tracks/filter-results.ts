@@ -6,9 +6,13 @@ function fold(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
 
-/** Letters and digits only, in capitals: "br1sp-12 00071" matches "BR1SP1200071". */
+/**
+ * What an ISRC is compared by: accents folded, capitals, and only the spaces and dashes people type inside a
+ * code removed ("br1sp-12 00071" matches "BR1SP1200071"). Nothing else is dropped, so a title typed in another
+ * alphabet ("Песня 1") never shrinks into a few characters that happen to match some code.
+ */
 function compact(text: string): string {
-  return text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return fold(text).toUpperCase().replace(/[\s-]/g, '');
 }
 
 /**

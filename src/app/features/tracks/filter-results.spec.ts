@@ -75,6 +75,35 @@ describe('filterResults', () => {
     });
   });
 
+  describe('words that are not an ISRC', () => {
+    const CODES = [
+      foundResult('Song', { isrc: 'BR1SP1200071' }),
+      notFoundResult('NO1R42509310'),
+      notFoundResult('QZNJX2081700'),
+    ];
+
+    it('does not shrink a query in another alphabet into characters that match a code', () => {
+      expect(filterResults(CODES, 'Песня 1')).toEqual([]);
+    });
+
+    it('does not drop letters with accents: "não" is "NAO", not "NO"', () => {
+      expect(filterResults(CODES, 'não')).toEqual([]);
+      expect(filterResults(CODES, 'nao')).toEqual([]);
+    });
+
+    it('treats accent variants the same way', () => {
+      const results = [notFoundResult('XX1NAO000001')];
+
+      expect(filterResults(results, 'não')).toEqual(results);
+      expect(filterResults(results, 'nao')).toEqual(results);
+      expect(filterResults(results, 'NÃO')).toEqual(results);
+    });
+
+    it('does not match across the characters between words', () => {
+      expect(filterResults(CODES, 'br1 sp12.0007')).toEqual([]);
+    });
+  });
+
   it('is empty when nothing matches', () => {
     expect(filterResults(ALL, 'zzzz')).toEqual([]);
   });

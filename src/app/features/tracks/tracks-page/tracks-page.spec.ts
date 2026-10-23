@@ -398,6 +398,20 @@ describe('TracksPage', () => {
         expect(root(fixture).querySelector('.toolbar__clear')).toBeNull();
       });
 
+      it('gives the focus back to the field after clearing, whichever way it was cleared', async () => {
+        const { fixture } = await loaded();
+        await type(fixture, 'louc');
+        (root(fixture).querySelector('.toolbar__clear') as HTMLButtonElement).click();
+        await settle(fixture);
+        expect(document.activeElement).toBe(input(fixture));
+
+        await type(fixture, 'zzzz');
+        (document.activeElement as HTMLElement).blur();
+        (root(fixture).querySelector('.empty button') as HTMLButtonElement).click();
+        await settle(fixture);
+        expect(document.activeElement).toBe(input(fixture));
+      });
+
       it('is cleared by Escape, and by the button of the empty message', async () => {
         const { fixture } = await loaded();
         await type(fixture, 'louc');
