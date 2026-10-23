@@ -4,9 +4,22 @@
 
 .hero {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   padding: clamp(2.5rem, 8vw, 5rem) var(--orp-gutter) clamp(1.5rem, 5vw, 3rem);
   text-align: center;
+}
+
+/*
+ * The glow behind the title. It is a layer of its own, faded to nothing towards the bottom edge with a mask:
+ * the radial gradients are a fixed size (24rem tall), taller than the hero on a phone, and would otherwise be
+ * cut off by the edge while still bright, leaving a hard line.
+ */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   background:
     radial-gradient(
       60rem 24rem at 50% -10%,
@@ -18,6 +31,7 @@
       color-mix(in srgb, var(--orp-accent-alt) 16%, transparent),
       transparent 70%
     );
+  mask-image: linear-gradient(to bottom, #000 35%, transparent 100%);
 }
 
 .hero__title {
@@ -45,7 +59,7 @@
 .content {
   max-width: var(--orp-page-width);
   margin: 0 auto;
-  padding: 0 var(--orp-gutter) 4rem;
+  padding: 1rem var(--orp-gutter) 4rem;
 }
 
 .alert {
