@@ -1,6 +1,11 @@
 import { definePreset } from '@primeuix/themes';
 import Aura from '@primeuix/themes/aura';
-import { ACCENT_PALETTE, ACTION_COLORS, SURFACE_PALETTE } from './theme.constants';
+import {
+  ACCENT_PALETTE,
+  ACTION_COLORS,
+  PLAY_BUTTON_COLORS,
+  SURFACE_PALETTE,
+} from './theme.constants';
 
 /**
  * Aura with our accent and ink surfaces; light and dark keep AA contrast (see `ACCENT_PALETTE`).
@@ -16,6 +21,7 @@ export const OnerpmPreset = definePreset(Aura, {
       light: {
         surface: SURFACE_PALETTE,
         action: ACTION_COLORS.light,
+        play: PLAY_BUTTON_COLORS,
         primary: {
           color: '{primary.700}',
           contrastColor: '#ffffff',
@@ -32,6 +38,7 @@ export const OnerpmPreset = definePreset(Aura, {
       dark: {
         surface: SURFACE_PALETTE,
         action: ACTION_COLORS.dark,
+        play: PLAY_BUTTON_COLORS,
         primary: {
           color: '{primary.400}',
           contrastColor: '{surface.950}',

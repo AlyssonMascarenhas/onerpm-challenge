@@ -4,6 +4,7 @@ import { ReleaseDatePrecision } from '../../../../contract/tracks.enums';
 import { Track } from '../../../../contract/tracks.interfaces';
 import { Language } from '../../../core/i18n/i18n.enums';
 import { i18nTestProviders, useLanguage } from '../../../testing/i18n-testing';
+import { NowPlaying } from '../now-playing';
 import { TrackPlayer } from '../track-player/track-player';
 import { track } from '../testing/builders';
 import { TrackCard } from './track-card';
@@ -245,6 +246,73 @@ describe('TrackCard', () => {
 
       expect(player.componentInstance.track().id).toBe('7q7QtMiK9jhob0Md7p715D');
       expect(player.componentInstance.track().title).toBe('...É pra Você');
+    });
+  });
+
+  describe('play button over the cover', () => {
+    const cover = (fixture: ComponentFixture<TrackCard>) =>
+      root(fixture).querySelector('.card__cover button.card__play') as HTMLButtonElement | null;
+    const listenButton = (fixture: ComponentFixture<TrackCard>) =>
+      root(fixture).querySelector('orp-track-player button') as HTMLButtonElement;
+
+    it('is on the cover of a playable track', async () => {
+      const fixture = await render();
+
+      expect(cover(fixture)).not.toBeNull();
+      expect(cover(fixture)?.querySelector('svg path')?.getAttribute('d')).toBeTruthy();
+    });
+
+    it('is only a pointer shortcut: hidden from assistive technology and not a tab stop', async () => {
+      const fixture = await render();
+
+      expect(cover(fixture)?.getAttribute('aria-hidden')).toBe('true');
+      expect(cover(fixture)?.getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('plays this track, handing over the "listen" button so the focus can come back to it', async () => {
+      const fixture = await render();
+      const play = vi.spyOn(TestBed.inject(NowPlaying), 'play');
+
+      cover(fixture)?.click();
+
+      expect(play).toHaveBeenCalledTimes(1);
+      expect(play.mock.calls[0][0].id).toBe('7q7QtMiK9jhob0Md7p715D');
+      expect(play.mock.calls[0][1]).toBe(listenButton(fixture));
+    });
+
+    it('goes away while this track is the one playing', async () => {
+      const fixture = await render();
+
+      cover(fixture)?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(cover(fixture)).toBeNull();
+    });
+
+    it('is back when another track takes over', async () => {
+      const fixture = await render();
+      cover(fixture)?.click();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      TestBed.inject(NowPlaying).play(track({ id: '1A2b3C4d5E6f7G8h9I0j1K' }));
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(cover(fixture)).not.toBeNull();
+    });
+
+    it('is not offered for an id that is not a Spotify id', async () => {
+      const fixture = await render({ id: 'https://evil.example/x' });
+
+      expect(cover(fixture)).toBeNull();
+    });
+
+    it('is also over the placeholder when the cover is missing', async () => {
+      const fixture = await render({ coverUrl: null });
+
+      expect(cover(fixture)).not.toBeNull();
     });
   });
 

@@ -1,4 +1,9 @@
-import { ACCENT_PALETTE, ACTION_COLORS, SURFACE_PALETTE } from './theme.constants';
+import {
+  ACCENT_PALETTE,
+  ACTION_COLORS,
+  PLAY_BUTTON_COLORS,
+  SURFACE_PALETTE,
+} from './theme.constants';
 import { OnerpmPreset } from './theme-preset';
 import { blend, contrastRatio } from './testing/contrast';
 
@@ -9,6 +14,7 @@ interface SchemeTokens {
   primary: Record<string, string>;
   surface: Record<string, string>;
   action: Record<string, string>;
+  play: Record<string, string>;
 }
 
 const semantic = OnerpmPreset.semantic as {
@@ -33,6 +39,19 @@ describe('OnerpmPreset', () => {
 
   it.each(['light', 'dark'] as const)('uses the ink scale for the %s surfaces', (scheme) => {
     expect(semantic.colorScheme[scheme].surface).toEqual(SURFACE_PALETTE);
+  });
+
+  describe('play button colors (over a cover)', () => {
+    it.each(['light', 'dark'] as const)('%s: come from PLAY_BUTTON_COLORS', (scheme) => {
+      expect(semantic.colorScheme[scheme].play).toEqual(PLAY_BUTTON_COLORS);
+    });
+
+    it('the icon is readable on the button, also on hover (AA 4.5:1)', () => {
+      const { color, background, hoverBackground } = PLAY_BUTTON_COLORS;
+
+      expect(contrastRatio(color, background)).toBeGreaterThanOrEqual(AA);
+      expect(contrastRatio(color, hoverBackground)).toBeGreaterThanOrEqual(AA);
+    });
   });
 
   describe('action button colors', () => {

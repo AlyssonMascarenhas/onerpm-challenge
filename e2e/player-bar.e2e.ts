@@ -203,6 +203,53 @@ test.describe('player bar', () => {
     expect(await spotify(page)).toBeNull();
   });
 
+  test.describe('play button over the cover', () => {
+    const overlay = (page: Page, index = 0) =>
+      page.locator('orp-track-card .card').nth(index).locator('.card__play');
+
+    test('rises when the card is pointed at, and is gone when it is not', async ({
+      page,
+      isMobile,
+    }) => {
+      test.skip(isMobile, 'Touch has no pointer to hover with: see the next test');
+      await expect(overlay(page)).toHaveCSS('opacity', '0');
+
+      await page.locator('orp-track-card .card').first().hover();
+
+      await expect(overlay(page)).toHaveCSS('opacity', '1');
+      await expect(overlay(page)).toHaveCSS('background-color', 'rgb(30, 215, 96)');
+    });
+
+    test('is always there where there is no hover (touch)', async ({ page, isMobile }) => {
+      test.skip(!isMobile, 'Only touch devices have no hover');
+
+      await expect(overlay(page)).toHaveCSS('opacity', '1');
+    });
+
+    test('plays the track of its card, and leaves once that track is the one playing', async ({
+      page,
+    }) => {
+      await page.locator('orp-track-card .card').nth(1).hover();
+
+      await overlay(page, 1).click();
+
+      await expect.poll(async () => (await spotify(page))?.['played']).toHaveLength(1);
+      await expect(page.getByRole('button', { name: 'Now playing' })).toHaveCount(1);
+      await expect(
+        page.locator('orp-track-card .card').nth(1).getByRole('button', { name: 'Now playing' }),
+      ).toBeVisible();
+      await expect(overlay(page, 1)).toHaveCount(0);
+    });
+
+    test('is not a tab stop, and the "listen" button stays the accessible control', async ({
+      page,
+    }) => {
+      await expect(overlay(page)).toHaveAttribute('tabindex', '-1');
+      await expect(overlay(page)).toHaveAttribute('aria-hidden', 'true');
+      await expect(page.getByRole('button', LISTEN)).toHaveCount(10);
+    });
+  });
+
   test('is in the visitor language', async ({ page }) => {
     await chooseLanguage(page, 'Português');
 

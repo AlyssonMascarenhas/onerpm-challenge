@@ -32,6 +32,20 @@ embed. A revisão pediu algo como a barra do próprio Spotify: um player que aco
   player. O ponto de montagem recorta o embed no mesmo raio de 12 px do Spotify (`overflow: hidden`), e nos dois temas só o
   player aparece (reproduzido e conferido com capturas).
 
+### Botão de play sobre a capa
+
+Como no Spotify, ao apontar o mouse para um cartão sobe, no canto da capa, um botão redondo verde de play que toca aquela
+faixa (as cores estão em `PLAY_BUTTON_COLORS`, com contraste testado). Em telas de toque, que não têm _hover_
+(`@media (hover: none)`), ele fica sempre visível. É um **atalho para o mouse**: tem `aria-hidden` e `tabindex="-1"`, e o
+botão "Ouvir uma prévia" continua sendo o controle acessível (e é para ele que o foco volta ao fechar a barra). Some enquanto
+a faixa do cartão é a que está tocando. Não cobre o selo do Brasil, que continua no corpo do cartão.
+
+### Volume: não é possível com o embed
+
+O controlador da iFrame API só oferece `play`, `pause`, `resume`, `togglePlay`, `seek`, `restart` e `loadUri` (conferido no
+objeto real); não há volume, e o navegador não deixa uma página controlar o som de um iframe de outra origem. O volume fica
+com o sistema e a aba. Só seria possível tocando áudio próprio (`preview_url`), que o Spotify não devolve (ADR 0005).
+
 ## Alternativas consideradas
 
 - **Manter o embed em cada cartão** — é o que causava o problema; vários players também competiam entre si.

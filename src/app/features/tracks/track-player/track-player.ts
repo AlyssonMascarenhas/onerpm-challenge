@@ -44,7 +44,8 @@ export class TrackPlayer {
   );
   protected readonly label = computed(() => (this.current() ? this._playing() : this._listen()));
 
-  protected play(): void {
+  /** Also called by the play button over the cover: the focus later returns to this card's own button. */
+  public play(): void {
     this._nowPlaying.play(this.track(), this._host.nativeElement.querySelector('button'));
   }
 }
