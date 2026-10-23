@@ -49,10 +49,12 @@
 
     <orp-track-player [trackId]="track().id" [title]="track().title" />
 
-    <a class="card__link" target="_blank" rel="noopener noreferrer" [href]="track().spotifyUrl">
-      {{ labels.openOnSpotify() }}
-      <i class="pi pi-external-link" aria-hidden="true"></i>
-      <span class="visually-hidden">({{ labels.newTab() }})</span>
-    </a>
+    <orp-action-button
+      class="card__link"
+      [href]="track().spotifyUrl"
+      [icon]="spotifyIcon"
+      [label]="labels.openOnSpotify()"
+      [newTabLabel]="labels.newTab()"
+    />
   </div>
 </article>

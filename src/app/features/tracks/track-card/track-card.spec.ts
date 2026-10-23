@@ -203,7 +203,7 @@ describe('TrackCard', () => {
 
   describe('Spotify link', () => {
     const link = (fixture: ComponentFixture<TrackCard>) =>
-      root(fixture).querySelector('a.card__link') as HTMLAnchorElement;
+      root(fixture).querySelector('orp-action-button.card__link a') as HTMLAnchorElement;
 
     it('goes to the track page on Spotify', async () => {
       const fixture = await render();
@@ -218,6 +218,15 @@ describe('TrackCard', () => {
       expect(link(fixture).target).toBe('_blank');
       expect(link(fixture).rel).toBe('noopener noreferrer');
       expect(text(link(fixture).querySelector('.visually-hidden'))).toBe('(opens in a new tab)');
+    });
+
+    it('shows the Spotify mark next to the text, hidden from assistive technology', async () => {
+      const fixture = await render();
+
+      const mark = link(fixture).querySelector('svg.action__mark--spotify');
+
+      expect(mark?.getAttribute('aria-hidden')).toBe('true');
+      expect(text(link(fixture).querySelector('.action__label'))).toBe('Open on Spotify');
     });
 
     it('is translated', async () => {

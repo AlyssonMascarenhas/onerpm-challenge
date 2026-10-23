@@ -1,24 +1,25 @@
 @if (available()) {
   <div class="player" role="group" [attr.aria-label]="regionLabel()">
     @if (embedUrl(); as url) {
-      <iframe
-        class="player__frame"
-        loading="lazy"
-        allow="encrypted-media"
-        [src]="url"
-        [title]="playerTitle()"
-        [height]="height"
-      ></iframe>
+      <div class="player__stage" [style.height.px]="height">
+        @if (!frameLoaded()) {
+          <div class="player__loading" role="status">
+            <span class="player__spinner" aria-hidden="true"></span>
+            {{ loadingLabel() }}
+          </div>
+        }
+        <iframe
+          class="player__frame"
+          [class.player__frame--pending]="!frameLoaded()"
+          allow="encrypted-media"
+          [src]="url"
+          [title]="playerTitle()"
+          [height]="height"
+          (load)="onFrameLoad($event)"
+        ></iframe>
+      </div>
     } @else {
-      <p-button
-        severity="secondary"
-        icon="pi pi-play"
-        [outlined]="true"
-        [fluid]="true"
-        [buttonProps]="{ autofocus: false }"
-        [label]="listen()"
-        (onClick)="load()"
-      />
+      <orp-action-button [icon]="playIcon" [label]="listen()" (pressed)="load()" />
     }
   </div>
 }

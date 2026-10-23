@@ -1,4 +1,4 @@
-import { ACCENT_PALETTE, SURFACE_PALETTE } from './theme.constants';
+import { ACCENT_PALETTE, ACTION_COLORS, SURFACE_PALETTE } from './theme.constants';
 import { OnerpmPreset } from './theme-preset';
 import { blend, contrastRatio } from './testing/contrast';
 
@@ -8,6 +8,7 @@ const AA = 4.5;
 interface SchemeTokens {
   primary: Record<string, string>;
   surface: Record<string, string>;
+  action: Record<string, string>;
 }
 
 const semantic = OnerpmPreset.semantic as {
@@ -32,6 +33,38 @@ describe('OnerpmPreset', () => {
 
   it.each(['light', 'dark'] as const)('uses the ink scale for the %s surfaces', (scheme) => {
     expect(semantic.colorScheme[scheme].surface).toEqual(SURFACE_PALETTE);
+  });
+
+  describe('action button colors', () => {
+    it.each(['light', 'dark'] as const)('%s: come from ACTION_COLORS', (scheme) => {
+      expect(semantic.colorScheme[scheme].action).toEqual(ACTION_COLORS[scheme]);
+    });
+
+    it.each(['light', 'dark'] as const)(
+      '%s: the label is readable on the button, also on hover (AA 4.5:1)',
+      (scheme) => {
+        const { color, background, hoverBackground } = ACTION_COLORS[scheme];
+
+        expect(contrastRatio(color, background)).toBeGreaterThanOrEqual(AA);
+        expect(contrastRatio(color, hoverBackground)).toBeGreaterThanOrEqual(AA);
+      },
+    );
+
+    it.each(['light', 'dark'] as const)(
+      '%s: the Spotify mark stands out from the button (non-text AA 3:1)',
+      (scheme) => {
+        const { spotify, background } = ACTION_COLORS[scheme];
+
+        expect(contrastRatio(spotify, background)).toBeGreaterThanOrEqual(3);
+      },
+    );
+
+    it('the two schemes are opposites: black on light, white on dark', () => {
+      expect(ACTION_COLORS.light.background).not.toBe(ACTION_COLORS.dark.background);
+      expect(
+        contrastRatio(ACTION_COLORS.light.background, ACTION_COLORS.dark.background),
+      ).toBeGreaterThan(10);
+    });
   });
 
   describe('accessibility (WCAG AA, 4.5:1)', () => {
