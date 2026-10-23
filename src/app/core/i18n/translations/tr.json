@@ -1,0 +1,31 @@
+{
+  "app": {
+    "title": "Eksik ISRC'ler",
+    "subtitle": "Yapımcı sözleşmesindeki ve henüz veri tabanlarımızda bulunmayan parçalar.",
+    "language": "Dil"
+  },
+  "tracks": {
+    "listLabel": "Parçalar",
+    "released": "Yayın tarihi",
+    "duration": "Süre",
+    "isrc": "ISRC",
+    "artists": "Sanatçılar",
+    "album": "Albüm",
+    "openOnSpotify": "Spotify'da aç",
+    "preview": "Ses önizlemesi",
+    "coverAlt": "{{album}} albümünün kapağı",
+    "coverMissing": "Kapak mevcut değil",
+    "availableInBR": "Brezilya'da mevcut",
+    "unavailableInBR": "Brezilya'da mevcut değil",
+    "notFound": "ISRC Spotify'da bulunamadı",
+    "failed": "Bu ISRC yüklenemedi"
+  },
+  "status": {
+    "loading": "Parçalar yükleniyor…",
+    "empty": "Gösterilecek parça yok.",
+    "partialFailure": "Bazı ISRC'ler yüklenemedi. Etkilenen ISRC sayısı: {{count}}",
+    "unavailableTitle": "Müzik verileri kullanılamıyor",
+    "unavailableMessage": "Şu anda Spotify'a ulaşılamıyor. Lütfen biraz sonra tekrar deneyin.",
+    "retry": "Tekrar dene"
+  }
+}
