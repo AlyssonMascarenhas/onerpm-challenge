@@ -118,7 +118,7 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     # Pinned: the Playwright browsers and their system packages are tested on this image.
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -128,9 +128,46 @@ jobs:
       - name: Set up project
         uses: ./.github/actions/setup-project
 
-      - name: Install Chromium
+      # The install used to be one `playwright install --with-deps`, which downloads the browser and also apt
+      # packages (fonts included) from a mirror that is sometimes very slow: the job then hung until the step
+      # timed out and no test ran. Now: the browser is cached by Playwright version, every download is retried
+      # with its own time limit, and apt is only touched when Chromium cannot start without it.
+      - name: Find the Playwright version
+        id: playwright
+        run: |
+          version="$(npx playwright --version | awk '{print $NF}')"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Chromium download
+        id: chromium
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+
+      - name: Download Chromium
+        if: steps.chromium.outputs.cache-hit != 'true'
         timeout-minutes: 8
-        run: npm run e2e:install
+        run: |
+          for attempt in 1 2 3; do
+            timeout --kill-after=10 120 npx playwright install chromium && exit 0
+            echo "::warning::Chromium download, attempt $attempt, failed or timed out"
+          done
+          exit 1
+
+      - name: Install the system packages Chromium needs, if it cannot start without them
+        timeout-minutes: 8
+        run: |
+          if node -e "require('@playwright/test').chromium.launch().then((browser) => browser.close())"; then
+            echo "Chromium starts as it is: no system packages to install"
+            exit 0
+          fi
+          for attempt in 1 2 3; do
+            timeout --kill-after=10 120 npx playwright install-deps chromium && exit 0
+            echo "::warning::System packages, attempt $attempt, failed or timed out"
+          done
+          exit 1
 
       # The suite runs against the production build served by the real SSR/Express server.
       - name: Build (browser + SSR server)
