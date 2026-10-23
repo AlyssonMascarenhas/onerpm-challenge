@@ -34,6 +34,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     stdout: 'ignore',
+    stderr: 'ignore',
     timeout: 60_000,
     env: {
       PORT: String(PORT),
