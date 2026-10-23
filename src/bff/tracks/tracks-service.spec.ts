@@ -1,8 +1,11 @@
 // @vitest-environment node
-import { Track } from '../../contract/tracks';
+import { LookupErrorCode, LookupStatus, ReleaseDatePrecision } from '../../contract/tracks.enums';
+import { Track } from '../../contract/tracks.interfaces';
+import { Logger } from '../shared/shared.interfaces';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
-import { TrackFinder } from './track-finder';
-import { Logger, TracksService } from './tracks-service';
+import { SpotifyFailureReason } from '../spotify/spotify.enums';
+import { TrackFinder } from './tracks.interfaces';
+import { TracksService } from './tracks-service';
 
 const track = (isrc: string): Track => ({
   id: `id-${isrc}`,
@@ -11,7 +14,7 @@ const track = (isrc: string): Track => ({
   artists: ['Artist'],
   albumName: 'Album',
   coverUrl: null,
-  releaseDate: { value: '2020', precision: 'year' },
+  releaseDate: { value: '2020', precision: ReleaseDatePrecision.YEAR },
   durationMs: 1000,
   spotifyUrl: 'https://open.spotify.com/track/x',
   availableInBR: true,
@@ -29,25 +32,33 @@ describe('TracksService.lookup', () => {
     const results = await service.lookup(['B', 'MISSING', 'A']);
 
     expect(results).toEqual([
-      { status: 'found', isrc: 'B', track: track('B') },
-      { status: 'not_found', isrc: 'MISSING' },
-      { status: 'found', isrc: 'A', track: track('A') },
+      { status: LookupStatus.FOUND, isrc: 'B', track: track('B') },
+      { status: LookupStatus.NOT_FOUND, isrc: 'MISSING' },
+      { status: LookupStatus.FOUND, isrc: 'A', track: track('A') },
     ]);
   });
 
   it('isolates an integration failure to the ISRC that hit it', async () => {
     const { service, logger } = setup(async (isrc) => {
       if (isrc === 'B') {
-        throw new SpotifyUnavailableError('search_failed_500');
+        throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_FAILED, { status: 500 });
       }
       return track(isrc);
     });
 
     const results = await service.lookup(['A', 'B', 'C']);
 
-    expect(results.map((result) => result.status)).toEqual(['found', 'error', 'found']);
-    expect(results[1]).toEqual({ status: 'error', isrc: 'B', code: 'integration_unavailable' });
-    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('search_failed_500'));
+    expect(results.map((result) => result.status)).toEqual([
+      LookupStatus.FOUND,
+      LookupStatus.ERROR,
+      LookupStatus.FOUND,
+    ]);
+    expect(results[1]).toEqual({
+      status: LookupStatus.ERROR,
+      isrc: 'B',
+      code: LookupErrorCode.INTEGRATION_UNAVAILABLE,
+    });
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('search_failed'));
   });
 
   it('reports unexpected errors as internal_error and logs them', async () => {
@@ -58,7 +69,9 @@ describe('TracksService.lookup', () => {
 
     const results = await service.lookup(['A']);
 
-    expect(results).toEqual([{ status: 'error', isrc: 'A', code: 'internal_error' }]);
+    expect(results).toEqual([
+      { status: LookupStatus.ERROR, isrc: 'A', code: LookupErrorCode.INTERNAL_ERROR },
+    ]);
     expect(logger.error).toHaveBeenCalledWith(expect.stringContaining('A'), failure);
   });
 

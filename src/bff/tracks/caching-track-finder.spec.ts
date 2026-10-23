@@ -1,7 +1,8 @@
+import { ReleaseDatePrecision } from '../../contract/tracks.enums';
 // @vitest-environment node
-import { Track } from '../../contract/tracks';
+import { Track } from '../../contract/tracks.interfaces';
 import { CachingTrackFinder } from './caching-track-finder';
-import { TrackFinder } from './track-finder';
+import { TrackFinder } from './tracks.interfaces';
 
 const track = (isrc: string): Track => ({
   id: `id-${isrc}`,
@@ -10,7 +11,7 @@ const track = (isrc: string): Track => ({
   artists: ['Artist'],
   albumName: 'Album',
   coverUrl: null,
-  releaseDate: { value: '2020', precision: 'year' },
+  releaseDate: { value: '2020', precision: ReleaseDatePrecision.YEAR },
   durationMs: 1000,
   spotifyUrl: 'https://open.spotify.com/track/x',
   availableInBR: true,

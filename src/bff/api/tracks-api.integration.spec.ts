@@ -2,8 +2,14 @@
 import express from 'express';
 import { Server } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { ApiError, TracksResponse } from '../../contract/tracks';
-import { SpotifyTrack } from '../spotify/spotify.types';
+import {
+  ApiErrorCode,
+  LookupErrorCode,
+  LookupStatus,
+  ReleaseDatePrecision,
+} from '../../contract/tracks.enums';
+import { ApiError, TracksResponse } from '../../contract/tracks.interfaces';
+import { SpotifyTrack } from '../spotify/spotify.interfaces';
 import { spotifyTrack } from '../testing/builders';
 import { createFakeSpotify, FakeSpotifyOptions } from '../testing/fake-spotify';
 import { CHALLENGE_ISRCS, recordedTracks } from '../testing/fixtures';
@@ -56,9 +62,9 @@ describe('GET /api/tracks', () => {
 
       expect(response.status).toBe(200);
       expect(body.results).toHaveLength(10);
-      expect(body.results.every((result) => result.status === 'found')).toBe(true);
+      expect(body.results.every((result) => result.status === LookupStatus.FOUND)).toBe(true);
       for (const result of body.results) {
-        if (result.status !== 'found') {
+        if (result.status !== LookupStatus.FOUND) {
           continue;
         }
         expect(result.track).toMatchObject({
@@ -78,11 +84,11 @@ describe('GET /api/tracks', () => {
       const body = (await (await get('/api/tracks?isrc=BRC310600002')).json()) as TracksResponse;
 
       expect(body.results[0]).toMatchObject({
-        status: 'found',
+        status: LookupStatus.FOUND,
         track: {
           title: 'Repente',
           artists: ['PianOrquestra'],
-          releaseDate: { value: '2013-06-13', precision: 'day' },
+          releaseDate: { value: '2013-06-13', precision: ReleaseDatePrecision.DAY },
           durationMs: 170_733,
           spotifyUrl: 'https://open.spotify.com/track/4lwE7ainG51zmxt1xAC7XQ',
         },
@@ -95,7 +101,7 @@ describe('GET /api/tracks', () => {
       const body = (await (await get('/api/tracks?isrc=BR1SP1200071')).json()) as TracksResponse;
 
       expect(body.results[0]).toMatchObject({
-        status: 'found',
+        status: LookupStatus.FOUND,
         track: { id: '4s71Bub5KzXBSMyE8nlH4E', releaseDate: { value: '2014-03-25' } },
       });
     });
@@ -108,7 +114,10 @@ describe('GET /api/tracks', () => {
       await get('/api/tracks?isrc=BR1SP1200071,BR1SP1200070')
     ).json()) as TracksResponse;
 
-    expect(body.results.map((result) => result.status)).toEqual(['found', 'not_found']);
+    expect(body.results.map((result) => result.status)).toEqual([
+      LookupStatus.FOUND,
+      LookupStatus.NOT_FOUND,
+    ]);
   });
 
   it('flags a track that exists but is not playable in Brazil', async () => {
@@ -116,7 +125,10 @@ describe('GET /api/tracks', () => {
 
     const body = (await (await get('/api/tracks?isrc=BR1SP1200071')).json()) as TracksResponse;
 
-    expect(body.results[0]).toMatchObject({ status: 'found', track: { availableInBR: false } });
+    expect(body.results[0]).toMatchObject({
+      status: LookupStatus.FOUND,
+      track: { availableInBR: false },
+    });
   });
 
   it('keeps the healthy results when one ISRC hits a Spotify error', async () => {
@@ -130,8 +142,8 @@ describe('GET /api/tracks', () => {
 
     expect(response.status).toBe(200);
     expect(body.results).toMatchObject([
-      { status: 'found' },
-      { status: 'error', code: 'integration_unavailable' },
+      { status: LookupStatus.FOUND },
+      { status: LookupStatus.ERROR, code: LookupErrorCode.INTEGRATION_UNAVAILABLE },
     ]);
   });
 
@@ -143,7 +155,7 @@ describe('GET /api/tracks', () => {
 
     expect(response.status).toBe(503);
     expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(body.code).toBe('integration_unavailable');
+    expect(body.code).toBe(ApiErrorCode.INTEGRATION_UNAVAILABLE);
   });
 
   it('answers 503 when Spotify search fails for every ISRC', async () => {
@@ -161,7 +173,7 @@ describe('GET /api/tracks', () => {
     const text = await response.text();
 
     expect(response.status).toBe(503);
-    expect(JSON.parse(text)).toMatchObject({ code: 'integration_unavailable' });
+    expect(JSON.parse(text)).toMatchObject({ code: ApiErrorCode.INTEGRATION_UNAVAILABLE });
     expect(text).not.toContain('SPOTIFY');
   });
 
@@ -193,7 +205,7 @@ describe('GET /api/tracks', () => {
       const response = await get(path);
 
       expect(response.status).toBe(400);
-      expect(((await response.json()) as ApiError).code).toBe('invalid_isrc');
+      expect(((await response.json()) as ApiError).code).toBe(ApiErrorCode.INVALID_ISRC);
     });
 
     it('lists the malformed ISRCs and does not call Spotify', async () => {
@@ -203,7 +215,7 @@ describe('GET /api/tracks', () => {
       const body = (await response.json()) as ApiError;
 
       expect(response.status).toBe(400);
-      expect(body).toMatchObject({ code: 'invalid_isrc', invalid: ['NOPE'] });
+      expect(body).toMatchObject({ code: ApiErrorCode.INVALID_ISRC, invalid: ['NOPE'] });
       expect(fake.searches).toHaveLength(0);
     });
 
@@ -217,7 +229,7 @@ describe('GET /api/tracks', () => {
       const response = await get(`/api/tracks?isrc=${many}`);
 
       expect(response.status).toBe(400);
-      expect(((await response.json()) as ApiError).code).toBe('too_many_isrcs');
+      expect(((await response.json()) as ApiError).code).toBe(ApiErrorCode.TOO_MANY_ISRCS);
     });
   });
 });
@@ -230,6 +242,6 @@ describe('unknown API routes', () => {
 
     expect(response.status).toBe(404);
     expect(response.headers.get('content-type')).toContain('application/json');
-    expect(((await response.json()) as ApiError).code).toBe('not_found');
+    expect(((await response.json()) as ApiError).code).toBe(ApiErrorCode.NOT_FOUND);
   });
 });

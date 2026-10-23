@@ -1,4 +1,4 @@
-import { SpotifyTrack } from '../spotify/spotify.types';
+import { SpotifyTrack } from '../spotify/spotify.interfaces';
 
 /**
  * The same ISRC can be published on several releases (album + single, reissues).

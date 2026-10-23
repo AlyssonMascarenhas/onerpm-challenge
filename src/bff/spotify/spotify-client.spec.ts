@@ -3,7 +3,8 @@ import { spotifyTrack } from '../testing/builders';
 import { jsonResponse } from '../testing/fake-spotify';
 import { SpotifyClient } from './spotify-client';
 import { SpotifyUnavailableError } from './spotify-errors';
-import { AccessTokenProvider } from './token-provider';
+import { SpotifyFailureReason } from './spotify.enums';
+import { AccessTokenProvider } from './spotify.interfaces';
 
 function setup(responses: (() => Response | Promise<Response>)[]) {
   let issued = 0;
@@ -77,7 +78,8 @@ describe('SpotifyClient.searchByIsrc', () => {
       const { client, fetchFn } = setup([failure(401), failure(401)]);
 
       await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
-        reason: 'search_failed_401',
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 401,
       });
       expect(fetchFn).toHaveBeenCalledTimes(2);
     });
@@ -97,7 +99,8 @@ describe('SpotifyClient.searchByIsrc', () => {
       const { client, sleep } = setup([failure(429, { 'Retry-After': '30' })]);
 
       await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
-        reason: 'search_failed_429',
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 429,
       });
       expect(sleep).not.toHaveBeenCalled();
     });
@@ -105,8 +108,14 @@ describe('SpotifyClient.searchByIsrc', () => {
     it('fails when Retry-After is missing or invalid', async () => {
       const { client } = setup([failure(429), failure(429, { 'Retry-After': 'soon' })]);
 
-      await expect(client.searchByIsrc('A')).rejects.toMatchObject({ reason: 'search_failed_429' });
-      await expect(client.searchByIsrc('A')).rejects.toMatchObject({ reason: 'search_failed_429' });
+      await expect(client.searchByIsrc('A')).rejects.toMatchObject({
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 429,
+      });
+      await expect(client.searchByIsrc('A')).rejects.toMatchObject({
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 429,
+      });
     });
 
     it('retries only once', async () => {
@@ -116,7 +125,8 @@ describe('SpotifyClient.searchByIsrc', () => {
       ]);
 
       await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
-        reason: 'search_failed_429',
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 429,
       });
       expect(sleep).toHaveBeenCalledTimes(1);
       expect(fetchFn).toHaveBeenCalledTimes(2);
@@ -130,7 +140,8 @@ describe('SpotifyClient.searchByIsrc', () => {
 
       await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
         name: 'SpotifyUnavailableError',
-        reason: `search_failed_${status}`,
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status,
       });
     },
   );
@@ -141,7 +152,9 @@ describe('SpotifyClient.searchByIsrc', () => {
     const error = await client.searchByIsrc('BR1SP1200071').catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(SpotifyUnavailableError);
-    expect((error as SpotifyUnavailableError).reason).toBe('search_network_error');
+    expect((error as SpotifyUnavailableError).reason).toBe(
+      SpotifyFailureReason.SEARCH_NETWORK_ERROR,
+    );
   });
 
   it.each([
@@ -152,7 +165,7 @@ describe('SpotifyClient.searchByIsrc', () => {
     const { client } = setup([respond]);
 
     await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
-      reason: 'search_response_malformed',
+      reason: SpotifyFailureReason.SEARCH_RESPONSE_MALFORMED,
     });
   });
 });

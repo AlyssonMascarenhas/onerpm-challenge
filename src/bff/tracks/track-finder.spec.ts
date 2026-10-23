@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { TrackSearch } from '../spotify/spotify-client';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
-import { SpotifyTrack } from '../spotify/spotify.types';
+import { SpotifyFailureReason } from '../spotify/spotify.enums';
+import { SpotifyTrack, TrackSearch } from '../spotify/spotify.interfaces';
 import { spotifyAlbum, spotifyTrack } from '../testing/builders';
 import { SpotifyTrackFinder } from './track-finder';
 
@@ -82,7 +82,7 @@ describe('SpotifyTrackFinder', () => {
   it('propagates integration failures', async () => {
     const searchByIsrc = vi
       .fn<TrackSearch['searchByIsrc']>()
-      .mockRejectedValue(new SpotifyUnavailableError('boom'));
+      .mockRejectedValue(new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_FAILED));
     const finder = new SpotifyTrackFinder({ searchByIsrc });
 
     await expect(finder.findByIsrc(ISRC)).rejects.toBeInstanceOf(SpotifyUnavailableError);

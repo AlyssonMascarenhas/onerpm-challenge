@@ -1,25 +1,17 @@
 import { Router } from 'express';
 import { readSpotifyCredentials } from '../config';
-import { Clock, FetchFn, Sleep } from '../spotify/http';
+import { Logger } from '../shared/shared.interfaces';
 import { SpotifyClient } from '../spotify/spotify-client';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
+import { SpotifyFailureReason } from '../spotify/spotify.enums';
 import { SpotifyTokenProvider } from '../spotify/token-provider';
 import { CachingTrackFinder } from '../tracks/caching-track-finder';
-import { SpotifyTrackFinder, TrackFinder } from '../tracks/track-finder';
-import { Logger, TracksService } from '../tracks/tracks-service';
+import { SpotifyTrackFinder } from '../tracks/track-finder';
+import { TrackFinder } from '../tracks/tracks.interfaces';
+import { TracksService } from '../tracks/tracks-service';
+import { TRACK_CACHE_MAX_ENTRIES, TRACK_CACHE_TTL_MS } from './api.constants';
+import { ApiRouterOptions } from './api.interfaces';
 import { apiNotFound, createApiErrorHandler, createTracksRouter } from './tracks-router';
-
-export interface ApiRouterOptions {
-  readonly env: NodeJS.ProcessEnv;
-  readonly logger?: Logger;
-  /** Test seams: replace the network, the clock and the sleeping. */
-  readonly fetchFn?: FetchFn;
-  readonly now?: Clock;
-  readonly sleep?: Sleep;
-}
-
-const CACHE_TTL_MS = 5 * 60_000;
-const CACHE_MAX_ENTRIES = 500;
 
 /** Composition root of the BFF: wires config → Spotify adapters → finder → service → HTTP routes. */
 export function createApiRouter(options: ApiRouterOptions): Router {
@@ -40,7 +32,8 @@ function createTrackFinder(options: ApiRouterOptions, logger: Logger): TrackFind
       'SPOTIFY_CLIENT_ID / SPOTIFY_CLIENT_SECRET are not set; /api/tracks will answer 503.',
     );
     return {
-      findByIsrc: () => Promise.reject(new SpotifyUnavailableError('missing_credentials')),
+      findByIsrc: () =>
+        Promise.reject(new SpotifyUnavailableError(SpotifyFailureReason.MISSING_CREDENTIALS)),
     };
   }
 
@@ -50,8 +43,8 @@ function createTrackFinder(options: ApiRouterOptions, logger: Logger): TrackFind
   });
   const client = new SpotifyClient(tokens, { fetchFn: options.fetchFn, sleep: options.sleep });
   return new CachingTrackFinder(new SpotifyTrackFinder(client), {
-    ttlMs: CACHE_TTL_MS,
-    maxEntries: CACHE_MAX_ENTRIES,
+    ttlMs: TRACK_CACHE_TTL_MS,
+    maxEntries: TRACK_CACHE_MAX_ENTRIES,
     now: options.now,
   });
 }

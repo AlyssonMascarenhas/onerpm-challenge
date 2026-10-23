@@ -1,3 +1,4 @@
+import { ReleaseDatePrecision } from '../../contract/tracks.enums';
 // @vitest-environment node
 import { spotifyAlbum, spotifyTrack } from '../testing/builders';
 import { toTrack } from './track-mapper';
@@ -18,7 +19,7 @@ describe('toTrack', () => {
       album: spotifyAlbum({
         name: 'Gó Gó Boys',
         release_date: '2014-05-12',
-        release_date_precision: 'day',
+        release_date_precision: ReleaseDatePrecision.DAY,
       }),
     });
 
@@ -29,7 +30,7 @@ describe('toTrack', () => {
       artists: ['Gó Gó Boys', 'Convidado'],
       albumName: 'Gó Gó Boys',
       coverUrl: 'https://img.test/300.jpg',
-      releaseDate: { value: '2014-05-12', precision: 'day' },
+      releaseDate: { value: '2014-05-12', precision: ReleaseDatePrecision.DAY },
       durationMs: 177_626,
       spotifyUrl: 'https://open.spotify.com/track/7q7QtMiK9jhob0Md7p715D',
       availableInBR: true,
@@ -41,8 +42,8 @@ describe('toTrack', () => {
   });
 
   it.each([
-    ['year', '2019'],
-    ['month', '2019-10'],
+    [ReleaseDatePrecision.YEAR, '2019'],
+    [ReleaseDatePrecision.MONTH, '2019-10'],
   ] as const)('keeps %s-precision release dates untouched', (precision, value) => {
     const dto = spotifyTrack({
       album: spotifyAlbum({ release_date: value, release_date_precision: precision }),

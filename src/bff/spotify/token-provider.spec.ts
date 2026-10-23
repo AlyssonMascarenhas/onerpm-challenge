@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { jsonResponse } from '../testing/fake-spotify';
 import { SpotifyUnavailableError } from './spotify-errors';
+import { SpotifyFailureReason } from './spotify.enums';
 import { SpotifyTokenProvider } from './token-provider';
 
 const CREDENTIALS = { clientId: 'my-id', clientSecret: 'my-secret' };
@@ -88,7 +89,8 @@ describe('SpotifyTokenProvider', () => {
 
     await expect(provider.getToken()).rejects.toMatchObject({
       name: 'SpotifyUnavailableError',
-      reason: 'token_request_failed_400',
+      reason: SpotifyFailureReason.TOKEN_REQUEST_FAILED,
+      status: 400,
     });
     await expect(provider.getToken()).resolves.toBe('ok');
   });
@@ -99,7 +101,9 @@ describe('SpotifyTokenProvider', () => {
     const failure = await provider.getToken().catch((error: unknown) => error);
 
     expect(failure).toBeInstanceOf(SpotifyUnavailableError);
-    expect((failure as SpotifyUnavailableError).reason).toBe('token_request_network_error');
+    expect((failure as SpotifyUnavailableError).reason).toBe(
+      SpotifyFailureReason.TOKEN_REQUEST_NETWORK_ERROR,
+    );
   });
 
   it.each([
@@ -109,6 +113,8 @@ describe('SpotifyTokenProvider', () => {
   ])('rejects a malformed response (%s)', async (_label, respond) => {
     const { provider } = setup([respond]);
 
-    await expect(provider.getToken()).rejects.toMatchObject({ reason: 'token_response_malformed' });
+    await expect(provider.getToken()).rejects.toMatchObject({
+      reason: SpotifyFailureReason.TOKEN_RESPONSE_MALFORMED,
+    });
   });
 });

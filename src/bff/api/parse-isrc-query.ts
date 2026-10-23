@@ -1,11 +1,7 @@
 import { isValidIsrc, normalizeIsrc } from '../../contract/isrc';
-
-export const MAX_ISRCS_PER_REQUEST = 20;
-
-export type IsrcQuery =
-  | { readonly kind: 'ok'; readonly isrcs: readonly string[] }
-  | { readonly kind: 'invalid'; readonly invalid: readonly string[] }
-  | { readonly kind: 'too_many' };
+import { MAX_ISRCS_PER_REQUEST } from './api.constants';
+import { IsrcQueryKind } from './api.enums';
+import { IsrcQuery } from './api.types';
 
 /** Accepts `?isrc=A,B` and/or repeated `?isrc=A&isrc=B`; normalizes and de-duplicates preserving order. */
 export function parseIsrcQuery(raw: unknown): IsrcQuery {
@@ -18,13 +14,15 @@ export function parseIsrcQuery(raw: unknown): IsrcQuery {
     .filter((value) => value.length > 0);
 
   if (candidates.length === 0) {
-    return { kind: 'invalid', invalid: [] };
+    return { kind: IsrcQueryKind.INVALID, invalid: [] };
   }
   const invalid = candidates.filter((candidate) => !isValidIsrc(candidate));
   if (invalid.length > 0) {
-    return { kind: 'invalid', invalid };
+    return { kind: IsrcQueryKind.INVALID, invalid };
   }
 
   const isrcs = [...new Set(candidates)];
-  return isrcs.length > MAX_ISRCS_PER_REQUEST ? { kind: 'too_many' } : { kind: 'ok', isrcs };
+  return isrcs.length > MAX_ISRCS_PER_REQUEST
+    ? { kind: IsrcQueryKind.TOO_MANY }
+    : { kind: IsrcQueryKind.OK, isrcs };
 }

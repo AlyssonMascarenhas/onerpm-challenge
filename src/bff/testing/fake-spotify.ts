@@ -1,5 +1,5 @@
-import { FetchFn } from '../spotify/http';
-import { SpotifyTrack } from '../spotify/spotify.types';
+import { FetchFn } from '../spotify/http.types';
+import { SpotifyTrack } from '../spotify/spotify.interfaces';
 
 export function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
   return new Response(JSON.stringify(body), {

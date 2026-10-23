@@ -1,4 +1,5 @@
-import { SpotifyAlbum, SpotifyTrack } from '../spotify/spotify.types';
+import { ReleaseDatePrecision } from '../../contract/tracks.enums';
+import { SpotifyAlbum, SpotifyTrack } from '../spotify/spotify.interfaces';
 
 export function spotifyAlbum(overrides: Partial<SpotifyAlbum> = {}): SpotifyAlbum {
   return {
@@ -9,7 +10,7 @@ export function spotifyAlbum(overrides: Partial<SpotifyAlbum> = {}): SpotifyAlbu
       { url: 'https://img.test/64.jpg', width: 64, height: 64 },
     ],
     release_date: '2020-01-02',
-    release_date_precision: 'day',
+    release_date_precision: ReleaseDatePrecision.DAY,
     ...overrides,
   };
 }

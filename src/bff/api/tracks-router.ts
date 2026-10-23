@@ -1,10 +1,15 @@
-import { ErrorRequestHandler, RequestHandler, Router } from 'express';
-import { ApiError, TracksResponse } from '../../contract/tracks';
-import { Logger, TracksService } from '../tracks/tracks-service';
-import { MAX_ISRCS_PER_REQUEST, parseIsrcQuery } from './parse-isrc-query';
-
-/** Browsers may reuse a response briefly; the server-side cache is the one that matters. */
-const CACHE_CONTROL = 'public, max-age=60';
+import { ErrorRequestHandler, RequestHandler, Response, Router } from 'express';
+import { ApiError, TracksResponse } from '../../contract/tracks.interfaces';
+import { ApiErrorCode, LookupStatus } from '../../contract/tracks.enums';
+import { Logger } from '../shared/shared.interfaces';
+import { TracksService } from '../tracks/tracks-service';
+import {
+  CACHE_CONTROL_NO_STORE,
+  CACHE_CONTROL_PUBLIC,
+  MAX_ISRCS_PER_REQUEST,
+} from './api.constants';
+import { IsrcQueryKind } from './api.enums';
+import { parseIsrcQuery } from './parse-isrc-query';
 
 export function createTracksRouter(service: TracksService): Router {
   const router = Router();
@@ -12,16 +17,16 @@ export function createTracksRouter(service: TracksService): Router {
   router.get('/tracks', async (req, res) => {
     const query = parseIsrcQuery(req.query['isrc']);
 
-    if (query.kind === 'invalid') {
+    if (query.kind === IsrcQueryKind.INVALID) {
       return sendError(res, 400, {
-        code: 'invalid_isrc',
+        code: ApiErrorCode.INVALID_ISRC,
         message: 'Provide one or more valid ISRCs in the "isrc" query parameter.',
         invalid: query.invalid,
       });
     }
-    if (query.kind === 'too_many') {
+    if (query.kind === IsrcQueryKind.TOO_MANY) {
       return sendError(res, 400, {
-        code: 'too_many_isrcs',
+        code: ApiErrorCode.TOO_MANY_ISRCS,
         message: `At most ${MAX_ISRCS_PER_REQUEST} ISRCs per request.`,
       });
     }
@@ -29,15 +34,15 @@ export function createTracksRouter(service: TracksService): Router {
     const results = await service.lookup(query.isrcs);
 
     // Every lookup failed: the integration itself is down, so say so instead of "200 with nothing".
-    if (results.every((result) => result.status === 'error')) {
+    if (results.every((result) => result.status === LookupStatus.ERROR)) {
       return sendError(res, 503, {
-        code: 'integration_unavailable',
+        code: ApiErrorCode.INTEGRATION_UNAVAILABLE,
         message: 'The music data provider is currently unavailable.',
       });
     }
 
     const body: TracksResponse = { results };
-    res.set('Cache-Control', CACHE_CONTROL).json(body);
+    res.set('Cache-Control', CACHE_CONTROL_PUBLIC).json(body);
   });
 
   return router;
@@ -45,7 +50,7 @@ export function createTracksRouter(service: TracksService): Router {
 
 /** Unknown `/api/*` paths must answer JSON, not fall through to the SSR HTML renderer. */
 export const apiNotFound: RequestHandler = (_req, res) => {
-  sendError(res, 404, { code: 'not_found', message: 'Unknown API route.' });
+  sendError(res, 404, { code: ApiErrorCode.NOT_FOUND, message: 'Unknown API route.' });
 };
 
 export function createApiErrorHandler(logger: Logger): ErrorRequestHandler {
@@ -53,10 +58,10 @@ export function createApiErrorHandler(logger: Logger): ErrorRequestHandler {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return (error, _req, res, _next) => {
     logger.error('Unhandled API error', error);
-    sendError(res, 500, { code: 'internal_error', message: 'Unexpected error.' });
+    sendError(res, 500, { code: ApiErrorCode.INTERNAL_ERROR, message: 'Unexpected error.' });
   };
 }
 
-function sendError(res: Parameters<RequestHandler>[1], status: number, body: ApiError): void {
-  res.status(status).set('Cache-Control', 'no-store').json(body);
+function sendError(res: Response, status: number, body: ApiError): void {
+  res.status(status).set('Cache-Control', CACHE_CONTROL_NO_STORE).json(body);
 }

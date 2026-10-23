@@ -1,69 +1,68 @@
-import { FetchFn, Sleep, systemSleep } from './http';
+import { systemSleep } from './http';
+import { FetchFn, Sleep } from './http.types';
 import { SpotifyUnavailableError } from './spotify-errors';
-import { SpotifySearchResponse, SpotifyTrack } from './spotify.types';
-import { AccessTokenProvider } from './token-provider';
-
-/** Port the track finder depends on; the HTTP client below is one adapter for it. */
-export interface TrackSearch {
-  searchByIsrc(isrc: string, options?: { market?: string }): Promise<readonly SpotifyTrack[]>;
-}
-
-export interface SpotifyClientOptions {
-  readonly fetchFn?: FetchFn;
-  readonly sleep?: Sleep;
-}
-
-const SEARCH_URL = 'https://api.spotify.com/v1/search';
-/** Search `limit` is capped at 10 since the February 2026 API changes. */
-const SEARCH_LIMIT = 10;
-const REQUEST_TIMEOUT_MS = 8_000;
-/** Longer waits are not worth holding a user request open for: fail fast instead. */
-const MAX_RATE_LIMIT_WAIT_MS = 5_000;
-const MAX_RATE_LIMIT_RETRIES = 1;
+import {
+  MAX_RATE_LIMIT_RETRIES,
+  MAX_RATE_LIMIT_WAIT_MS,
+  REQUEST_TIMEOUT_MS,
+  SEARCH_LIMIT,
+  SEARCH_URL,
+} from './spotify.constants';
+import { SpotifyFailureReason } from './spotify.enums';
+import {
+  AccessTokenProvider,
+  SearchOptions,
+  SpotifyClientOptions,
+  SpotifySearchResponse,
+  SpotifyTrack,
+  TrackSearch,
+} from './spotify.interfaces';
 
 export class SpotifyClient implements TrackSearch {
-  private readonly fetchFn: FetchFn;
-  private readonly sleep: Sleep;
+  private readonly _fetchFn: FetchFn;
+  private readonly _sleep: Sleep;
 
   constructor(
-    private readonly tokens: AccessTokenProvider,
+    private readonly _tokens: AccessTokenProvider,
     options: SpotifyClientOptions = {},
   ) {
-    this.fetchFn = options.fetchFn ?? fetch;
-    this.sleep = options.sleep ?? systemSleep;
+    this._fetchFn = options.fetchFn ?? fetch;
+    this._sleep = options.sleep ?? systemSleep;
   }
 
-  async searchByIsrc(
+  public async searchByIsrc(
     isrc: string,
-    options: { market?: string } = {},
+    options: SearchOptions = {},
   ): Promise<readonly SpotifyTrack[]> {
-    const url = this.buildSearchUrl(isrc, options.market);
+    const url = this._buildSearchUrl(isrc, options.market);
     let tokenRefreshed = false;
     let rateLimitRetries = 0;
 
-    for (;;) {
-      const response = await this.get(url);
+    while (true) {
+      const response = await this._get(url);
       if (response.ok) {
-        return this.parseTracks(response);
+        return this._parseTracks(response);
       }
       if (response.status === 401 && !tokenRefreshed) {
         tokenRefreshed = true;
-        this.tokens.invalidate();
+        this._tokens.invalidate();
         continue;
       }
       if (response.status === 429 && rateLimitRetries < MAX_RATE_LIMIT_RETRIES) {
         const waitMs = retryAfterMs(response);
         if (waitMs !== null && waitMs <= MAX_RATE_LIMIT_WAIT_MS) {
           rateLimitRetries++;
-          await this.sleep(waitMs);
+          await this._sleep(waitMs);
           continue;
         }
       }
-      throw new SpotifyUnavailableError(`search_failed_${response.status}`);
+      throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_FAILED, {
+        status: response.status,
+      });
     }
   }
 
-  private buildSearchUrl(isrc: string, market?: string): string {
+  private _buildSearchUrl(isrc: string, market?: string): string {
     const params = new URLSearchParams({
       q: `isrc:${isrc}`,
       type: 'track',
@@ -75,23 +74,23 @@ export class SpotifyClient implements TrackSearch {
     return `${SEARCH_URL}?${params}`;
   }
 
-  private async get(url: string): Promise<Response> {
-    const token = await this.tokens.getToken();
+  private async _get(url: string): Promise<Response> {
+    const token = await this._tokens.getToken();
     try {
-      return await this.fetchFn(url, {
+      return await this._fetchFn(url, {
         headers: { Authorization: `Bearer ${token}` },
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (cause) {
-      throw new SpotifyUnavailableError('search_network_error', { cause });
+      throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_NETWORK_ERROR, { cause });
     }
   }
 
-  private async parseTracks(response: Response): Promise<readonly SpotifyTrack[]> {
+  private async _parseTracks(response: Response): Promise<readonly SpotifyTrack[]> {
     const body = (await response.json().catch(() => null)) as Partial<SpotifySearchResponse> | null;
     const items = body?.tracks?.items;
     if (!Array.isArray(items)) {
-      throw new SpotifyUnavailableError('search_response_malformed');
+      throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_RESPONSE_MALFORMED);
     }
     return items;
   }

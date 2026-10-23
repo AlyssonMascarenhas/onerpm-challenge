@@ -1,4 +1,4 @@
-import { SpotifySearchResponse, SpotifyTrack } from '../spotify/spotify.types';
+import { SpotifySearchResponse, SpotifyTrack } from '../spotify/spotify.interfaces';
 import BR1SP1200070 from './fixtures/BR1SP1200070.market-br.json';
 import BR1SP1200071 from './fixtures/BR1SP1200071.market-br.json';
 import BR1SP1500002 from './fixtures/BR1SP1500002.market-br.json';

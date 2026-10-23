@@ -1,86 +1,71 @@
-import { Clock, FetchFn, systemClock } from './http';
+import { REQUEST_TIMEOUT_MS, TOKEN_EXPIRY_MARGIN_MS, TOKEN_URL } from './spotify.constants';
+import { systemClock } from './http';
+import { Clock, FetchFn } from './http.types';
 import { SpotifyUnavailableError } from './spotify-errors';
-import { SpotifyTokenResponse } from './spotify.types';
-
-export interface AccessTokenProvider {
-  getToken(): Promise<string>;
-  /** Drops the cached token (e.g. after a 401) so the next call fetches a new one. */
-  invalidate(): void;
-}
-
-export interface SpotifyCredentials {
-  readonly clientId: string;
-  readonly clientSecret: string;
-}
-
-export interface TokenProviderOptions {
-  readonly fetchFn?: FetchFn;
-  readonly now?: Clock;
-}
-
-const TOKEN_URL = 'https://accounts.spotify.com/api/token';
-/** Renew a bit early so a token never expires mid-request. */
-const EXPIRY_MARGIN_MS = 60_000;
-const REQUEST_TIMEOUT_MS = 8_000;
-
-interface CachedToken {
-  readonly value: string;
-  readonly expiresAt: number;
-}
+import { SpotifyFailureReason } from './spotify.enums';
+import {
+  AccessTokenProvider,
+  CachedToken,
+  SpotifyCredentials,
+  SpotifyTokenResponse,
+  TokenProviderOptions,
+} from './spotify.interfaces';
 
 /**
  * Client Credentials token source. Caches the token until shortly before it expires and
  * collapses concurrent refreshes into a single request (single-flight).
  */
 export class SpotifyTokenProvider implements AccessTokenProvider {
-  private readonly fetchFn: FetchFn;
-  private readonly now: Clock;
-  private cached: CachedToken | null = null;
-  private inflight: Promise<string> | null = null;
+  private readonly _fetchFn: FetchFn;
+  private readonly _now: Clock;
+  private _cached: CachedToken | null = null;
+  private _inflight: Promise<string> | null = null;
 
   constructor(
-    private readonly credentials: SpotifyCredentials,
+    private readonly _credentials: SpotifyCredentials,
     options: TokenProviderOptions = {},
   ) {
-    this.fetchFn = options.fetchFn ?? fetch;
-    this.now = options.now ?? systemClock;
+    this._fetchFn = options.fetchFn ?? fetch;
+    this._now = options.now ?? systemClock;
   }
 
-  getToken(): Promise<string> {
-    if (this.cached && this.now() < this.cached.expiresAt) {
-      return Promise.resolve(this.cached.value);
+  public getToken(): Promise<string> {
+    if (this._cached && this._now() < this._cached.expiresAt) {
+      return Promise.resolve(this._cached.value);
     }
-    this.inflight ??= this.requestToken().finally(() => {
-      this.inflight = null;
+    this._inflight ??= this._requestToken().finally(() => {
+      this._inflight = null;
     });
-    return this.inflight;
+    return this._inflight;
   }
 
-  invalidate(): void {
-    this.cached = null;
+  public invalidate(): void {
+    this._cached = null;
   }
 
-  private async requestToken(): Promise<string> {
-    const response = await this.post();
+  private async _requestToken(): Promise<string> {
+    const response = await this._post();
     if (!response.ok) {
-      throw new SpotifyUnavailableError(`token_request_failed_${response.status}`);
+      throw new SpotifyUnavailableError(SpotifyFailureReason.TOKEN_REQUEST_FAILED, {
+        status: response.status,
+      });
     }
 
     const body = (await response.json().catch(() => null)) as Partial<SpotifyTokenResponse> | null;
     if (typeof body?.access_token !== 'string' || typeof body.expires_in !== 'number') {
-      throw new SpotifyUnavailableError('token_response_malformed');
+      throw new SpotifyUnavailableError(SpotifyFailureReason.TOKEN_RESPONSE_MALFORMED);
     }
 
-    const lifetimeMs = Math.max(body.expires_in * 1000 - EXPIRY_MARGIN_MS, 0);
-    this.cached = { value: body.access_token, expiresAt: this.now() + lifetimeMs };
+    const lifetimeMs = Math.max(body.expires_in * 1000 - TOKEN_EXPIRY_MARGIN_MS, 0);
+    this._cached = { value: body.access_token, expiresAt: this._now() + lifetimeMs };
     return body.access_token;
   }
 
-  private async post(): Promise<Response> {
-    const { clientId, clientSecret } = this.credentials;
+  private async _post(): Promise<Response> {
+    const { clientId, clientSecret } = this._credentials;
     const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
     try {
-      return await this.fetchFn(TOKEN_URL, {
+      return await this._fetchFn(TOKEN_URL, {
         method: 'POST',
         headers: {
           Authorization: `Basic ${basic}`,
@@ -90,7 +75,9 @@ export class SpotifyTokenProvider implements AccessTokenProvider {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch (cause) {
-      throw new SpotifyUnavailableError('token_request_network_error', { cause });
+      throw new SpotifyUnavailableError(SpotifyFailureReason.TOKEN_REQUEST_NETWORK_ERROR, {
+        cause,
+      });
     }
   }
 }

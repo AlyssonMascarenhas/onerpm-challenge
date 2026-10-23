@@ -1,56 +1,46 @@
-import { Track } from '../../contract/tracks';
-import { Clock, systemClock } from '../spotify/http';
-import { TrackFinder } from './track-finder';
-
-export interface CachingOptions {
-  readonly ttlMs: number;
-  readonly maxEntries: number;
-  readonly now?: Clock;
-}
-
-interface Entry {
-  readonly result: Promise<Track | null>;
-  readonly expiresAt: number;
-}
+import { Track } from '../../contract/tracks.interfaces';
+import { systemClock } from '../spotify/http';
+import { Clock } from '../spotify/http.types';
+import { CacheEntry, CachingOptions, TrackFinder } from './tracks.interfaces';
 
 /**
  * Short-lived in-memory cache (Decorator). It only shields Spotify's rate limits and
  * de-duplicates concurrent lookups; nothing is persisted. Failures are never cached.
  */
 export class CachingTrackFinder implements TrackFinder {
-  private readonly entries = new Map<string, Entry>();
-  private readonly now: Clock;
+  private readonly _entries = new Map<string, CacheEntry>();
+  private readonly _now: Clock;
 
   constructor(
-    private readonly inner: TrackFinder,
-    private readonly options: CachingOptions,
+    private readonly _inner: TrackFinder,
+    private readonly _options: CachingOptions,
   ) {
-    this.now = options.now ?? systemClock;
+    this._now = _options.now ?? systemClock;
   }
 
-  findByIsrc(isrc: string): Promise<Track | null> {
-    const cached = this.entries.get(isrc);
-    if (cached && cached.expiresAt > this.now()) {
+  public findByIsrc(isrc: string): Promise<Track | null> {
+    const cached = this._entries.get(isrc);
+    if (cached && cached.expiresAt > this._now()) {
       return cached.result;
     }
 
-    const result = this.inner.findByIsrc(isrc);
-    this.store(isrc, { result, expiresAt: this.now() + this.options.ttlMs });
+    const result = this._inner.findByIsrc(isrc);
+    this._store(isrc, { result, expiresAt: this._now() + this._options.ttlMs });
     result.catch(() => {
-      if (this.entries.get(isrc)?.result === result) {
-        this.entries.delete(isrc);
+      if (this._entries.get(isrc)?.result === result) {
+        this._entries.delete(isrc);
       }
     });
     return result;
   }
 
-  private store(isrc: string, entry: Entry): void {
-    this.entries.delete(isrc);
-    this.entries.set(isrc, entry);
-    if (this.entries.size > this.options.maxEntries) {
-      const oldest = this.entries.keys().next().value;
+  private _store(isrc: string, entry: CacheEntry): void {
+    this._entries.delete(isrc);
+    this._entries.set(isrc, entry);
+    if (this._entries.size > this._options.maxEntries) {
+      const oldest = this._entries.keys().next().value;
       if (oldest !== undefined) {
-        this.entries.delete(oldest);
+        this._entries.delete(oldest);
       }
     }
   }
