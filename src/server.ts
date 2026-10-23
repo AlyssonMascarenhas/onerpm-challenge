@@ -32,8 +32,10 @@ app.use(
 
 /**
  * Handle all other requests by rendering the Angular application.
+ * The rendered language follows `Accept-Language`, so caches must not share pages across languages.
  */
 app.use((req, res, next) => {
+  res.vary('Accept-Language');
   angularApp
     .handle(req)
     .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
