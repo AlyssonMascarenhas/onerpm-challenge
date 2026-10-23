@@ -6,23 +6,18 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { createApiRouter } from './bff/api/create-api-router';
+import { loadLocalEnvFile } from './bff/config';
+
+loadLocalEnvFile();
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+/** BFF: keeps the Spotify credentials on the server. Must come before the SSR catch-all. */
+app.use('/api', createApiRouter({ env: process.env }));
 
 /**
  * Serve static files from /browser
