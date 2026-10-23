@@ -26,3 +26,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0010 | [Domínio de faixas no front: ordenação, duração e estado](0010-dominio-de-faixas-no-front.md) | Aceito |
 | 0011 | [Internacionalização com Transloco, em seis idiomas, também no servidor](0011-i18n-com-transloco.md) | Aceito |
 | 0012 | [Tema, modo escuro e layout com PrimeNG](0012-tema-e-layout-com-primeng.md) | Aceito |
+| 0013 | [Cartões de faixa e player de prévia do Spotify](0013-cartoes-de-faixa-e-player-do-spotify.md) | Aceito |
