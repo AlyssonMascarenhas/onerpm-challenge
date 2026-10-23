@@ -1,0 +1,122 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 1.25rem;
+  background: var(--p-content-background);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--p-surface-950) 8%, transparent);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (hover: hover) {
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--p-surface-950) 35%, transparent);
+  }
+}
+
+.card__cover {
+  position: relative;
+  aspect-ratio: 1;
+  background: color-mix(in srgb, var(--p-text-color) 10%, transparent);
+}
+
+.card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card__fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: 3rem;
+  color: var(--orp-text-muted);
+}
+
+/* Never on top of the cover: translucent tag colors are unreadable over arbitrary artwork. */
+.card__badge {
+  align-self: flex-start;
+}
+
+.card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
+.card__title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+
+.card__artists {
+  margin: -0.4rem 0 0;
+  color: var(--orp-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.card__meta dt {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--orp-text-muted);
+}
+
+.card__meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.card__isrc {
+  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.card__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin-top: auto;
+  font-weight: 600;
+  color: var(--p-primary-color);
+  text-decoration: none;
+}
+
+.card__link:hover {
+  text-decoration: underline;
+}
+
+.card__link:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
