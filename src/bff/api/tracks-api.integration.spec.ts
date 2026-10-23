@@ -1,0 +1,235 @@
+// @vitest-environment node
+import express from 'express';
+import { Server } from 'node:http';
+import { AddressInfo } from 'node:net';
+import { ApiError, TracksResponse } from '../../contract/tracks';
+import { SpotifyTrack } from '../spotify/spotify.types';
+import { spotifyTrack } from '../testing/builders';
+import { createFakeSpotify, FakeSpotifyOptions } from '../testing/fake-spotify';
+import { CHALLENGE_ISRCS, recordedTracks } from '../testing/fixtures';
+import { createApiRouter } from './create-api-router';
+
+const ENV = { SPOTIFY_CLIENT_ID: 'id', SPOTIFY_CLIENT_SECRET: 'secret' };
+const silentLogger = { warn: vi.fn(), error: vi.fn() };
+
+let server: Server;
+let baseUrl: string;
+
+/** Boots the real Express router (mounted at /api like in server.ts) against a fake Spotify. */
+async function startApi(spotify: Partial<FakeSpotifyOptions> = {}, env: NodeJS.ProcessEnv = ENV) {
+  const fake = createFakeSpotify({
+    search: ({ isrc, market }) => (market === 'BR' ? recordedTracks(isrc) : []),
+    ...spotify,
+  });
+  const app = express();
+  app.use(
+    '/api',
+    createApiRouter({
+      env,
+      fetchFn: fake.fetchFn,
+      logger: silentLogger,
+      sleep: async () => undefined,
+    }),
+  );
+
+  server = await new Promise<Server>((resolve) => {
+    const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+  });
+  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  return fake;
+}
+
+const get = (path: string) => fetch(`${baseUrl}${path}`);
+
+afterEach(async () => {
+  await new Promise<void>((resolve) => server?.close(() => resolve()));
+  vi.clearAllMocks();
+});
+
+describe('GET /api/tracks', () => {
+  describe('with the 10 ISRCs of the challenge', () => {
+    it('returns all of them found and available in Brazil', async () => {
+      await startApi();
+
+      const response = await get(`/api/tracks?isrc=${CHALLENGE_ISRCS.join(',')}`);
+      const body = (await response.json()) as TracksResponse;
+
+      expect(response.status).toBe(200);
+      expect(body.results).toHaveLength(10);
+      expect(body.results.every((result) => result.status === 'found')).toBe(true);
+      for (const result of body.results) {
+        if (result.status !== 'found') {
+          continue;
+        }
+        expect(result.track).toMatchObject({
+          isrc: result.isrc,
+          availableInBR: true,
+          coverUrl: expect.stringContaining('https://i.scdn.co/image/'),
+          spotifyUrl: expect.stringContaining('https://open.spotify.com/track/'),
+        });
+        expect(result.track.artists.length).toBeGreaterThan(0);
+        expect(result.track.durationMs).toBeGreaterThan(0);
+      }
+    });
+
+    it('exposes the fields the page renders for a known track', async () => {
+      await startApi();
+
+      const body = (await (await get('/api/tracks?isrc=BRC310600002')).json()) as TracksResponse;
+
+      expect(body.results[0]).toMatchObject({
+        status: 'found',
+        track: {
+          title: 'Repente',
+          artists: ['PianOrquestra'],
+          releaseDate: { value: '2013-06-13', precision: 'day' },
+          durationMs: 170_733,
+          spotifyUrl: 'https://open.spotify.com/track/4lwE7ainG51zmxt1xAC7XQ',
+        },
+      });
+    });
+
+    it('chooses the original release when an ISRC lives on an album and on a single', async () => {
+      await startApi();
+
+      const body = (await (await get('/api/tracks?isrc=BR1SP1200071')).json()) as TracksResponse;
+
+      expect(body.results[0]).toMatchObject({
+        status: 'found',
+        track: { id: '4s71Bub5KzXBSMyE8nlH4E', releaseDate: { value: '2014-03-25' } },
+      });
+    });
+  });
+
+  it('reports ISRCs Spotify does not know without failing the request', async () => {
+    await startApi({ search: ({ isrc }) => (isrc === 'BR1SP1200071' ? [spotifyTrack()] : []) });
+
+    const body = (await (
+      await get('/api/tracks?isrc=BR1SP1200071,BR1SP1200070')
+    ).json()) as TracksResponse;
+
+    expect(body.results.map((result) => result.status)).toEqual(['found', 'not_found']);
+  });
+
+  it('flags a track that exists but is not playable in Brazil', async () => {
+    await startApi({ search: () => [spotifyTrack({ is_playable: false })] });
+
+    const body = (await (await get('/api/tracks?isrc=BR1SP1200071')).json()) as TracksResponse;
+
+    expect(body.results[0]).toMatchObject({ status: 'found', track: { availableInBR: false } });
+  });
+
+  it('keeps the healthy results when one ISRC hits a Spotify error', async () => {
+    await startApi({
+      search: ({ isrc }): SpotifyTrack[] | Response =>
+        isrc === 'BR1SP1200070' ? new Response('', { status: 500 }) : [spotifyTrack()],
+    });
+
+    const response = await get('/api/tracks?isrc=BR1SP1200071,BR1SP1200070');
+    const body = (await response.json()) as TracksResponse;
+
+    expect(response.status).toBe(200);
+    expect(body.results).toMatchObject([
+      { status: 'found' },
+      { status: 'error', code: 'integration_unavailable' },
+    ]);
+  });
+
+  it('answers 503 integration_unavailable when Spotify auth is down', async () => {
+    await startApi({ tokenStatus: 500 });
+
+    const response = await get('/api/tracks?isrc=BR1SP1200071,BR1SP1200070');
+    const body = (await response.json()) as ApiError;
+
+    expect(response.status).toBe(503);
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(body.code).toBe('integration_unavailable');
+  });
+
+  it('answers 503 when Spotify search fails for every ISRC', async () => {
+    await startApi({ search: () => new Response('', { status: 503 }) });
+
+    const response = await get('/api/tracks?isrc=BR1SP1200071');
+
+    expect(response.status).toBe(503);
+  });
+
+  it('answers 503 when the Spotify credentials are not configured, never leaking details', async () => {
+    await startApi({}, {});
+
+    const response = await get('/api/tracks?isrc=BR1SP1200071');
+    const text = await response.text();
+
+    expect(response.status).toBe(503);
+    expect(JSON.parse(text)).toMatchObject({ code: 'integration_unavailable' });
+    expect(text).not.toContain('SPOTIFY');
+  });
+
+  it('serves repeated lookups from cache, without calling Spotify again', async () => {
+    const fake = await startApi();
+
+    await get('/api/tracks?isrc=BRC310600002');
+    await get('/api/tracks?isrc=BRC310600002');
+
+    expect(fake.searches).toHaveLength(1);
+    expect(fake.tokenRequests()).toBe(1);
+  });
+
+  it('allows browsers to reuse successful responses for a minute', async () => {
+    await startApi();
+
+    const response = await get('/api/tracks?isrc=BRC310600002');
+
+    expect(response.headers.get('cache-control')).toBe('public, max-age=60');
+  });
+
+  describe('validation', () => {
+    it.each([
+      ['no ISRC', '/api/tracks'],
+      ['an empty ISRC', '/api/tracks?isrc='],
+    ])('rejects %s with 400', async (_label, path) => {
+      await startApi();
+
+      const response = await get(path);
+
+      expect(response.status).toBe(400);
+      expect(((await response.json()) as ApiError).code).toBe('invalid_isrc');
+    });
+
+    it('lists the malformed ISRCs and does not call Spotify', async () => {
+      const fake = await startApi();
+
+      const response = await get('/api/tracks?isrc=BRC310600002,NOPE');
+      const body = (await response.json()) as ApiError;
+
+      expect(response.status).toBe(400);
+      expect(body).toMatchObject({ code: 'invalid_isrc', invalid: ['NOPE'] });
+      expect(fake.searches).toHaveLength(0);
+    });
+
+    it('rejects more than 20 ISRCs', async () => {
+      await startApi();
+      const many = Array.from(
+        { length: 21 },
+        (_, i) => `BR1SP12${String(i).padStart(5, '0')}`,
+      ).join(',');
+
+      const response = await get(`/api/tracks?isrc=${many}`);
+
+      expect(response.status).toBe(400);
+      expect(((await response.json()) as ApiError).code).toBe('too_many_isrcs');
+    });
+  });
+});
+
+describe('unknown API routes', () => {
+  it('answers a JSON 404 instead of falling through to the SSR renderer', async () => {
+    await startApi();
+
+    const response = await get('/api/nope');
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get('content-type')).toContain('application/json');
+    expect(((await response.json()) as ApiError).code).toBe('not_found');
+  });
+});
