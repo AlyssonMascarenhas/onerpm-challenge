@@ -116,7 +116,8 @@ jobs:
   e2e:
     name: End-to-end and accessibility
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
+    # Pinned: the Playwright browsers and their system packages are tested on this image.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - name: Check out
@@ -128,6 +129,7 @@ jobs:
         uses: ./.github/actions/setup-project
 
       - name: Install Chromium
+        timeout-minutes: 8
         run: npm run e2e:install
 
       # The suite runs against the production build served by the real SSR/Express server.
