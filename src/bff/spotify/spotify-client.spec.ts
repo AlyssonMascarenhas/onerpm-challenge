@@ -25,6 +25,9 @@ const ok =
   (...tracks: ReturnType<typeof spotifyTrack>[]) =>
   () =>
     jsonResponse({ tracks: { items: tracks } });
+const page = (tracks: ReturnType<typeof spotifyTrack>[], next: string | null) => () =>
+  jsonResponse({ tracks: { items: tracks, next } });
+const NEXT = 'https://api.spotify.com/v1/search?offset=10';
 const failure = (status: number, headers?: Record<string, string>) => () =>
   new Response('', { status, headers });
 
@@ -59,6 +62,63 @@ describe('SpotifyClient.searchByIsrc', () => {
     const { client } = setup([ok()]);
 
     await expect(client.searchByIsrc('BR1SP1200071')).resolves.toEqual([]);
+  });
+
+  describe('pagination', () => {
+    it('follows the next pages and returns every track, 10 per request', async () => {
+      const first = spotifyTrack({ id: 'first' });
+      const second = spotifyTrack({ id: 'second' });
+      const { client, fetchFn } = setup([page([first], NEXT), page([second], null)]);
+
+      const tracks = await client.searchByIsrc('BR1SP1200071', { market: 'BR' });
+
+      expect(tracks.map((track) => track.id)).toEqual(['first', 'second']);
+      const requests = fetchFn.mock.calls.map(([url]) => new URL(String(url)).searchParams);
+      expect(requests.map((params) => params.get('offset'))).toEqual(['0', '10']);
+      expect(requests.map((params) => params.get('limit'))).toEqual(['10', '10']);
+      expect(requests.map((params) => params.get('market'))).toEqual(['BR', 'BR']);
+    });
+
+    it('stops at the last page', async () => {
+      const { client, fetchFn } = setup([page([spotifyTrack()], null)]);
+
+      await client.searchByIsrc('BR1SP1200071');
+
+      expect(fetchFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('never requests more than 5 pages, even if Spotify keeps offering more', async () => {
+      const { client, fetchFn } = setup(
+        Array.from({ length: 8 }, () => page([spotifyTrack()], NEXT)),
+      );
+
+      const tracks = await client.searchByIsrc('BR1SP1200071');
+
+      expect(fetchFn).toHaveBeenCalledTimes(5);
+      expect(tracks).toHaveLength(5);
+    });
+
+    it('fails the whole search when a later page fails', async () => {
+      const { client } = setup([page([spotifyTrack()], NEXT), failure(500)]);
+
+      await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
+        reason: SpotifyFailureReason.SEARCH_FAILED,
+        status: 500,
+      });
+    });
+
+    it('still retries a rate-limited later page on its own', async () => {
+      const { client, sleep } = setup([
+        page([spotifyTrack({ id: 'a' })], NEXT),
+        failure(429, { 'Retry-After': '1' }),
+        page([spotifyTrack({ id: 'b' })], null),
+      ]);
+
+      const tracks = await client.searchByIsrc('BR1SP1200071');
+
+      expect(tracks.map((track) => track.id)).toEqual(['a', 'b']);
+      expect(sleep).toHaveBeenCalledExactlyOnceWith(1000);
+    });
   });
 
   describe('401 Unauthorized', () => {

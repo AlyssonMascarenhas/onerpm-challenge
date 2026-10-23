@@ -1,10 +1,11 @@
 import { systemSleep } from './http';
-import { isSpotifyTrack } from './is-spotify-track';
 import { FetchFn, Sleep } from './http.types';
+import { isSpotifyTrack } from './is-spotify-track';
 import { SpotifyUnavailableError } from './spotify-errors';
 import {
   MAX_RATE_LIMIT_RETRIES,
   MAX_RATE_LIMIT_WAIT_MS,
+  MAX_SEARCH_PAGES,
   REQUEST_TIMEOUT_MS,
   SEARCH_LIMIT,
   SEARCH_URL,
@@ -13,6 +14,7 @@ import { SpotifyFailureReason } from './spotify.enums';
 import {
   AccessTokenProvider,
   SearchOptions,
+  SearchPage,
   SpotifyClientOptions,
   SpotifySearchResponse,
   SpotifyTrack,
@@ -31,18 +33,32 @@ export class SpotifyClient implements TrackSearch {
     this._sleep = options.sleep ?? systemSleep;
   }
 
+  /** Every track Spotify lists for the ISRC: the API caps a page at 10, so we follow `next`. */
   public async searchByIsrc(
     isrc: string,
     options: SearchOptions = {},
   ): Promise<readonly SpotifyTrack[]> {
-    const url = this._buildSearchUrl(isrc, options.market);
+    const tracks: SpotifyTrack[] = [];
+
+    for (let page = 0; page < MAX_SEARCH_PAGES; page++) {
+      const result = await this._searchPage(isrc, options.market, page * SEARCH_LIMIT);
+      tracks.push(...result.items);
+      if (!result.hasNext) {
+        break;
+      }
+    }
+    return tracks;
+  }
+
+  private async _searchPage(isrc: string, market: string | undefined, offset: number) {
+    const url = this._buildSearchUrl(isrc, market, offset);
     let tokenRefreshed = false;
     let rateLimitRetries = 0;
 
     while (true) {
       const response = await this._get(url);
       if (response.ok) {
-        return this._parseTracks(response);
+        return this._parsePage(response);
       }
       if (response.status === 401 && !tokenRefreshed) {
         tokenRefreshed = true;
@@ -63,11 +79,12 @@ export class SpotifyClient implements TrackSearch {
     }
   }
 
-  private _buildSearchUrl(isrc: string, market?: string): string {
+  private _buildSearchUrl(isrc: string, market: string | undefined, offset: number): string {
     const params = new URLSearchParams({
       q: `isrc:${isrc}`,
       type: 'track',
       limit: String(SEARCH_LIMIT),
+      offset: String(offset),
     });
     if (market) {
       params.set('market', market);
@@ -87,13 +104,13 @@ export class SpotifyClient implements TrackSearch {
     }
   }
 
-  private async _parseTracks(response: Response): Promise<readonly SpotifyTrack[]> {
+  private async _parsePage(response: Response): Promise<SearchPage> {
     const body = (await response.json().catch(() => null)) as Partial<SpotifySearchResponse> | null;
     const items = body?.tracks?.items;
     if (!Array.isArray(items) || !items.every(isSpotifyTrack)) {
       throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_RESPONSE_MALFORMED);
     }
-    return items;
+    return { items, hasNext: typeof body?.tracks?.next === 'string' };
   }
 }
 

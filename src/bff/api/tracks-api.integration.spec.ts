@@ -10,7 +10,7 @@ import {
 } from '../../contract/tracks.enums';
 import { ApiError, TracksResponse } from '../../contract/tracks.interfaces';
 import { SpotifyTrack } from '../spotify/spotify.interfaces';
-import { spotifyTrack } from '../testing/builders';
+import { spotifyAlbum, spotifyTrack } from '../testing/builders';
 import { createFakeSpotify, FakeSpotifyOptions } from '../testing/fake-spotify';
 import { CHALLENGE_ISRCS, recordedTracks } from '../testing/fixtures';
 import { createApiRouter } from './create-api-router';
@@ -105,6 +105,28 @@ describe('GET /api/tracks', () => {
         track: { id: '4s71Bub5KzXBSMyE8nlH4E', releaseDate: { value: '2014-03-25' } },
       });
     });
+  });
+
+  it('finds the original release even when it only shows up on the second page of results', async () => {
+    const reissues = Array.from({ length: 10 }, (_, i) =>
+      spotifyTrack({
+        id: `reissue-${i}`,
+        album: spotifyAlbum({ release_date: `2022-01-${String(i + 1).padStart(2, '0')}` }),
+      }),
+    );
+    const original = spotifyTrack({
+      id: 'original',
+      album: spotifyAlbum({ release_date: '2010-05-05' }),
+    });
+    const fake = await startApi({ search: () => [...reissues, original] });
+
+    const body = (await (await get('/api/tracks?isrc=BR1SP1200071')).json()) as TracksResponse;
+
+    expect(body.results[0]).toMatchObject({
+      status: LookupStatus.FOUND,
+      track: { id: 'original', releaseDate: { value: '2010-05-05' } },
+    });
+    expect(fake.searches.map((search) => search.offset)).toEqual([0, 10]);
   });
 
   it('reports ISRCs Spotify does not know without failing the request', async () => {

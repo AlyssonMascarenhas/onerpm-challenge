@@ -32,7 +32,17 @@ export interface SpotifyTrack {
 }
 
 export interface SpotifySearchResponse {
-  readonly tracks: { readonly items: readonly SpotifyTrack[] };
+  readonly tracks: {
+    readonly items: readonly SpotifyTrack[];
+    /** URL of the next page, or `null` on the last one. */
+    readonly next: string | null;
+  };
+}
+
+/** One validated page of search results. */
+export interface SearchPage {
+  readonly items: readonly SpotifyTrack[];
+  readonly hasNext: boolean;
 }
 
 export interface SpotifyTokenResponse {

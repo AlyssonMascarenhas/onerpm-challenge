@@ -5,6 +5,9 @@ export const SEARCH_URL = 'https://api.spotify.com/v1/search';
 
 /** Search `limit` is capped at 10 since the February 2026 API changes. */
 export const SEARCH_LIMIT = 10;
+
+/** An ISRC lives on a handful of releases; this caps paging at 50 tracks so a bad query cannot loop. */
+export const MAX_SEARCH_PAGES = 5;
 export const REQUEST_TIMEOUT_MS = 8_000;
 
 /** Renew the token a bit early so it never expires mid-request. */
