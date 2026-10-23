@@ -12,7 +12,7 @@
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
-  min-height: 2.75rem;
+  min-height: var(--action-min-height, 2.75rem);
   padding: 0.5rem 1rem;
   border: 1px solid var(--p-action-background);
   border-radius: var(--p-border-radius-md, 0.5rem);

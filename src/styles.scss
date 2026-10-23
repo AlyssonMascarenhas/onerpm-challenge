@@ -6,7 +6,7 @@
  * need no duplicated values here: `--p-*` variables switch with the `.app-dark` class on <html>.
  */
 :root {
-  --orp-page-width: 64rem;
+  --orp-page-width: 80rem;
   --orp-gutter: clamp(1rem, 4vw, 2rem);
   --orp-accent: var(--p-primary-color);
   --orp-accent-alt: #d6246e;

@@ -114,10 +114,15 @@
   margin: 0.25rem 0 0;
 }
 
-/* One column on phones, two on tablets, three on desktops, each card at least 19rem wide. */
+/*
+ * As many columns as fit, each card at least 16.5rem wide: one on phones, two on tablets, three on laptops and
+ * four on wide screens. The grid is also a size container, so a card can tell when it is alone in its row (one
+ * column) and take its compact layout (see track-card.scss).
+ */
 .grid {
+  container-type: inline-size;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.5rem), 1fr));
   gap: 1.25rem;
   margin: 0;
   padding: 0;
@@ -138,5 +143,25 @@
     grid-template-rows: subgrid;
     grid-row: span 8;
     row-gap: 0;
+  }
+}
+
+/* One column: the entries are no longer aligned with neighbours, so they stop spanning the rows of a track card. */
+@container (width < 34.25rem) {
+  .grid__item {
+    display: block;
+    grid-row: auto;
+    grid-template-rows: none;
+  }
+}
+
+/* The loading placeholders are about as tall as the cards that replace them, so nothing jumps when they arrive. */
+.grid__placeholder {
+  height: 28rem;
+}
+
+@container (width < 34.25rem) {
+  .grid__placeholder {
+    height: 20rem;
   }
 }

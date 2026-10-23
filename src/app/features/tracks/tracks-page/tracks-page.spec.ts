@@ -82,7 +82,7 @@ describe('TracksPage', () => {
     it('shows placeholders and a status message, and marks the region busy, until the answer comes', async () => {
       const { fixture } = await render();
 
-      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(3);
+      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(4);
       expect(root(fixture).querySelector('[role="status"]')?.textContent).toBe('Loading tracks…');
       expect(root(fixture).querySelector('section.content')?.getAttribute('aria-busy')).toBe(
         'true',
@@ -354,7 +354,7 @@ describe('TracksPage', () => {
       );
       expect(lookup).toHaveBeenCalledTimes(2);
       expect(root(fixture).querySelector('[role="alert"]')).toBeNull();
-      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(3);
+      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(4);
     });
 
     it('recovers into the list when the retry succeeds', async () => {

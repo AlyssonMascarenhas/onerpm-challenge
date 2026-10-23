@@ -83,7 +83,10 @@ test('opening a player changes nothing in the cards: the player lives in the bar
   await page.getByRole('button', { name: 'Listen to a preview' }).first().click();
   await expect(page.locator('iframe')).toHaveCount(1);
 
-  expect(await measureBands(page)).toEqual(before);
+  // The click leaves the pointer over the card, which rises by 2px (a short transition) while it is hovered:
+  // take the pointer away and measure until the card has settled.
+  await page.mouse.move(0, 0);
+  await expect(async () => expect(await measureBands(page)).toEqual(before)).toPass();
 });
 
 test('stays aligned in another language, where texts wrap differently', async ({ page }) => {

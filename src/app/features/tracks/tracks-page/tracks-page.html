@@ -84,7 +84,9 @@
     <p class="visually-hidden" role="status">{{ loading() }}</p>
     <div class="grid" aria-hidden="true">
       @for (placeholder of placeholders; track placeholder) {
-        <p-skeleton height="28rem" borderRadius="1.25rem" />
+        <div class="grid__placeholder">
+          <p-skeleton height="100%" borderRadius="1.25rem" />
+        </div>
       }
     </div>
   }

@@ -1,5 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 import { isolateSpotify, mockTracks } from './support/mock-api';
+
+/** The height of the sticky header, with some margin: what a card cannot use of a phone screen. */
+const HEADER_ALLOWANCE = 80;
 
 test.beforeEach(async ({ page }) => {
   await isolateSpotify(page);
@@ -27,17 +30,59 @@ test('cards fit inside the viewport and are never cut off', async ({ page }) => 
   }
 });
 
-test('lays the cards out in as many columns as fit', async ({ page }, testInfo) => {
+const columnsOnScreen = async (page: Page) => {
   const lefts = await page
     .locator('orp-track-card .card')
     .evaluateAll((cards) => cards.map((card) => Math.round(card.getBoundingClientRect().left)));
-  const columns = new Set(lefts).size;
+  return new Set(lefts).size;
+};
 
-  if (testInfo.project.name === 'mobile') {
-    expect(columns).toBe(1);
-  } else {
-    expect(columns).toBe(3);
+test('lays the cards out in as many columns as fit', async ({ page }, testInfo) => {
+  expect(await columnsOnScreen(page)).toBe(testInfo.project.name === 'mobile' ? 1 : 4);
+});
+
+test.describe('columns by width', () => {
+  for (const [width, columns] of [
+    [375, 1],
+    [640, 2],
+    [960, 3],
+    [1280, 4],
+    [1600, 4],
+  ] as const) {
+    test(`${width}px wide: ${columns} column(s)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+
+      await expect.poll(() => columnsOnScreen(page)).toBe(columns);
+    });
   }
+});
+
+test('on a phone the whole card fits on the screen, with no scrolling to read it', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'The compact card is the phone layout');
+  const viewport = page.viewportSize()!;
+  const card = page.locator('orp-track-card .card').first();
+  await card.scrollIntoViewIfNeeded();
+
+  const box = (await card.boundingBox())!;
+
+  // The sticky header (about 65px) takes the top of the screen; the card must fit in what is left.
+  expect(box.height).toBeLessThan(viewport.height - HEADER_ALLOWANCE);
+  await expect(card.getByRole('button', { name: 'Listen to a preview' })).toBeVisible();
+  await expect(card.getByRole('link', { name: 'Open on Spotify' })).toBeVisible();
+});
+
+test('on a phone the cover is a small thumbnail beside the title', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'The compact card is the phone layout');
+  const card = page.locator('orp-track-card .card').first();
+
+  const cover = (await card.locator('.card__cover').boundingBox())!;
+  const title = (await card.getByRole('heading', { level: 2 }).boundingBox())!;
+
+  expect(cover.width).toBeLessThan(120);
+  expect(title.x).toBeGreaterThanOrEqual(cover.x + cover.width);
 });
 
 test('cards of the same row have the same height', async ({ page }) => {
