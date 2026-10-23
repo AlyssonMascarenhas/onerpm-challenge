@@ -248,6 +248,12 @@ describe('TracksPage', () => {
       expect(alert?.querySelector('button')?.textContent?.trim()).toBe(retry);
     });
 
+    it('does not move focus to the retry button by itself', async () => {
+      const { fixture } = await unavailable();
+
+      expect(root(fixture).querySelector('[autofocus]')).toBeNull();
+    });
+
     it('offers a retry that asks again, showing the placeholders meanwhile', async () => {
       const { fixture, lookup } = await unavailable();
 

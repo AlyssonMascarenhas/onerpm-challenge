@@ -38,6 +38,12 @@ describe('TrackPlayer', () => {
   });
 
   describe('before the visitor asks to listen', () => {
+    it('does not ask the browser to focus the button on load', async () => {
+      const fixture = await render();
+
+      expect(root(fixture).querySelector('[autofocus]')).toBeNull();
+    });
+
     it('shows only a button, and loads nothing from Spotify', async () => {
       const fixture = await render();
 
