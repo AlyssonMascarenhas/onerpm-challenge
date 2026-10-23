@@ -147,6 +147,19 @@ describe('GET /api/tracks', () => {
     ]);
   });
 
+  it('forbids caching a response that contains a failed lookup, so a retry reaches the BFF', async () => {
+    await startApi({
+      search: ({ isrc }): SpotifyTrack[] | Response =>
+        isrc === 'BR1SP1200070' ? new Response('', { status: 500 }) : [spotifyTrack()],
+    });
+
+    const partial = await get('/api/tracks?isrc=BR1SP1200071,BR1SP1200070');
+    const healthy = await get('/api/tracks?isrc=BR1SP1200071');
+
+    expect(partial.headers.get('cache-control')).toBe('no-store');
+    expect(healthy.headers.get('cache-control')).toBe('public, max-age=60');
+  });
+
   it('answers 503 integration_unavailable when Spotify auth is down', async () => {
     await startApi({ tokenStatus: 500 });
 

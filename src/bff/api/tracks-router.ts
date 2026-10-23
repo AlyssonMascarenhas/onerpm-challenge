@@ -41,8 +41,12 @@ export function createTracksRouter(service: TracksService): Router {
       });
     }
 
+    // A partial failure is transient: it must never be replayed from a browser or shared cache.
+    const hasFailures = results.some((result) => result.status === LookupStatus.ERROR);
     const body: TracksResponse = { results };
-    res.set('Cache-Control', CACHE_CONTROL_PUBLIC).json(body);
+    res
+      .set('Cache-Control', hasFailures ? CACHE_CONTROL_NO_STORE : CACHE_CONTROL_PUBLIC)
+      .json(body);
   });
 
   return router;
