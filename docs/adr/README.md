@@ -20,3 +20,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0004 | [Commits semânticos, commitlint e fluxo de PRs](0004-commits-semanticos-e-fluxo-de-prs.md) | Aceito |
 | 0005 | [Regras de consulta ao Spotify em 2026](0005-regras-de-consulta-ao-spotify.md) | Aceito   |
 | 0006 | [PrimeNG como biblioteca de UI e MCP em vez de plugin](0006-primeng-e-mcp.md)  | Aceito   |
+| 0009 | [CI com GitHub Actions em PRs para `main`](0009-ci-com-github-actions.md) | Aceito |
