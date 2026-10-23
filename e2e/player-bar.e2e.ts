@@ -200,6 +200,9 @@ test.describe('player bar', () => {
       /^https:\/\/open\.spotify\.com\/embed\/track\/[A-Za-z0-9]{22}/,
     );
     await expect(page.getByRole('button', { name: 'Close the player' })).toBeVisible();
+    // Once the frame has loaded the loading indicator is gone, and the frame is visible.
+    await expect(page.locator('orp-player-bar').getByRole('status')).toHaveCount(0);
+    await expect(frame).toBeVisible();
     expect(await spotify(page)).toBeNull();
   });
 

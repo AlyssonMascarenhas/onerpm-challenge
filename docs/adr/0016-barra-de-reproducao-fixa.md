@@ -24,8 +24,14 @@ embed. A revisão pediu algo como a barra do próprio Spotify: um player que aco
   `iframe-api/v1` permite `play()` por código. O `SpotifyIframeApi` injeta esse _script_ **só no primeiro "Ouvir"**, só do
   endereço do Spotify, e o endereço tocado (`spotify:track:<id>`) só é montado por `buildTrackUri` com o id validado, como no
   ADR 0013. Verificado no navegador real: após o clique a posição avança sem ação adicional.
-- **Se o _script_ não carregar** (bloqueador, sem rede), a barra usa o embed simples da faixa (`buildEmbedUrl`): o visitante
-  aperta o play nele. A funcionalidade nunca fica indisponível.
+- **Se o início por código não acontecer**, a barra usa o embed simples da faixa (`buildEmbedUrl`): o visitante aperta o
+  play nele. A funcionalidade nunca fica indisponível. Isso vale para _script_ bloqueado ou sem rede e também para **qualquer
+  etapa que trave**: um prazo de 15 s cobre o _script_, a criação do embed e o "pronto" dele; vencido o prazo, o que ficou
+  pela metade é desfeito e qualquer resposta tardia é descartada (cada tentativa é numerada). Uma falha que chega depois de a
+  barra ser fechada não conta: a próxima faixa tenta o _script_ de novo. O embed de contingência também mostra o indicador de
+  carregamento (com o quadro invisível e fora do foco até o `load`) e o mostra de novo quando a faixa ou o tema o recarregam.
+- **Limite conhecido**: no embed de contingência não há prazo para o `load` do quadro; se esse evento nunca vier (rede
+  caída), o indicador fica até o visitante fechar a barra.
 - **Carregamento sem "buraco"**: a barra reserva os 80 px e mostra o indicador "Carregando o player…" até o `ready` do embed;
   o embed carrega por baixo, invisível.
 - **Bordas brancas**: o _iframe_ tem um fundo branco opaco quando a página é escura, que aparecia nos cantos arredondados do

@@ -15,6 +15,7 @@ import {
   SpotifyIframeApiObject,
 } from '../spotify-iframe-api.interfaces';
 import { track } from '../testing/builders';
+import { SPOTIFY_EMBED_READY_TIMEOUT_MS } from '../tracks.constants';
 import { PlayerBar } from './player-bar';
 
 const ID = '7q7QtMiK9jhob0Md7p715D';
@@ -44,6 +45,8 @@ class FakeController implements SpotifyEmbedController {
 }
 
 interface Setup {
+  /** The callbacks of embeds that were asked for and have not answered (only with `holdControllers`). */
+  held: ((controller: FakeController) => void)[];
   fixture: ComponentFixture<PlayerBar>;
   controllers: FakeController[];
   created: { element: HTMLElement; options: SpotifyEmbedOptions }[];
@@ -51,13 +54,21 @@ interface Setup {
 }
 
 async function render(
-  options: { language?: Language; scriptFails?: boolean } = {},
+  options: { language?: Language; scriptFails?: boolean; holdControllers?: boolean } = {},
 ): Promise<Setup> {
   const controllers: FakeController[] = [];
   const created: Setup['created'] = [];
+  const held: Setup['held'] = [];
   const api: SpotifyIframeApiObject = {
     createController: (element, creation, callback) => {
       created.push({ element, options: creation });
+      if (options.holdControllers) {
+        held.push((controller) => {
+          controllers.push(controller);
+          callback(controller);
+        });
+        return;
+      }
       const controller = new FakeController();
       controllers.push(controller);
       callback(controller);
@@ -73,7 +84,7 @@ async function render(
   await useLanguage(options.language);
   const fixture = TestBed.createComponent(PlayerBar);
   await fixture.whenStable();
-  return { fixture, controllers, created, load };
+  return { fixture, controllers, created, held, load };
 }
 
 const root = (fixture: ComponentFixture<PlayerBar>) => fixture.nativeElement as HTMLElement;
@@ -214,7 +225,7 @@ describe('PlayerBar', () => {
         join(process.cwd(), 'src/app/features/tracks/player-bar/player-bar.scss'),
         'utf8',
       );
-      const pending = /\.bar__mount--pending\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+      const pending = /\.bar__mount--pending[^{]*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
 
       expect(pending).toContain('visibility: hidden');
       expect(pending).not.toContain('opacity');
@@ -252,7 +263,65 @@ describe('PlayerBar', () => {
       expect(frame.src).toBe(`https://open.spotify.com/embed/track/${ID}`);
       expect(frame.getAttribute('allow')).toBe('encrypted-media');
       expect(frame.getAttribute('height')).toBe('80');
+    });
+
+    it('keeps the loading indicator, with the frame hidden, until the fallback frame has loaded', async () => {
+      const { fixture } = await render({ scriptFails: true });
+
+      await play(fixture);
+
+      expect(loading(fixture)).not.toBeNull();
+      expect(root(fixture).querySelector('iframe')?.classList).toContain('bar__frame--pending');
+
+      root(fixture).querySelector('iframe')?.dispatchEvent(new Event('load'));
+      await settle(fixture);
+
       expect(loading(fixture)).toBeNull();
+      expect(root(fixture).querySelector('iframe')?.classList).not.toContain('bar__frame--pending');
+    });
+
+    it('waits again when the fallback frame is replaced (another track, or another theme)', async () => {
+      const { fixture } = await render({ scriptFails: true });
+      await play(fixture, ID);
+      root(fixture).querySelector('iframe')?.dispatchEvent(new Event('load'));
+      await settle(fixture);
+      expect(loading(fixture)).toBeNull();
+
+      await play(fixture, OTHER_ID);
+      expect(loading(fixture)).not.toBeNull();
+      root(fixture).querySelector('iframe')?.dispatchEvent(new Event('load'));
+      await settle(fixture);
+      expect(loading(fixture)).toBeNull();
+
+      TestBed.inject(Theme).setMode(ThemeMode.DARK);
+      await settle(fixture);
+      expect(loading(fixture)).not.toBeNull();
+    });
+
+    it('waits for the frame again when the bar is closed and the same track is chosen again', async () => {
+      const { fixture } = await render({ scriptFails: true });
+      await play(fixture, ID);
+      root(fixture).querySelector('iframe')?.dispatchEvent(new Event('load'));
+      await settle(fixture);
+      closeButton(fixture)?.click();
+      await settle(fixture);
+
+      await play(fixture, ID);
+
+      expect(loading(fixture)).not.toBeNull();
+      expect(root(fixture).querySelector('iframe')?.classList).toContain('bar__frame--pending');
+    });
+
+    it('ignores a load of something that is not the Spotify embed', async () => {
+      const { fixture } = await render({ scriptFails: true });
+      await play(fixture);
+      const frame = root(fixture).querySelector('iframe') as HTMLIFrameElement;
+      Object.defineProperty(frame, 'src', { value: 'about:blank', configurable: true });
+
+      frame.dispatchEvent(new Event('load'));
+      await settle(fixture);
+
+      expect(loading(fixture)).not.toBeNull();
     });
 
     it('names the fallback frame after the track, in the visitor language', async () => {
@@ -361,8 +430,117 @@ describe('PlayerBar', () => {
       release();
       await settle(fixture);
 
-      expect(controllers).toHaveLength(1);
+      expect(controllers).toHaveLength(0);
+    });
+
+    it('destroys an embed that answers after the bar was closed', async () => {
+      const { fixture, held } = await render({ holdControllers: true });
+      await play(fixture);
+      const late = new FakeController();
+
+      closeButton(fixture)?.click();
+      await settle(fixture);
+      held[0](late);
+
+      expect(late.destroyed).toBe(true);
+    });
+
+    it('does not count a script failure that comes after the bar was closed', async () => {
+      const { fixture, load } = await render();
+      let fail!: () => void;
+      load.mockImplementationOnce(
+        () => new Promise((_resolve, reject) => (fail = () => reject(new Error('late')))),
+      );
+      await play(fixture);
+
+      closeButton(fixture)?.click();
+      await settle(fixture);
+      fail();
+      await settle(fixture);
+      await play(fixture, OTHER_ID);
+
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(root(fixture).querySelector('.bar__mount')).not.toBeNull();
+      expect(root(fixture).querySelector('iframe')).toBeNull();
+    });
+  });
+
+  describe('when a step of the start stalls', () => {
+    // Fake timers only once the page is rendered (Angular's own waiting needs real ones), and the checks that
+    // follow flush effects and promises by hand.
+    afterEach(() => vi.useRealTimers());
+
+    const start = async (options: Parameters<typeof render>[0] = {}) => {
+      const setup = await render(options);
+      vi.useFakeTimers();
+      return setup;
+    };
+    const flush = async (fixture: ComponentFixture<PlayerBar>, ms = 0) => {
+      for (let round = 0; round < 3; round++) {
+        fixture.detectChanges();
+        await vi.advanceTimersByTimeAsync(round === 0 ? ms : 0);
+      }
+      fixture.detectChanges();
+    };
+    const begin = async (fixture: ComponentFixture<PlayerBar>, id = ID) => {
+      TestBed.inject(NowPlaying).play(track({ id }));
+      await flush(fixture);
+    };
+
+    it('falls back to the plain embed when the embed never answers', async () => {
+      const { fixture } = await start({ holdControllers: true });
+      await begin(fixture);
+
+      await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS);
+
+      expect(root(fixture).querySelector('iframe')?.src).toBe(
+        `https://open.spotify.com/embed/track/${ID}`,
+      );
+    });
+
+    it('falls back, taking the embed down, when it never says it is ready', async () => {
+      const { fixture, controllers } = await start();
+      await begin(fixture);
+
+      await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS);
+
       expect(controllers[0].destroyed).toBe(true);
+      expect(root(fixture).querySelector('iframe')).not.toBeNull();
+    });
+
+    it('destroys an embed that answers after the deadline', async () => {
+      const { fixture, held } = await start({ holdControllers: true });
+      await begin(fixture);
+      await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS);
+      const late = new FakeController();
+
+      held[0](late);
+
+      expect(late.destroyed).toBe(true);
+    });
+
+    it('does not fall back once the embed is ready', async () => {
+      const { fixture, controllers } = await start();
+      await begin(fixture);
+      controllers[0].emit(SpotifyEmbedEvent.Ready);
+
+      await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS * 2);
+
+      expect(controllers[0].destroyed).toBe(false);
+      expect(root(fixture).querySelector('.bar__mount')).not.toBeNull();
+    });
+
+    it('does not fall back after the bar was closed', async () => {
+      const { fixture, load } = await start({ holdControllers: true });
+      await begin(fixture);
+      closeButton(fixture)?.click();
+      await flush(fixture);
+
+      await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS * 2);
+      await begin(fixture, OTHER_ID);
+
+      expect(load).toHaveBeenCalledTimes(2);
+      expect(root(fixture).querySelector('.bar__mount')).not.toBeNull();
     });
   });
 

@@ -53,6 +53,12 @@ export const SPOTIFY_IFRAME_API_URL = 'https://open.spotify.com/embed/iframe-api
 /** How long to wait for Spotify's script before giving up on it and using the plain embed. */
 export const SPOTIFY_IFRAME_API_TIMEOUT_MS = 10_000;
 
+/**
+ * How long the whole start of the player (script, embed and its "ready") may take before the plain embed takes
+ * over: a stalled step must not leave the bar on its spinner for good.
+ */
+export const SPOTIFY_EMBED_READY_TIMEOUT_MS = 15_000;
+
 /** What comes before the id in the address the iFrame API plays. */
 export const SPOTIFY_TRACK_URI_PREFIX = 'spotify:track:';
 
