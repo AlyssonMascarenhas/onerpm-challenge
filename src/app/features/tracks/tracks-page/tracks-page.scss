@@ -56,6 +56,56 @@
   gap: 1rem;
 }
 
+/* Room between the warning and the cards, and the warning's own link to the list. */
+.warning {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.alert__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.alert__link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
+.affected__hint {
+  margin: 0 0 1rem;
+  color: var(--orp-text-muted);
+}
+
+/* Many ISRCs scroll inside the dialog; the list takes focus so the keyboard can scroll it. */
+.affected__list {
+  max-height: min(50vh, 20rem);
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 0.75rem;
+}
+
+.affected__isrc {
+  padding: 0.4rem 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: 0.02em;
+}
+
+.affected__isrc + .affected__isrc {
+  border-top: 1px solid var(--p-content-border-color);
+}
+
 .alert__title {
   display: block;
 }
@@ -76,4 +126,17 @@
 
 .grid__item {
   min-width: 0;
+}
+
+/*
+ * Each entry spans the 8 rows of a track card (see track-card.scss) so that the sections of the cards in a
+ * row line up. Entries that are not track cards (ISRC cards) simply fill the same height.
+ */
+@supports (grid-template-rows: subgrid) {
+  .grid__item {
+    display: grid;
+    grid-template-rows: subgrid;
+    grid-row: span 8;
+    row-gap: 0;
+  }
 }

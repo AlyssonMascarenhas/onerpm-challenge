@@ -113,6 +113,20 @@ describe('TracksStore', () => {
       expect(store.items()).toHaveLength(3);
     });
 
+    it('lists the ISRCs that failed, in display order, not the ones that merely have no track', () => {
+      const { store, requests } = setup();
+      store.load();
+
+      requests[0].next([
+        errorResult('BR1SP1200071'),
+        foundResult('Louca'),
+        notFoundResult('XX1AA0000001'),
+        errorResult('BR1SP1200070'),
+      ]);
+
+      expect(store.failedIsrcs()).toEqual(['BR1SP1200070', 'BR1SP1200071']);
+    });
+
     it('has no failures when everything loaded', () => {
       const { store, requests } = setup();
       store.load();

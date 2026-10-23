@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { challengeResults, failed, isolateSpotify, mockTracks, notFound } from './support/mock-api';
+import { chooseLanguage } from './support/ui';
 
 const EXPECTED_ORDER = [
   'É pra Você',
@@ -88,6 +89,31 @@ test.describe('the page with the 10 tracks of the challenge', () => {
     await expect(player).toHaveAttribute('title', /Spotify player for /);
     await expect(page.getByRole('button', { name: 'Listen to a preview' })).toHaveCount(9);
   });
+
+  test('holds the place of the player while it loads: a spinner, and no jump when it arrives', async ({
+    page,
+  }) => {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route('https://open.spotify.com/**', async (route) => {
+      await gate;
+      await route.fulfill({ contentType: 'text/html', body: '<!doctype html><p>player</p>' });
+    });
+    const card = page.locator('orp-track-card .card').first();
+
+    await page.getByRole('button', { name: 'Listen to a preview' }).first().click();
+
+    const loading = card.getByRole('status');
+    await expect(loading).toHaveText('Loading the player…');
+    const stage = await card.locator('.player__stage').boundingBox();
+    expect(stage?.height).toBe(152);
+    const heightWhileLoading = Math.round((await card.boundingBox())?.height ?? 0);
+
+    release();
+
+    await expect(loading).toHaveCount(0);
+    expect(Math.round((await card.boundingBox())?.height ?? 0)).toBe(heightWhileLoading);
+  });
 });
 
 test.describe('ISRCs that did not become a track', () => {
@@ -108,6 +134,78 @@ test.describe('ISRCs that did not become a track', () => {
     await expect(page.getByText('Could not load this ISRC')).toHaveCount(2);
     await expect(page.getByRole('status').filter({ hasText: 'ISRCs affected: 2' })).toBeVisible();
     await expect(page.getByRole('alert')).toHaveCount(0);
+  });
+
+  test.describe('the list of affected ISRCs', () => {
+    /** More ISRCs than fit on the screen: the list must not depend on finding them among the cards. */
+    const MANY = Array.from({ length: 40 }, (_, index) =>
+      failed(`XX1AA${String(index).padStart(7, '0')}`),
+    );
+
+    test.beforeEach(async ({ page }) => {
+      await isolateSpotify(page);
+      await mockTracks(page, [...challengeResults().slice(0, 2), ...MANY]);
+      await page.goto('/');
+      await expect(page.locator('orp-track-card')).toHaveCount(2);
+    });
+
+    test('opens from the warning, listing every ISRC that failed, and keeps the warning clear of the cards', async ({
+      page,
+    }) => {
+      await expect(
+        page.getByRole('status').filter({ hasText: 'ISRCs affected: 40' }),
+      ).toBeVisible();
+      const warning = await page.locator('p-message').boundingBox();
+      const firstCard = await page.locator('orp-track-card .card').first().boundingBox();
+      expect(
+        (firstCard?.y ?? 0) - ((warning?.y ?? 0) + (warning?.height ?? 0)),
+      ).toBeGreaterThanOrEqual(16);
+
+      await page.getByRole('button', { name: 'Show affected ISRCs' }).click();
+
+      const dialog = page.getByRole('dialog', { name: 'ISRCs that could not be loaded' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog.locator('.affected__isrc')).toHaveCount(40);
+      await expect(dialog.locator('.affected__isrc').first()).toHaveText('XX1AA0000000');
+    });
+
+    test('scrolls inside the dialog, which stays within the screen', async ({ page }) => {
+      await page.getByRole('button', { name: 'Show affected ISRCs' }).click();
+
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      const box = await dialog.boundingBox();
+      const viewport = page.viewportSize()!;
+      expect(box!.y).toBeGreaterThanOrEqual(0);
+      expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
+      const list = dialog.getByLabel('Affected ISRCs');
+      expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    });
+
+    test('closes with Escape and gives the focus back to the button that opened it', async ({
+      page,
+    }) => {
+      const trigger = page.getByRole('button', { name: 'Show affected ISRCs' });
+      await trigger.click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+
+      await page.keyboard.press('Escape');
+
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await expect(trigger).toBeFocused();
+    });
+
+    test('is in the visitor language', async ({ page }) => {
+      await chooseLanguage(page, 'Português');
+
+      await page.getByRole('button', { name: 'Ver ISRCs afetados' }).click();
+
+      await expect(
+        page.getByRole('dialog', { name: 'ISRCs que não puderam ser carregados' }),
+      ).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Fechar' })).toBeVisible();
+    });
   });
 
   test('come after the tracks, whatever their ISRC', async ({ page }) => {

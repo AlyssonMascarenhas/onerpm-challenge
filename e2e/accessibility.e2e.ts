@@ -80,6 +80,22 @@ for (const theme of ['light', 'dark'] as const) {
       await expectNoViolations(page);
     });
 
+    test('with the list of affected ISRCs open', async ({ page }) => {
+      await setTheme(page, theme);
+      await mockTracks(page, [
+        ...challengeResults().slice(0, 2),
+        ...Array.from({ length: 30 }, (_, index) =>
+          failed(`XX1AA${String(index).padStart(7, '0')}`),
+        ),
+      ]);
+      await page.goto('/');
+      await expect(page.locator('orp-track-card')).toHaveCount(2);
+      await page.getByRole('button', { name: 'Show affected ISRCs' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+
+      await expectNoViolations(page);
+    });
+
     test('with a Spotify player opened', async ({ page }) => {
       await setTheme(page, theme);
       await mockTracks(page);
