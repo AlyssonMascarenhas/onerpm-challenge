@@ -50,8 +50,11 @@ test.describe('the page with the 10 tracks of the challenge', () => {
     page,
   }) => {
     const cards = page.locator('orp-track-card');
+    // The cards appear after the lookup: wait for all of them, or the loop below could check nothing.
+    await expect(cards).toHaveCount(10);
 
-    for (const card of await cards.all()) {
+    for (let index = 0; index < 10; index++) {
+      const card = cards.nth(index);
       await expect(card.locator('dd').nth(1)).toHaveText(/^\d{2}:\d{2}$/);
       await expect(card.locator('p-tag')).toHaveText(/Available in Brazil/);
     }
