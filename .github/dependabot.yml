@@ -7,9 +7,11 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Fixed prefixes: `include: scope` would emit `chore(deps-dev)` for dev dependencies,
+    # a scope that commitlint.config.js does not allow.
     commit-message:
-      prefix: chore
-      include: scope # => "chore(deps): ..." (matches the commitlint scope list)
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(deps)'
     groups:
       angular:
         patterns: ['@angular/*', '@angular-devkit/*', '@schematics/*', 'angular-eslint', 'ng-*']
@@ -42,8 +44,7 @@ updates:
     schedule:
       interval: monthly
     commit-message:
-      prefix: ci
-      include: scope
+      prefix: 'ci(deps)'
     groups:
       actions:
         patterns: ['*']
