@@ -26,8 +26,19 @@ Resultados do spike:
 3. **Player de prévia:** usar o **embed oficial** do Spotify (`open.spotify.com/embed/track/{id}`), já que
    `preview_url` não é fornecido. Sem fontes de áudio de terceiros.
 4. **Thumb:** imagem de ~300 px. **Data de lançamento** formatada conforme a precisão (ano, mês ou dia) e o idioma.
-5. **Resiliência:** concorrência limitada, respeito a `Retry-After` (429), um retry com novo token em 401.
-   Falha geral do Spotify vira erro estável (502/503) que o front exibe como alerta.
+5. **Paginação:** cada busca traz no máximo 10 faixas; o cliente segue `next` (até 5 páginas, sempre com `limit=10`)
+   antes de escolher a faixa, para não perder o lançamento original ou a versão tocável no BR que esteja numa página posterior.
+6. **Validação na borda:** cada item é checado antes do mapeamento (campos usados, `release_date_precision` conhecido);
+   payload inválido vira `search_response_malformed`, em vez de `internal_error` ou de uma faixa incompleta em cache.
+7. **Resiliência:**
+   - **Concorrência global:** um único limitador (5 buscas simultâneas) envolve todas as chamadas ao Spotify, somando
+     todos os visitantes — não só os ISRCs de uma requisição.
+   - **429:** o `Retry-After` vira um _cooldown_ compartilhado pelo cliente. Cooldown curto (≤ 5 s) é aguardado antes da
+     próxima chamada; longo falha localmente com `rate_limited`, sem tocar no Spotify. Sem `Retry-After`, assume 1 s.
+   - **401:** um retry com novo token.
+   - **Cache HTTP:** respostas com qualquer falha saem com `Cache-Control: no-store`, para o navegador não repetir um erro transitório.
+8. **Falha geral:** se todas as consultas de uma requisição falham, a API responde `503 integration_unavailable`
+   (código estável) e o front exibe o alerta; falhas parciais seguem como itens `error` dentro de um `200`.
 
 ## Alternativas consideradas
 

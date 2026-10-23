@@ -12,15 +12,16 @@ no Brasil e escolha entre faixas duplicadas (ADR 0005). Essas regras precisam se
 
 Camadas pequenas, cada uma com uma responsabilidade e dependências injetadas:
 
-| Peça                                     | Papel                                                               | Padrão                    |
-| ---------------------------------------- | ------------------------------------------------------------------- | ------------------------- |
-| `SpotifyTokenProvider`                   | token Client Credentials, cache e _single-flight_                   | Proxy de cache            |
-| `SpotifyClient` (`TrackSearch`)          | HTTP do `/search`; 401 → renova token, 429 → respeita `Retry-After` | Port & Adapter            |
-| `toTrack` (`track-mapper`)               | converte o payload do Spotify no contrato `Track`                   | Anti-corruption layer     |
-| `SpotifyTrackFinder` (`TrackFinder`)     | regra de BR + escolha da faixa original                             | Strategy/regra de domínio |
-| `CachingTrackFinder`                     | cache em memória com TTL, sem persistência, sem cachear falhas      | Decorator                 |
-| `TracksService`                          | vários ISRCs com concorrência limitada e falha isolada por item     | Application service       |
-| `createTracksRouter` / `createApiRouter` | HTTP (validação, códigos, `Cache-Control`) e _composition root_     | Facade                    |
+| Peça                                     | Papel                                                             | Padrão                    |
+| ---------------------------------------- | ----------------------------------------------------------------- | ------------------------- |
+| `SpotifyTokenProvider`                   | token Client Credentials, cache e _single-flight_                 | Proxy de cache            |
+| `SpotifyClient` (`TrackSearch`)          | HTTP do `/search`, paginação, 401 → renova token, cooldown de 429 | Port & Adapter            |
+| `LimitedTrackSearch`                     | todas as buscas passam por um limitador compartilhado             | Decorator                 |
+| `toTrack` (`track-mapper`)               | converte o payload do Spotify no contrato `Track`                 | Anti-corruption layer     |
+| `SpotifyTrackFinder` (`TrackFinder`)     | regra de BR + escolha da faixa original                           | Strategy/regra de domínio |
+| `CachingTrackFinder`                     | cache em memória com TTL, sem persistência, sem cachear falhas    | Decorator                 |
+| `TracksService`                          | vários ISRCs com falha isolada por item                           | Application service       |
+| `createTracksRouter` / `createApiRouter` | HTTP (validação, códigos, `Cache-Control`) e _composition root_   | Facade                    |
 
 - O contrato entre BFF e Angular vive em `src/contract/` (apenas tipos + validação de ISRC), evitando divergência.
 - Rede, relógio e _sleep_ são injetáveis (`fetchFn`, `now`, `sleep`): testes rodam sem rede e sem esperar.
