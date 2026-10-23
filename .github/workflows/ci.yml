@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commits:
+    name: Conventional commits
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      - name: Lint commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: npx --no-install commitlint --from "$BASE_SHA" --to "$HEAD_SHA" --verbose
+
+      # The PR title becomes the squash-merge commit message.
+      - name: Lint PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | npx --no-install commitlint --verbose
+
+  quality:
+    name: Lint, format and types
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Type-check app and specs
+        run: npm run typecheck
+
+  test:
+    name: Unit and integration tests
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      # Fails when coverage drops below the thresholds in angular.json.
+      - name: Run tests with coverage
+        run: npm run test:ci
+
+      - name: Summarize coverage
+        if: always()
+        run: |
+          if [ -f coverage/onerpm-tracks/coverage-summary.json ]; then
+            node -e "
+              const { total } = require('./coverage/onerpm-tracks/coverage-summary.json');
+              const rows = Object.entries(total).map(([k, v]) => '| ' + k + ' | ' + v.pct + '% |').join('\n');
+              console.log('### Coverage\n\n| Metric | Covered |\n| --- | --- |\n' + rows);
+            " >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: coverage/onerpm-tracks/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build:
+    name: Production build
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      - name: Build (browser + SSR server)
+        run: npm run build
+
+  audit:
+    name: Dependency audit (informational)
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # New advisories appear without any change in this repo, so they must not block unrelated PRs.
+    continue-on-error: true
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  # Single required check for branch protection: it stays green for draft PRs (jobs skipped).
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [commits, quality, test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify every required job
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "A required job failed or was cancelled." >&2
+            exit 1
+          fi
