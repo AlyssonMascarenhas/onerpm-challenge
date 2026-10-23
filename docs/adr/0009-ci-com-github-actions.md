@@ -57,5 +57,10 @@ Detalhes que importam:
 - Positivas: `main` só recebe código que passou em lint, tipos, testes com cobertura e build; histórico padronizado.
 - Negativas: manter os SHAs (o Dependabot ajuda); a cobertura mínima exige testar o código novo; o CI só vale a
   partir da primeira vez que o workflow existir na `main`.
+- **Instalação do Chromium no job `e2e` (resiliente)**: o `playwright install --with-deps` baixava o navegador e também
+  pacotes do `apt` (fontes inclusive) de um espelho às vezes muito lento; o passo travava até o limite e nenhum teste
+  rodava. Agora o Chromium fica em _cache_ pela versão do Playwright, cada download tem tentativas (3) com limite de tempo
+  próprio, e o `apt` só é usado se o Chromium não abrir sem ele (a imagem `ubuntu-24.04` já traz quase tudo). `npm run
+e2e:install` continua valendo para a máquina local.
 - Próximos passos: e2e (Playwright) e CD (imagem Docker + deploy) entram em PRs próprios; ativar a proteção da
   `main` exigindo os checks `CI OK` e `PR title`.
