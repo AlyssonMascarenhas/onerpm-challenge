@@ -1,6 +1,6 @@
 import { ACCENT_PALETTE, SURFACE_PALETTE } from './theme.constants';
 import { OnerpmPreset } from './theme-preset';
-import { contrastRatio } from './testing/contrast';
+import { blend, contrastRatio } from './testing/contrast';
 
 /** WCAG AA for body text. */
 const AA = 4.5;
@@ -80,6 +80,50 @@ describe('OnerpmPreset', () => {
       expect(contrastRatio(SURFACE_PALETTE[400], SURFACE_PALETTE[950])).toBeGreaterThanOrEqual(AA);
       expect(contrastRatio(SURFACE_PALETTE[400], SURFACE_PALETTE[900])).toBeGreaterThanOrEqual(AA);
     });
+  });
+});
+
+describe('OnerpmPreset: Aura colors that failed the axe audit', () => {
+  const primitive = OnerpmPreset.primitive as Record<string, Record<string, string>>;
+  const components = OnerpmPreset.components as {
+    message: {
+      colorScheme: {
+        light: Record<string, { color: string }>;
+        dark: Record<string, { color: string }>;
+      };
+    };
+    button: { colorScheme: { light: { outlined: { danger: { color: string } } } } };
+  };
+  /** `{red.700}` → the hex of Aura's red 700. */
+  const primitiveHex = (token: string) => {
+    const [, family, step] = /^\{(\w+)\.(\d+)\}$/.exec(token)!;
+    return primitive[family][step];
+  };
+
+  it.each([
+    ['error message', components.message.colorScheme.light['error'].color, 'red'],
+    ['warning message', components.message.colorScheme.light['warn'].color, 'yellow'],
+    ['success message', components.message.colorScheme.light['success'].color, 'green'],
+    ['outlined danger button', components.button.colorScheme.light.outlined.danger.color, 'red'],
+  ])('light %s text is readable on its pale background (and on white)', (_label, token, family) => {
+    const text = primitiveHex(token);
+    const paleBackground = primitive[family]['50'];
+
+    expect(contrastRatio(text, paleBackground)).toBeGreaterThanOrEqual(AA);
+    expect(contrastRatio(text, '#ffffff')).toBeGreaterThanOrEqual(AA);
+  });
+
+  it('dark error message text is readable on its red tint over the card (Aura default: 4.47:1)', () => {
+    const text = primitiveHex(components.message.colorScheme.dark['error'].color);
+    const tint = blend(primitive['red']['500'], SURFACE_PALETTE[900], 0.16);
+
+    expect(contrastRatio(text, tint)).toBeGreaterThanOrEqual(AA);
+    expect(contrastRatio(primitive['red']['500'], tint)).toBeLessThan(AA);
+  });
+
+  it("is darker than Aura's own defaults, which measured below 4.5:1", () => {
+    expect(contrastRatio(primitive['red']['600'], primitive['red']['50'])).toBeLessThan(AA);
+    expect(contrastRatio(primitive['yellow']['600'], primitive['yellow']['50'])).toBeLessThan(AA);
   });
 });
 
