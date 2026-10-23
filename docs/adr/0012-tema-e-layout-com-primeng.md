@@ -60,3 +60,11 @@ não expõe cores oficiais), então não dá para afirmar fidelidade à marca.
 - Negativas: _bundle_ inicial maior que o orçamento padrão do Angular; o PrimeNG 21 fixa em inglês o rótulo
   "dropdown trigger" de um elemento decorativo do `p-select` (tentei ocultá-lo via _pass-through_ sem efeito; a auditoria
   de acessibilidade do PR de e2e deve confirmar se importa); a cor de marca é uma aproximação até haver guia oficial.
+
+## Atualização — brilho do topo (hero)
+
+O brilho atrás do título é uma camada própria (`.hero::before`) com uma máscara que o apaga até a borda de baixo. Os
+degradês radiais têm tamanho fixo (24rem de altura): no celular o bloco é mais baixo e a borda cortava o brilho ainda forte,
+deixando uma linha dura. Um teste e2e lê os pixels da última linha do bloco e da primeira abaixo dele (nos dois temas e nos
+dois tamanhos de tela) e exige que a diferença seja imperceptível. A área do conteúdo também ganhou um respiro no topo, para o
+campo de filtro não encostar no bloco.
