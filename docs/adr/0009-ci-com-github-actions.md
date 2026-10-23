@@ -59,8 +59,10 @@ Detalhes que importam:
   partir da primeira vez que o workflow existir na `main`.
 - **Instalação do Chromium no job `e2e` (resiliente)**: o `playwright install --with-deps` baixava o navegador e também
   pacotes do `apt` (fontes inclusive) de um espelho às vezes muito lento; o passo travava até o limite e nenhum teste
-  rodava. Agora o Chromium fica em _cache_ pela versão do Playwright, cada download tem tentativas (3) com limite de tempo
-  próprio, e o `apt` só é usado se o Chromium não abrir sem ele (a imagem `ubuntu-24.04` já traz quase tudo). `npm run
-e2e:install` continua valendo para a máquina local.
+  rodava. Agora o Chromium fica em _cache_ pela versão do Playwright, cada download tem 3 tentativas com limite de tempo
+  próprio, e o `apt` só é usado se o Chromium não abrir sem ele (a imagem `ubuntu-24.04` já traz quase tudo).
+  O comando local `npm run e2e:install` não mudou. Limites: como o CI só roda em PRs, o _cache_ vale para novas
+  execuções do mesmo PR (não para outros); e sem o `--with-deps` as fontes extras deixam de ser instaladas (a imagem
+  fixa e a fonte Inter empacotada mantêm o layout estável; se aparecer variação visual, voltar a instalá-las).
 - Próximos passos: e2e (Playwright) e CD (imagem Docker + deploy) entram em PRs próprios; ativar a proteção da
   `main` exigindo os checks `CI OK` e `PR title`.
