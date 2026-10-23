@@ -90,6 +90,36 @@ describe('parseAcceptLanguage', () => {
     expect(parseAcceptLanguage(header)).toEqual([]);
   });
 
+  describe('quality values follow the HTTP grammar (0 to 1, at most three decimals)', () => {
+    it.each([['0.5'], ['0.123'], ['0.1'], ['1'], ['1.0'], ['1.000'], ['1.']])(
+      'accepts q=%s and ranks it above a lower weight',
+      (q) => {
+        expect(parseAcceptLanguage(`fr;q=0.01, en;q=${q}`)).toEqual(['en', 'fr']);
+      },
+    );
+
+    it.each([['0'], ['0.'], ['0.0'], ['0.000']])('treats q=%s as not acceptable', (q) => {
+      expect(parseAcceptLanguage(`en;q=${q}, fr;q=0.1`)).toEqual(['fr']);
+    });
+
+    it.each([
+      ['above 1', '2'],
+      ['1.5', '1.5'],
+      ['just above 1', '1.001'],
+      ['more than three decimals', '0.1234'],
+      ['negative', '-0.5'],
+      ['without the leading digit', '.5'],
+      ['with an exponent', '1e0'],
+      ['with a sign', '+1'],
+    ])('drops an entry whose q is %s', (_label, q) => {
+      expect(parseAcceptLanguage(`en;q=${q}, fr;q=0.1`)).toEqual(['fr']);
+    });
+
+    it('does not let an out-of-range weight outrank a valid one', () => {
+      expect(parseAcceptLanguage('en;q=2, fr;q=1')).toEqual(['fr']);
+    });
+  });
+
   it('ignores an unparseable weight instead of failing', () => {
     expect(parseAcceptLanguage('en;q=abc, fr')).toEqual(['fr']);
   });

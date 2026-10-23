@@ -1,4 +1,4 @@
-import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './i18n.constants';
+import { DEFAULT_LANGUAGE, QUALITY_VALUE_PATTERN, SUPPORTED_LANGUAGES } from './i18n.constants';
 import { Language } from './i18n.enums';
 
 /**
@@ -41,7 +41,7 @@ export function parseAcceptLanguage(header: string | null | undefined): string[]
     .map(({ tag }) => tag);
 }
 
-/** The `q` parameter as a number: 1 when absent, `NaN` when malformed. */
+/** The `q` parameter as a number: 1 when absent, `NaN` when it is not a valid quality value. */
 function weightOf(params: readonly string[]): number {
   const raw = params
     .map((param) => /^\s*q\s*=\s*(.*?)\s*$/i.exec(param)?.[1])
@@ -49,5 +49,5 @@ function weightOf(params: readonly string[]): number {
   if (raw === undefined) {
     return 1;
   }
-  return /^\d+(\.\d+)?$/.test(raw) ? Number(raw) : Number.NaN;
+  return QUALITY_VALUE_PATTERN.test(raw) ? Number(raw) : Number.NaN;
 }

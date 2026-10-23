@@ -3,6 +3,9 @@ import { LanguageOption, TranslationModule } from './i18n.interfaces';
 
 export const DEFAULT_LANGUAGE = Language.EN;
 
+/** HTTP quality value (RFC 9110): `0` to `1`, with at most three decimals (`1` allows only zeros). */
+export const QUALITY_VALUE_PATTERN = /^(?:0(?:\.\d{0,3})?|1(?:\.0{0,3})?)$/;
+
 /** Display order of the language selector. */
 export const LANGUAGE_OPTIONS: readonly LanguageOption[] = [
   { id: Language.EN, label: 'English', locale: 'en' },
