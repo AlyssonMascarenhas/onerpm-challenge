@@ -21,6 +21,12 @@ describe('ThemeToggle', () => {
     document.documentElement.classList.remove(DARK_MODE_CLASS);
   });
 
+  it('does not ask the browser to focus it on load', async () => {
+    const fixture = await render();
+
+    expect(fixture.nativeElement.querySelector('[autofocus]')).toBeNull();
+  });
+
   it('offers the dark theme while the page is light, with the moon icon', async () => {
     const fixture = await render();
 

@@ -5,6 +5,8 @@
   [options]="options"
   [ngModel]="i18n.language()"
   [ariaLabel]="label()"
+  [autofocus]="false"
+  scrollHeight="20rem"
   (onChange)="select($event.value)"
 >
   <ng-template #selectedItem let-option>

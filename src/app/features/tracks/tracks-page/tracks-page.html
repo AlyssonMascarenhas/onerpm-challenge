@@ -16,6 +16,7 @@
           icon="pi pi-refresh"
           [label]="retry()"
           [outlined]="true"
+          [buttonProps]="{ autofocus: false }"
           (onClick)="reload()"
         />
       </div>

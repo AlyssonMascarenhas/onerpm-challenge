@@ -12,6 +12,7 @@ import { Theme } from '../../core/theme/theme';
       severity="secondary"
       [rounded]="true"
       [text]="true"
+      [buttonProps]="{ autofocus: false }"
       [icon]="icon()"
       [ariaLabel]="label()"
       (onClick)="theme.toggle()"

@@ -19,6 +19,7 @@ Um workflow (`.github/workflows/ci.yml`) roda em **pull requests para `main`** (
 | `commits` | todas as mensagens de commit do PR seguem o commitlint                                                  |
 | `quality` | ESLint (inclui as regras do ADR 0008), Prettier e `tsc` do app e dos specs                              |
 | `test`    | testes unitários e de integração com **cobertura mínima** (90% linhas/instruções/funções, 85% branches) |
+| `e2e`     | Playwright + axe contra o build real (ADR 0014)                                                         |
 | `build`   | build de produção (browser + servidor SSR)                                                              |
 | `audit`   | `npm audit` das dependências de produção — **informativo** (`continue-on-error`)                        |
 | `ci-ok`   | agrega os obrigatórios acima; é o check a exigir na proteção da branch, junto com `PR title`            |

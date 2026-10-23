@@ -11,3 +11,15 @@ export function contrastRatio(foreground: string, background: string): number {
   const [lighter, darker] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
   return (lighter + 0.05) / (darker + 0.05);
 }
+
+/** `color-mix(in srgb, fg <alpha>, transparent)` laid over an opaque `bg`: the color a tinted background really shows. */
+export function blend(foreground: string, background: string, alpha: number): string {
+  const channel = (start: number) =>
+    Math.round(
+      parseInt(foreground.slice(start, start + 2), 16) * alpha +
+        parseInt(background.slice(start, start + 2), 16) * (1 - alpha),
+    )
+      .toString(16)
+      .padStart(2, '0');
+  return `#${channel(1)}${channel(3)}${channel(5)}`;
+}

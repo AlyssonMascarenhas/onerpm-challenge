@@ -24,6 +24,12 @@ describe('LanguageSelect', () => {
   beforeEach(() => localStorage.clear());
   afterEach(() => vi.restoreAllMocks());
 
+  it('does not ask the browser to focus it on load (PrimeNG adds autofocus unless told not to)', async () => {
+    const fixture = await render();
+
+    expect(fixture.nativeElement.querySelector('[autofocus]')).toBeNull();
+  });
+
   it('offers exactly the six languages, in the documented order', async () => {
     const fixture = await render();
 
