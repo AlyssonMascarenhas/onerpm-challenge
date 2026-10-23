@@ -16,12 +16,17 @@ Um workflow (`.github/workflows/ci.yml`) roda em **pull requests para `main`** (
 
 | Job       | O que garante                                                                                           |
 | --------- | ------------------------------------------------------------------------------------------------------- |
-| `commits` | todas as mensagens do PR e o **título** (vira o commit do squash) seguem o commitlint                   |
+| `commits` | todas as mensagens de commit do PR seguem o commitlint                                                  |
 | `quality` | ESLint (inclui as regras do ADR 0008), Prettier e `tsc` do app e dos specs                              |
 | `test`    | testes unitários e de integração com **cobertura mínima** (90% linhas/instruções/funções, 85% branches) |
 | `build`   | build de produção (browser + servidor SSR)                                                              |
 | `audit`   | `npm audit` das dependências de produção — **informativo** (`continue-on-error`)                        |
-| `ci-ok`   | agrega os obrigatórios; é o **único check** a exigir na proteção da branch                              |
+| `ci-ok`   | agrega os obrigatórios acima; é o check a exigir na proteção da branch, junto com `PR title`            |
+
+O **título do PR** (que vira a mensagem do squash) é validado por um workflow à parte, `pr-title.yml`, que também
+escuta `edited`: corrigir ou estragar o título revalida só o título, sem reexecutar nem cancelar os jobs pesados do
+`ci.yml` e sem poder sobrescrever o resultado do `CI OK` do mesmo commit. Ele roda a cada push também, porque checks
+obrigatórios são avaliados por commit.
 
 Detalhes que importam:
 
@@ -34,7 +39,8 @@ Detalhes que importam:
 - **Segurança da cadeia de suprimentos:** actions fixadas por **SHA de commit** (com a versão em comentário),
   `permissions: contents: read`, `persist-credentials: false` e entradas do PR (`title`, SHAs) passadas por `env`,
   nunca interpoladas no script. O Dependabot (`.github/dependabot.yml`) atualiza npm (agrupado, com majors do
-  Angular/PrimeNG ignorados — ADR 0002) e as próprias actions, com commits no formato `chore(deps)`/`ci(deps)`.
+  Angular/PrimeNG ignorados — ADR 0002) e as próprias actions, com prefixos **fixos** `chore(deps)`/`ci(deps)`
+  (`include: scope` geraria `chore(deps-dev)` para dependências de desenvolvimento, escopo que o commitlint recusa).
 - **Concorrência:** um novo push cancela a execução anterior do mesmo PR.
 
 ## Alternativas consideradas
@@ -51,4 +57,4 @@ Detalhes que importam:
 - Negativas: manter os SHAs (o Dependabot ajuda); a cobertura mínima exige testar o código novo; o CI só vale a
   partir da primeira vez que o workflow existir na `main`.
 - Próximos passos: e2e (Playwright) e CD (imagem Docker + deploy) entram em PRs próprios; ativar a proteção da
-  `main` exigindo o check `CI OK`.
+  `main` exigindo os checks `CI OK` e `PR title`.
