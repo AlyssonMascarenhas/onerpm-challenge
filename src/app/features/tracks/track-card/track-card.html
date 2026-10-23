@@ -1,0 +1,58 @@
+<article class="card" [attr.aria-labelledby]="titleId()">
+  <div class="card__cover">
+    @if (coverUrl(); as url) {
+      <img
+        class="card__image"
+        width="300"
+        height="300"
+        loading="lazy"
+        decoding="async"
+        [src]="url"
+        [alt]="labels.coverAlt()"
+        (error)="onCoverError()"
+      />
+    } @else {
+      <div class="card__fallback" role="img" [attr.aria-label]="labels.coverMissing()">
+        <i class="pi pi-image" aria-hidden="true"></i>
+      </div>
+    }
+  </div>
+
+  <div class="card__body">
+    <p-tag
+      class="card__badge"
+      [severity]="track().availableInBR ? 'success' : 'danger'"
+      [icon]="track().availableInBR ? 'pi pi-check-circle' : 'pi pi-times-circle'"
+      [value]="track().availableInBR ? labels.available() : labels.unavailable()"
+    />
+    <h2 class="card__title" [id]="titleId()">{{ track().title }}</h2>
+    <p class="card__artists">{{ artists() }}</p>
+
+    <dl class="card__meta">
+      <div>
+        <dt>{{ labels.released() }}</dt>
+        <dd>{{ released() }}</dd>
+      </div>
+      <div>
+        <dt>{{ labels.duration() }}</dt>
+        <dd>{{ duration() }}</dd>
+      </div>
+      <div>
+        <dt>{{ labels.album() }}</dt>
+        <dd>{{ track().albumName }}</dd>
+      </div>
+      <div>
+        <dt>{{ labels.isrc() }}</dt>
+        <dd class="card__isrc">{{ track().isrc }}</dd>
+      </div>
+    </dl>
+
+    <orp-track-player [trackId]="track().id" [title]="track().title" />
+
+    <a class="card__link" target="_blank" rel="noopener noreferrer" [href]="track().spotifyUrl">
+      {{ labels.openOnSpotify() }}
+      <i class="pi pi-external-link" aria-hidden="true"></i>
+      <span class="visually-hidden">({{ labels.newTab() }})</span>
+    </a>
+  </div>
+</article>

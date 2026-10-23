@@ -15,7 +15,6 @@
     "released": "Yayın tarihi",
     "duration": "Süre",
     "isrc": "ISRC",
-    "artists": "Sanatçılar",
     "album": "Albüm",
     "openOnSpotify": "Spotify'da aç",
     "preview": "Ses önizlemesi",
@@ -24,7 +23,10 @@
     "availableInBR": "Brezilya'da mevcut",
     "unavailableInBR": "Brezilya'da mevcut değil",
     "notFound": "ISRC Spotify'da bulunamadı",
-    "failed": "Bu ISRC yüklenemedi"
+    "failed": "Bu ISRC yüklenemedi",
+    "listen": "Önizlemeyi dinle",
+    "playerTitle": "{{title}} için Spotify oynatıcısı",
+    "newTab": "yeni sekmede açılır"
   },
   "status": {
     "loading": "Parçalar yükleniyor…",

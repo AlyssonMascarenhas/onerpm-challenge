@@ -1,0 +1,7 @@
+<article class="card" [class.card--failed]="!isNotFound()">
+  <i [class]="icon()" class="card__icon" aria-hidden="true"></i>
+  <div>
+    <p class="card__isrc">{{ isrc() }}</p>
+    <p class="card__message">{{ message() }}</p>
+  </div>
+</article>

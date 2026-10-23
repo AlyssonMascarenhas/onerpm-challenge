@@ -31,9 +31,14 @@ const settle = async (fixture: ComponentFixture<TracksPage>) => {
   await fixture.whenStable();
   fixture.detectChanges();
 };
+const text = (element: Element | null | undefined) =>
+  element?.textContent?.replace(/\s+/g, ' ').trim();
+/** What each list entry shows as its headline: a track's title, or an ISRC with the reason it has no track. */
 const items = (fixture: ComponentFixture<TracksPage>) =>
   [...root(fixture).querySelectorAll('li')].map((item) =>
-    [...item.children].map((child) => child.textContent?.replace(/\s+/g, ' ').trim()).join(' '),
+    item.querySelector('orp-track-card')
+      ? text(item.querySelector('h2'))
+      : `${text(item.querySelector('.card__isrc'))} ${text(item.querySelector('.card__message'))}`,
   );
 
 describe('TracksPage', () => {
@@ -77,7 +82,7 @@ describe('TracksPage', () => {
     it('shows placeholders and a status message, and marks the region busy, until the answer comes', async () => {
       const { fixture } = await render();
 
-      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(4);
+      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(3);
       expect(root(fixture).querySelector('[role="status"]')?.textContent).toBe('Loading tracks…');
       expect(root(fixture).querySelector('section.content')?.getAttribute('aria-busy')).toBe(
         'true',
@@ -88,9 +93,7 @@ describe('TracksPage', () => {
     it('hides the placeholders from assistive technology (the status message speaks for them)', async () => {
       const { fixture } = await render();
 
-      expect(root(fixture).querySelector('.placeholders')?.getAttribute('aria-hidden')).toBe(
-        'true',
-      );
+      expect(root(fixture).querySelector('.grid')?.getAttribute('aria-hidden')).toBe('true');
     });
 
     it('translates the loading message', async () => {
@@ -103,21 +106,50 @@ describe('TracksPage', () => {
   });
 
   describe('when the tracks arrive', () => {
-    it('lists them by title, A to Z, with artists and duration', async () => {
+    it('lists them by title, A to Z, one card each', async () => {
+      const { fixture, requests } = await render();
+
+      requests[0].next([foundResult('Repente'), foundResult('Louca'), foundResult('Quase Nua')]);
+      await settle(fixture);
+
+      expect(items(fixture)).toEqual(['Louca', 'Quase Nua', 'Repente']);
+      expect(root(fixture).querySelectorAll('orp-track-card')).toHaveLength(3);
+    });
+
+    it('gives each track card its own track', async () => {
+      const { fixture, requests } = await render();
+
+      requests[0].next([foundResult('Louca', { artists: ['DJ Malibu'], durationMs: 124_315 })]);
+      await settle(fixture);
+
+      const card = root(fixture).querySelector('orp-track-card');
+      expect(text(card?.querySelector('.card__artists'))).toBe('DJ Malibu');
+      expect(text(card)).toContain('02:04');
+    });
+
+    it('shows ISRCs without a track as their own cards, among the tracks, never as track cards', async () => {
       const { fixture, requests } = await render();
 
       requests[0].next([
-        foundResult('Repente', { artists: ['PianOrquestra'], durationMs: 170_733 }),
-        foundResult('Louca', { artists: ['DJ Malibu', 'MC Pack'], durationMs: 124_315 }),
-        foundResult('Quase Nua', { artists: ['Clarisse Grova'], durationMs: 253_320 }),
+        notFoundResult('BR1SP1200070'),
+        foundResult('Louca'),
+        errorResult('BR1SP1200071'),
       ]);
       await settle(fixture);
 
-      expect(items(fixture)).toEqual([
-        'Louca DJ Malibu, MC Pack · 02:04',
-        'Quase Nua Clarisse Grova · 04:13',
-        'Repente PianOrquestra · 02:51',
-      ]);
+      expect(root(fixture).querySelectorAll('orp-track-card')).toHaveLength(1);
+      expect(root(fixture).querySelectorAll('orp-isrc-card')).toHaveLength(2);
+    });
+
+    it('is a list of cards, readable as such by assistive technology', async () => {
+      const { fixture, requests } = await render();
+
+      requests[0].next([foundResult('Louca'), foundResult('Repente')]);
+      await settle(fixture);
+
+      const list = root(fixture).querySelector('ul.grid');
+      expect(list?.querySelectorAll(':scope > li')).toHaveLength(2);
+      expect(list?.closest('section')?.getAttribute('aria-label')).toBe('Tracks');
     });
 
     it('replaces the placeholders and stops being busy', async () => {
@@ -138,10 +170,7 @@ describe('TracksPage', () => {
       requests[0].next([foundResult('Louca'), notFoundResult('BR1SP1200070')]);
       await settle(fixture);
 
-      expect(items(fixture)).toEqual([
-        'Louca Artist One · 03:35',
-        'BR1SP1200070 ISRC not found on Spotify',
-      ]);
+      expect(items(fixture)).toEqual(['Louca', 'BR1SP1200070 ISRC not found on Spotify']);
     });
 
     it('does not warn when everything loaded', async () => {
@@ -230,7 +259,7 @@ describe('TracksPage', () => {
       );
       expect(lookup).toHaveBeenCalledTimes(2);
       expect(root(fixture).querySelector('[role="alert"]')).toBeNull();
-      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(4);
+      expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(3);
     });
 
     it('recovers into the list when the retry succeeds', async () => {
