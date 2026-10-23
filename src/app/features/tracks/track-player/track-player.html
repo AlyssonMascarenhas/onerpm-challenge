@@ -1,0 +1,23 @@
+@if (available()) {
+  <div class="player" role="group" [attr.aria-label]="regionLabel()">
+    @if (embedUrl(); as url) {
+      <iframe
+        class="player__frame"
+        loading="lazy"
+        allow="encrypted-media"
+        [src]="url"
+        [title]="playerTitle()"
+        [height]="height"
+      ></iframe>
+    } @else {
+      <p-button
+        severity="secondary"
+        icon="pi pi-play"
+        [outlined]="true"
+        [fluid]="true"
+        [label]="listen()"
+        (onClick)="load()"
+      />
+    }
+  </div>
+}

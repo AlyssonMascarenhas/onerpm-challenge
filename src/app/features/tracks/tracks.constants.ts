@@ -43,3 +43,12 @@ export const SECONDS_PER_MINUTE = 60;
 
 /** Shown when a duration is missing or invalid, so the layout never breaks. */
 export const ZERO_DURATION = '00:00';
+
+/** Spotify's official embedded player. Only this origin is ever put in an `<iframe src>`. */
+export const SPOTIFY_EMBED_URL = 'https://open.spotify.com/embed/track';
+
+/** Spotify track ids are 22 base-62 characters. Anything else is never turned into a URL. */
+export const SPOTIFY_TRACK_ID_PATTERN = /^[A-Za-z0-9]{22}$/;
+
+/** Height of Spotify's compact player. */
+export const SPOTIFY_EMBED_HEIGHT = 152;
