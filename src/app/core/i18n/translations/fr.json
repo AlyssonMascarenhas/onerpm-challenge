@@ -27,7 +27,9 @@
     "failed": "Impossible de charger cet ISRC",
     "listen": "Écouter un extrait",
     "playerTitle": "Lecteur Spotify pour {{title}}",
-    "loadingPlayer": "Chargement du lecteur…"
+    "loadingPlayer": "Chargement du lecteur…",
+    "nowPlaying": "En cours de lecture",
+    "closePlayer": "Fermer le lecteur"
   },
   "status": {
     "loading": "Chargement des titres…",

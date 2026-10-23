@@ -48,7 +48,7 @@ mesmo componente, então têm o mesmo tamanho, raio, foco e comportamento. As co
 (`theme.constants.ts`, como manda o ADR 0012) e o preset as expõe como `--p-action-*`, trocadas pela mesma classe `app-dark`
 que troca os demais _tokens_; o contraste (AA) é testado. Não baixamos nem redistribuímos os selos oficiais: o botão usa texto traduzido e o glifo do Spotify em SVG.
 
-### Player: o lugar dele é reservado na hora
+### Player: o lugar dele é reservado na hora (hoje na barra fixa, ADR 0016)
 
 Ao clicar em "Ouvir uma prévia" o embed do Spotify leva um instante para abrir e, antes, a área ficava vazia ("buraco").
 Agora o palco do player já nasce com a altura do embed (152 px) mostrando um indicador de carregamento (`role="status"`,

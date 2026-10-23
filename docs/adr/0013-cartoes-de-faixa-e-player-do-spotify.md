@@ -20,7 +20,7 @@ de o visitante querer ouvir qualquer coisa.
   ("Disponível/Indisponível no Brasil") acompanham.
 - **Player em duas etapas (fachada)**: primeiro um botão "Ouvir uma prévia"; o iframe do Spotify só é criado quando o
   visitante pede. Resultado: nenhuma requisição ao Spotify por faixa no carregamento, só o player escolhido. O iframe é
-  compacto (152 px) (o `lazy` foi retirado no ADR 0015, que também reserva o lugar e mostra o carregamento), com `allow="encrypted-media"` e `title` traduzido ("Player do Spotify para …"). Usa o
+  compacto (152 px) (o `lazy` e o player dentro do cartão saíram nos ADRs 0015 e 0016: o player agora vive numa barra fixa), com `allow="encrypted-media"` e `title` traduzido ("Player do Spotify para …"). Usa o
   tema escuro do Spotify quando a página está escura.
 - **Segurança do iframe**: o Angular exige uma URL "confiável" para `<iframe src>`. Ela só é gerada por `buildEmbedUrl`, que
   usa uma **origem fixa** (`open.spotify.com/embed/track`) e **valida o id** (22 caracteres base 62). Qualquer outra coisa

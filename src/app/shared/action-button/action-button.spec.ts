@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActionButton } from './action-button';
 import { ACTION_ICON_PATHS } from './action-button.constants';
@@ -88,8 +90,10 @@ describe('ActionButton', () => {
   });
 
   describe('mark', () => {
-    it.each(Object.values(ActionIcon))(
-      'draws the %s mark, hidden from assistive technology',
+    const STILL = [ActionIcon.Play, ActionIcon.Spotify];
+
+    it.each(STILL)(
+      'draws the %s mark as a path, hidden from assistive technology',
       async (icon) => {
         const fixture = await render({ icon });
 
@@ -101,10 +105,56 @@ describe('ActionButton', () => {
       },
     );
 
-    it('has a distinct drawing for each icon', () => {
+    it('has a distinct drawing for each still icon', () => {
       const paths = Object.values(ACTION_ICON_PATHS);
 
+      expect(paths).toHaveLength(STILL.length);
       expect(new Set(paths).size).toBe(paths.length);
+    });
+
+    it('draws the equalizer as three bars that move, hidden from assistive technology', async () => {
+      const fixture = await render({ icon: ActionIcon.Equalizer });
+
+      const mark = root(fixture).querySelector('svg') as SVGElement;
+
+      expect(mark.getAttribute('aria-hidden')).toBe('true');
+      expect(mark.classList.contains('action__mark--equalizer')).toBe(true);
+      expect(mark.querySelectorAll('rect.action__bar')).toHaveLength(3);
+      expect(mark.querySelector('path')).toBeNull();
+    });
+
+    it('has a bar animation that the page does not play for visitors who ask for less motion', () => {
+      const styles = readFileSync(
+        join(process.cwd(), 'src/app/shared/action-button/action-button.scss'),
+        'utf8',
+      );
+
+      expect(styles).toMatch(/animation:\s*equalize/);
+      expect(styles).toMatch(
+        /prefers-reduced-motion:\s*reduce\)\s*\{[^@]*\.action__bar\s*\{\s*animation:\s*none/,
+      );
+    });
+  });
+
+  describe('current', () => {
+    it('is not marked by default', async () => {
+      const fixture = await render();
+
+      const button = root(fixture).querySelector('button') as HTMLButtonElement;
+
+      expect(button.getAttribute('aria-current')).toBeNull();
+      expect(button.classList).not.toContain('action--current');
+    });
+
+    it('is marked for assistive technology and in color when it is the action in effect', async () => {
+      const fixture = await render();
+      fixture.componentRef.setInput('current', true);
+      await fixture.whenStable();
+
+      const button = root(fixture).querySelector('button') as HTMLButtonElement;
+
+      expect(button.getAttribute('aria-current')).toBe('true');
+      expect(button.classList).toContain('action--current');
     });
   });
 });

@@ -28,6 +28,11 @@
   box-sizing: border-box;
 }
 
+/* While the player bar is on the page, keep a focused element from hiding behind it. */
+html:has(orp-player-bar section) {
+  scroll-padding-bottom: 7rem;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;

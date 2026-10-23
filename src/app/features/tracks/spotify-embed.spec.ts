@@ -1,4 +1,4 @@
-import { buildEmbedUrl } from './spotify-embed';
+import { buildEmbedUrl, buildTrackUri } from './spotify-embed';
 
 const ID = '7q7QtMiK9jhob0Md7p715D';
 
@@ -40,5 +40,21 @@ describe('buildEmbedUrl', () => {
       expect(buildEmbedUrl(id, false)).toBeNull();
       expect(buildEmbedUrl(id, true)).toBeNull();
     });
+  });
+});
+
+describe('buildTrackUri', () => {
+  it('is the spotify:track address of a valid id', () => {
+    expect(buildTrackUri(ID)).toBe(`spotify:track:${ID}`);
+  });
+
+  it.each([
+    ['empty', ''],
+    ['too short', 'abc'],
+    ['a URL', 'https://evil.example/x'],
+    ['markup', '"><img src=x onerror=alert(1)>'],
+    ['with a colon', 'spotify:track:7q7QtMiK9jhob0'],
+  ])('is null for an id that is not a Spotify id (%s)', (_label, id) => {
+    expect(buildTrackUri(id)).toBeNull();
   });
 });

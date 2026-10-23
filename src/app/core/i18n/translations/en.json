@@ -27,7 +27,9 @@
     "failed": "Could not load this ISRC",
     "listen": "Listen to a preview",
     "playerTitle": "Spotify player for {{title}}",
-    "loadingPlayer": "Loading the player…"
+    "loadingPlayer": "Loading the player…",
+    "nowPlaying": "Now playing",
+    "closePlayer": "Close the player"
   },
   "status": {
     "loading": "Loading tracks…",

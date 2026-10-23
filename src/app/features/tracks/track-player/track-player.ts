@@ -1,16 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { DomSanitizer } from '@angular/platform-browser';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  computed,
+  inject,
+  input,
+} from '@angular/core';
 import { translateSignal } from '@jsverse/transloco';
-import { Theme } from '../../../core/theme/theme';
+import { Track } from '../../../../contract/tracks.interfaces';
 import { ActionButton } from '../../../shared/action-button/action-button';
 import { ActionIcon } from '../../../shared/action-button/action-button.enums';
+import { NowPlaying } from '../now-playing';
 import { buildEmbedUrl } from '../spotify-embed';
-import { SPOTIFY_EMBED_HEIGHT, SPOTIFY_EMBED_URL } from '../tracks.constants';
 
 /**
- * Audio preview through Spotify's official embed (the API gives no `preview_url`, see ADR 0005).
- * The embed is heavy and third-party, so the page first shows a button and only loads the
- * player when the visitor asks to listen: ten tracks do not mean ten players at page load.
+ * The "listen" control of a card. It does not load anything from Spotify: it asks the player bar to play
+ * this track, so ten tracks never mean ten embeds, and the track playing is marked in its own card.
  */
 @Component({
   selector: 'orp-track-player',
@@ -20,53 +25,26 @@ import { SPOTIFY_EMBED_HEIGHT, SPOTIFY_EMBED_URL } from '../tracks.constants';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TrackPlayer {
-  public readonly trackId = input.required<string>();
-  public readonly title = input.required<string>();
+  public readonly track = input.required<Track>();
 
-  private readonly _theme = inject(Theme);
-  private readonly _sanitizer = inject(DomSanitizer);
-  private readonly _requested = signal(false);
-  /** The address of the embed that has finished loading (it changes with the theme, and then loads again). */
-  private readonly _loadedUrl = signal<string | null>(null);
+  private readonly _nowPlaying = inject(NowPlaying);
+  private readonly _host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly _listen = translateSignal('tracks.listen');
+  private readonly _playing = translateSignal('tracks.nowPlaying');
 
-  protected readonly height = SPOTIFY_EMBED_HEIGHT;
-  protected readonly playIcon = ActionIcon.Play;
-  protected readonly listen = translateSignal('tracks.listen');
   protected readonly regionLabel = translateSignal('tracks.preview');
-  protected readonly loadingLabel = translateSignal('tracks.loadingPlayer');
-  protected readonly playerTitle = translateSignal('tracks.playerTitle', { title: this.title });
 
   /** The id was not a Spotify id: there is nothing safe to embed, so no player is offered. */
-  protected readonly available = computed(() => buildEmbedUrl(this.trackId(), false) !== null);
+  protected readonly available = computed(() => buildEmbedUrl(this.track().id, false) !== null);
 
-  /** Set only once the visitor asked to listen. */
-  private readonly _embedAddress = computed(() =>
-    this._requested() ? buildEmbedUrl(this.trackId(), this._theme.isDark()) : null,
+  /** This card's track is the one in the player bar. */
+  protected readonly current = computed(() => this._nowPlaying.track()?.id === this.track().id);
+  protected readonly icon = computed(() =>
+    this.current() ? ActionIcon.Equalizer : ActionIcon.Play,
   );
+  protected readonly label = computed(() => (this.current() ? this._playing() : this._listen()));
 
-  protected readonly embedUrl = computed(() => {
-    const url = this._embedAddress();
-    // Trusted because it is our fixed Spotify origin plus an id validated by `buildEmbedUrl`.
-    return url ? this._sanitizer.bypassSecurityTrustResourceUrl(url) : null;
-  });
-
-  /**
-   * The embed in place has finished loading: until then a placeholder of the same size holds its place.
-   * Readiness belongs to one address, so a reload (another theme) waits for its own `load`.
-   */
-  protected readonly frameLoaded = computed(
-    () => this._embedAddress() !== null && this._loadedUrl() === this._embedAddress(),
-  );
-
-  protected load(): void {
-    this._requested.set(true);
-  }
-
-  protected onFrameLoad(event: Event): void {
-    // Some browsers fire an initial `load` for the blank frame, before the embed's address is applied.
-    const { src } = event.target as HTMLIFrameElement;
-    if (src.startsWith(SPOTIFY_EMBED_URL)) {
-      this._loadedUrl.set(src);
-    }
+  protected play(): void {
+    this._nowPlaying.play(this.track(), this._host.nativeElement.querySelector('button'));
   }
 }

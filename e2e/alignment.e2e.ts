@@ -75,21 +75,15 @@ test('the cards really differ in content, so the alignment is doing real work', 
   expect(new Set(heights).size).toBeGreaterThan(1);
 });
 
-test('opening one player grows that row for every card in it, and stays aligned', async ({
+test('opening a player changes nothing in the cards: the player lives in the bar', async ({
   page,
 }) => {
+  const before = await measureBands(page);
+
   await page.getByRole('button', { name: 'Listen to a preview' }).first().click();
   await expect(page.locator('iframe')).toHaveCount(1);
 
-  // The row settles once the player has been laid out: measure until it does (or fail with the last numbers).
-  await expect(async () => {
-    for (const band of await measureBands(page)) {
-      for (const [section, tops] of Object.entries(band.distinct)) {
-        expect(tops, `${section} in a row of ${band.cards} cards`).toHaveLength(1);
-      }
-      expect(band.heights).toHaveLength(1);
-    }
-  }).toPass();
+  expect(await measureBands(page)).toEqual(before);
 });
 
 test('stays aligned in another language, where texts wrap differently', async ({ page }) => {

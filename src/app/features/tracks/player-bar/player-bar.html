@@ -1,0 +1,28 @@
+@if (track()) {
+  <section class="bar" [attr.aria-label]="regionLabel()">
+    <div class="bar__inner">
+      <div class="bar__stage" [style.height.px]="height">
+        @if (fallbackUrl(); as url) {
+          <iframe
+            class="bar__frame"
+            allow="encrypted-media"
+            [src]="url"
+            [title]="playerTitle()"
+            [height]="height"
+          ></iframe>
+        } @else {
+          @if (!ready()) {
+            <div class="bar__loading" role="status">
+              <span class="bar__spinner" aria-hidden="true"></span>
+              {{ loadingLabel() }}
+            </div>
+          }
+          <div #mount class="bar__mount" [class.bar__mount--pending]="!ready()"></div>
+        }
+      </div>
+      <button type="button" class="bar__close" [attr.aria-label]="closeLabel()" (click)="close()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+    </div>
+  </section>
+}

@@ -238,13 +238,13 @@ describe('TrackCard', () => {
   });
 
   describe('player', () => {
-    it('embeds the preview player for this very track', async () => {
+    it('offers the preview of this very track', async () => {
       const fixture = await render();
 
       const player = fixture.debugElement.query(By.directive(TrackPlayer));
 
-      expect(player.componentInstance.trackId()).toBe('7q7QtMiK9jhob0Md7p715D');
-      expect(player.componentInstance.title()).toBe('...É pra Você');
+      expect(player.componentInstance.track().id).toBe('7q7QtMiK9jhob0Md7p715D');
+      expect(player.componentInstance.track().title).toBe('...É pra Você');
     });
   });
 
