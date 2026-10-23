@@ -83,6 +83,7 @@ export interface TrackSearch {
 export interface SpotifyClientOptions {
   readonly fetchFn?: FetchFn;
   readonly sleep?: Sleep;
+  readonly now?: Clock;
 }
 
 export interface SpotifyErrorDetails extends ErrorOptions {

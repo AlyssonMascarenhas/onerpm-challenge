@@ -17,8 +17,9 @@ function setup(responses: (() => Response | Promise<Response>)[]) {
     fetchFn.mockImplementationOnce(async () => respond());
   }
   const sleep = vi.fn(async () => undefined);
-  const client = new SpotifyClient(tokens, { fetchFn, sleep });
-  return { client, tokens, fetchFn, sleep };
+  const clock = { now: 1_000_000 };
+  const client = new SpotifyClient(tokens, { fetchFn, sleep, now: () => clock.now });
+  return { client, tokens, fetchFn, sleep, clock };
 }
 
 const ok =
@@ -155,27 +156,18 @@ describe('SpotifyClient.searchByIsrc', () => {
       expect(sleep).toHaveBeenCalledExactlyOnceWith(2000);
     });
 
-    it('fails fast when the wait is too long to hold a user request', async () => {
-      const { client, sleep } = setup([failure(429, { 'Retry-After': '30' })]);
+    it('assumes a short wait when Retry-After is missing or invalid', async () => {
+      const track = spotifyTrack();
+      const { client, sleep } = setup([
+        failure(429),
+        failure(429, { 'Retry-After': 'soon' }),
+        ok(track),
+      ]);
 
-      await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
-        reason: SpotifyFailureReason.SEARCH_FAILED,
-        status: 429,
-      });
-      expect(sleep).not.toHaveBeenCalled();
-    });
+      await expect(client.searchByIsrc('A')).rejects.toMatchObject({ status: 429 });
+      await expect(client.searchByIsrc('B')).resolves.toEqual([track]);
 
-    it('fails when Retry-After is missing or invalid', async () => {
-      const { client } = setup([failure(429), failure(429, { 'Retry-After': 'soon' })]);
-
-      await expect(client.searchByIsrc('A')).rejects.toMatchObject({
-        reason: SpotifyFailureReason.SEARCH_FAILED,
-        status: 429,
-      });
-      await expect(client.searchByIsrc('A')).rejects.toMatchObject({
-        reason: SpotifyFailureReason.SEARCH_FAILED,
-        status: 429,
-      });
+      expect(sleep).toHaveBeenCalledWith(1000);
     });
 
     it('retries only once', async () => {
@@ -190,6 +182,78 @@ describe('SpotifyClient.searchByIsrc', () => {
       });
       expect(sleep).toHaveBeenCalledTimes(1);
       expect(fetchFn).toHaveBeenCalledTimes(2);
+    });
+
+    describe('cooldown shared by every search', () => {
+      it('fails fast, without sleeping, when the wait is too long to hold a user request', async () => {
+        const { client, sleep } = setup([failure(429, { 'Retry-After': '30' })]);
+
+        await expect(client.searchByIsrc('BR1SP1200071')).rejects.toMatchObject({
+          reason: SpotifyFailureReason.RATE_LIMITED,
+          status: 429,
+        });
+        expect(sleep).not.toHaveBeenCalled();
+      });
+
+      it('rejects other searches locally, without calling Spotify, until the cooldown ends', async () => {
+        const { client, fetchFn } = setup([failure(429, { 'Retry-After': '30' })]);
+        await expect(client.searchByIsrc('A')).rejects.toBeInstanceOf(SpotifyUnavailableError);
+
+        await expect(client.searchByIsrc('B')).rejects.toMatchObject({
+          reason: SpotifyFailureReason.RATE_LIMITED,
+        });
+        await expect(client.searchByIsrc('C', { market: 'BR' })).rejects.toMatchObject({
+          reason: SpotifyFailureReason.RATE_LIMITED,
+        });
+
+        expect(fetchFn).toHaveBeenCalledTimes(1);
+      });
+
+      it('resumes calling Spotify once the cooldown has elapsed', async () => {
+        const track = spotifyTrack();
+        const { client, clock, fetchFn } = setup([
+          failure(429, { 'Retry-After': '30' }),
+          ok(track),
+        ]);
+        await expect(client.searchByIsrc('A')).rejects.toBeInstanceOf(SpotifyUnavailableError);
+
+        clock.now += 30_000;
+
+        await expect(client.searchByIsrc('B')).resolves.toEqual([track]);
+        expect(fetchFn).toHaveBeenCalledTimes(2);
+      });
+
+      it('makes the next search wait out a short cooldown before sending anything', async () => {
+        const track = spotifyTrack();
+        const { client, sleep, clock } = setup([
+          failure(429, { 'Retry-After': '2' }),
+          ok(track),
+          ok(track),
+        ]);
+        await client.searchByIsrc('A');
+        sleep.mockClear();
+        clock.now += 500;
+
+        await client.searchByIsrc('B');
+
+        expect(sleep).toHaveBeenCalledExactlyOnceWith(1500);
+      });
+
+      it('does not delay searches after the cooldown has passed', async () => {
+        const track = spotifyTrack();
+        const { client, sleep, clock } = setup([
+          failure(429, { 'Retry-After': '2' }),
+          ok(track),
+          ok(track),
+        ]);
+        await client.searchByIsrc('A');
+        sleep.mockClear();
+        clock.now += 2_000;
+
+        await client.searchByIsrc('B');
+
+        expect(sleep).not.toHaveBeenCalled();
+      });
     });
   });
 

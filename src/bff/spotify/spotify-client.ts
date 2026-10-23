@@ -1,8 +1,9 @@
-import { systemSleep } from './http';
-import { FetchFn, Sleep } from './http.types';
+import { systemClock, systemSleep } from './http';
+import { Clock, FetchFn, Sleep } from './http.types';
 import { isSpotifyTrack } from './is-spotify-track';
 import { SpotifyUnavailableError } from './spotify-errors';
 import {
+  DEFAULT_RETRY_AFTER_MS,
   MAX_RATE_LIMIT_RETRIES,
   MAX_RATE_LIMIT_WAIT_MS,
   MAX_SEARCH_PAGES,
@@ -24,6 +25,9 @@ import {
 export class SpotifyClient implements TrackSearch {
   private readonly _fetchFn: FetchFn;
   private readonly _sleep: Sleep;
+  private readonly _now: Clock;
+  /** Epoch ms until which Spotify asked us to back off; shared by every search of this client. */
+  private _rateLimitedUntil = 0;
 
   constructor(
     private readonly _tokens: AccessTokenProvider,
@@ -31,6 +35,7 @@ export class SpotifyClient implements TrackSearch {
   ) {
     this._fetchFn = options.fetchFn ?? fetch;
     this._sleep = options.sleep ?? systemSleep;
+    this._now = options.now ?? systemClock;
   }
 
   /** Every track Spotify lists for the ISRC: the API caps a page at 10, so we follow `next`. */
@@ -65,11 +70,11 @@ export class SpotifyClient implements TrackSearch {
         this._tokens.invalidate();
         continue;
       }
-      if (response.status === 429 && rateLimitRetries < MAX_RATE_LIMIT_RETRIES) {
-        const waitMs = retryAfterMs(response);
-        if (waitMs !== null && waitMs <= MAX_RATE_LIMIT_WAIT_MS) {
+      if (response.status === 429) {
+        this._startCooldown(retryAfterMs(response) ?? DEFAULT_RETRY_AFTER_MS);
+        if (rateLimitRetries < MAX_RATE_LIMIT_RETRIES) {
+          // The next _get() waits out the cooldown, or gives up if it is too long to wait for.
           rateLimitRetries++;
-          await this._sleep(waitMs);
           continue;
         }
       }
@@ -92,7 +97,24 @@ export class SpotifyClient implements TrackSearch {
     return `${SEARCH_URL}?${params}`;
   }
 
+  private _startCooldown(durationMs: number): void {
+    this._rateLimitedUntil = Math.max(this._rateLimitedUntil, this._now() + durationMs);
+  }
+
+  /** Honors a cooldown set by any earlier search: wait if it is short, fail locally if it is not. */
+  private async _awaitCooldown(): Promise<void> {
+    const remainingMs = this._rateLimitedUntil - this._now();
+    if (remainingMs <= 0) {
+      return;
+    }
+    if (remainingMs > MAX_RATE_LIMIT_WAIT_MS) {
+      throw new SpotifyUnavailableError(SpotifyFailureReason.RATE_LIMITED, { status: 429 });
+    }
+    await this._sleep(remainingMs);
+  }
+
   private async _get(url: string): Promise<Response> {
+    await this._awaitCooldown();
     const token = await this._tokens.getToken();
     try {
       return await this._fetchFn(url, {

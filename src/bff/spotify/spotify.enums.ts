@@ -7,4 +7,6 @@ export enum SpotifyFailureReason {
   SEARCH_FAILED = 'search_failed',
   SEARCH_NETWORK_ERROR = 'search_network_error',
   SEARCH_RESPONSE_MALFORMED = 'search_response_malformed',
+  /** Spotify asked us to back off for longer than we are willing to hold a request open. */
+  RATE_LIMITED = 'rate_limited',
 }

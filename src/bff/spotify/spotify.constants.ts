@@ -17,5 +17,8 @@ export const TOKEN_EXPIRY_MARGIN_MS = 60_000;
 export const MAX_RATE_LIMIT_WAIT_MS = 5_000;
 export const MAX_RATE_LIMIT_RETRIES = 1;
 
+/** Cooldown to assume when a 429 arrives without a usable `Retry-After`. */
+export const DEFAULT_RETRY_AFTER_MS = 1_000;
+
 /** Values Spotify may send in `release_date_precision`; anything else is a malformed payload. */
 export const RELEASE_DATE_PRECISIONS: readonly unknown[] = Object.values(ReleaseDatePrecision);

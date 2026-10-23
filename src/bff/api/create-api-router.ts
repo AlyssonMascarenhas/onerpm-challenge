@@ -41,7 +41,11 @@ function createTrackFinder(options: ApiRouterOptions, logger: Logger): TrackFind
     fetchFn: options.fetchFn,
     now: options.now,
   });
-  const client = new SpotifyClient(tokens, { fetchFn: options.fetchFn, sleep: options.sleep });
+  const client = new SpotifyClient(tokens, {
+    fetchFn: options.fetchFn,
+    sleep: options.sleep,
+    now: options.now,
+  });
   return new CachingTrackFinder(new SpotifyTrackFinder(client), {
     ttlMs: TRACK_CACHE_TTL_MS,
     maxEntries: TRACK_CACHE_MAX_ENTRIES,
