@@ -14,6 +14,7 @@ ordenadas por título. Sem persistência. O enunciado original está no `README.
 
 - **Commits**: Conventional Commits (`feat(bff): ...`). Escopos em `commitlint.config.js`. Husky roda commitlint + lint-staged.
 - **Branches/PRs**: uma branch por etapa (`feat/...`, `chore/...`, `ci/...`), PR pequeno para `main`, squash merge.
+- **ADRs**: toda decisão técnica relevante ganha um registro em `docs/adr/` (template em `0000-template.md`), no mesmo PR que a introduz, e entra no índice do `docs/adr/README.md`.
 - Segredos só em `.env` (ignorado) e secrets do GitHub. Use `.env.example` como referência.
 - Código: sem `any`; funções puras no domínio; mappers isolam o formato do Spotify (anti-corruption layer).
 - Siga `.claude/skills/angular-developer` e `.claude/skills/angular-new-app` (instaladas de https://github.com/angular/skills).
