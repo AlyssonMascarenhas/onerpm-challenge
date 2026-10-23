@@ -197,6 +197,9 @@ describe('TracksPage', () => {
 
       const alert = root(fixture).querySelector('[role="alert"]');
       expect(alert?.textContent).toContain('Music data unavailable');
+      expect(root(fixture).querySelector('section.content')?.getAttribute('aria-busy')).toBe(
+        'false',
+      );
       expect(alert?.textContent).toContain(
         'We could not reach Spotify right now. Please try again in a moment.',
       );
@@ -222,6 +225,9 @@ describe('TracksPage', () => {
       (root(fixture).querySelector('[role="alert"] button') as HTMLButtonElement).click();
       await settle(fixture);
 
+      expect(root(fixture).querySelector('section.content')?.getAttribute('aria-busy')).toBe(
+        'true',
+      );
       expect(lookup).toHaveBeenCalledTimes(2);
       expect(root(fixture).querySelector('[role="alert"]')).toBeNull();
       expect(root(fixture).querySelectorAll('p-skeleton')).toHaveLength(4);

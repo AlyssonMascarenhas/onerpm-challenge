@@ -37,6 +37,9 @@ export class TracksPage {
     count: computed(() => String(this.store.failedCount())),
   });
 
+  /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */
+  protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());
+
   protected readonly LookupStatus = LookupStatus;
   protected readonly placeholders = [1, 2, 3, 4];
 

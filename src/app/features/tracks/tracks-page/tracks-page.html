@@ -3,7 +3,7 @@
   <p class="hero__subtitle">{{ subtitle() }}</p>
 </section>
 
-<section class="content" [attr.aria-label]="listLabel()" [attr.aria-busy]="!store.isReady()">
+<section class="content" [attr.aria-label]="listLabel()" [attr.aria-busy]="busy()">
   @if (store.isUnavailable()) {
     <p-message severity="error" role="alert">
       <div class="alert">
