@@ -56,9 +56,12 @@
   color-scheme: normal;
 }
 
-/* Loads in the background, hidden until it has something to show. */
+/*
+ * Loads in the background, hidden until it has something to show. `visibility` (not `opacity`) so the frame
+ * keeps its place but cannot be focused or reached by assistive technology while it is not ready.
+ */
 .bar__mount--pending {
-  opacity: 0;
+  visibility: hidden;
 }
 
 .bar__loading {

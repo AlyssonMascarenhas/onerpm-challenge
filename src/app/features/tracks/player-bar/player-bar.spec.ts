@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Language } from '../../../core/i18n/i18n.enums';
 import { DARK_MODE_CLASS } from '../../../core/theme/theme.constants';
@@ -205,6 +207,17 @@ describe('PlayerBar', () => {
       expect(root(fixture).querySelector('.bar__mount')?.classList).toContain(
         'bar__mount--pending',
       );
+    });
+
+    it('hides the embed that is not ready from the keyboard and assistive technology', () => {
+      const styles = readFileSync(
+        join(process.cwd(), 'src/app/features/tracks/player-bar/player-bar.scss'),
+        'utf8',
+      );
+      const pending = /\.bar__mount--pending\s*\{([^}]*)\}/.exec(styles)?.[1] ?? '';
+
+      expect(pending).toContain('visibility: hidden');
+      expect(pending).not.toContain('opacity');
     });
 
     it('says it in the visitor language', async () => {
