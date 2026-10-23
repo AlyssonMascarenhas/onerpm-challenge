@@ -19,6 +19,7 @@ export class TracksStore {
 
   /** Results in display order (see `sortResults`). */
   public readonly items = computed(() => sortResults(this._results()));
+  public readonly isReady = computed(() => this._status() === TracksLoadStatus.READY);
   public readonly isLoading = computed(() => this._status() === TracksLoadStatus.LOADING);
   public readonly isUnavailable = computed(() => this._status() === TracksLoadStatus.UNAVAILABLE);
 

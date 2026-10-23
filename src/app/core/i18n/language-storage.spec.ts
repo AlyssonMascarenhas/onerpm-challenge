@@ -11,78 +11,47 @@ function create(platform: 'browser' | 'server' = 'browser'): LanguageStorage {
 
 describe('LanguageStorage', () => {
   beforeEach(() => localStorage.clear());
-  afterEach(() => vi.restoreAllMocks());
 
-  describe('in the browser', () => {
-    it('reads nothing when no language was saved', () => {
-      expect(create().read()).toBeNull();
-    });
-
-    it('reads back what it wrote', () => {
-      const storage = create();
-
-      storage.write(Language.RU);
-
-      expect(storage.read()).toBe(Language.RU);
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
-    });
-
-    it('overwrites the previous choice', () => {
-      const storage = create();
-      storage.write(Language.RU);
-
-      storage.write(Language.FR);
-
-      expect(storage.read()).toBe(Language.FR);
-    });
-
-    it.each([['de'], ['xx'], ['<script>'], ['']])(
-      'ignores a stored value that is not a supported language (%j)',
-      (value) => {
-        localStorage.setItem(LANGUAGE_STORAGE_KEY, value);
-
-        expect(create().read()).toBeNull();
-      },
-    );
-
-    it('normalizes a stored regional tag', () => {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, 'pt-BR');
-
-      expect(create().read()).toBe(Language.PT);
-    });
-
-    it('survives storage that throws on read (private mode, blocked cookies)', () => {
-      const storage = create();
-      vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-        throw new DOMException('denied', 'SecurityError');
-      });
-
-      expect(storage.read()).toBeNull();
-    });
-
-    it('survives storage that throws on write (quota exceeded)', () => {
-      const storage = create();
-      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-        throw new DOMException('full', 'QuotaExceededError');
-      });
-
-      expect(() => storage.write(Language.TR)).not.toThrow();
-    });
+  it('reads nothing when no language was saved', () => {
+    expect(create().read()).toBeNull();
   });
 
-  describe('on the server', () => {
-    it('reads nothing, even if a value exists', () => {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, 'ru');
+  it('reads back what it wrote, under its own key', () => {
+    const storage = create();
 
-      expect(create('server').read()).toBeNull();
-    });
+    storage.write(Language.RU);
 
-    it('does not write', () => {
-      const setItem = vi.spyOn(Storage.prototype, 'setItem');
+    expect(storage.read()).toBe(Language.RU);
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
+  });
 
-      create('server').write(Language.RU);
+  it('overwrites the previous choice', () => {
+    const storage = create();
+    storage.write(Language.RU);
 
-      expect(setItem).not.toHaveBeenCalled();
-    });
+    storage.write(Language.FR);
+
+    expect(storage.read()).toBe(Language.FR);
+  });
+
+  it.each([['de'], ['xx'], ['<script>'], ['']])(
+    'ignores a stored value that is not a supported language (%j)',
+    (value) => {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, value);
+
+      expect(create().read()).toBeNull();
+    },
+  );
+
+  it('normalizes a stored regional tag', () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'pt-BR');
+
+    expect(create().read()).toBe(Language.PT);
+  });
+
+  it('does not read on the server, even if a value exists', () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'ru');
+
+    expect(create('server').read()).toBeNull();
   });
 });

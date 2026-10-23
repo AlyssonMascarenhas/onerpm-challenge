@@ -1,0 +1,58 @@
+<section class="hero" aria-labelledby="page-title">
+  <h1 id="page-title" class="hero__title">{{ title() }}</h1>
+  <p class="hero__subtitle">{{ subtitle() }}</p>
+</section>
+
+<section class="content" [attr.aria-label]="listLabel()" [attr.aria-busy]="busy()">
+  @if (store.isUnavailable()) {
+    <p-message severity="error" role="alert">
+      <div class="alert">
+        <div>
+          <strong class="alert__title">{{ unavailableTitle() }}</strong>
+          <p class="alert__text">{{ unavailableMessage() }}</p>
+        </div>
+        <p-button
+          severity="danger"
+          icon="pi pi-refresh"
+          [label]="retry()"
+          [outlined]="true"
+          (onClick)="reload()"
+        />
+      </div>
+    </p-message>
+  } @else if (store.isReady()) {
+    @if (store.failedCount() > 0) {
+      <p-message severity="warn" role="status">{{ partialFailure() }}</p-message>
+    }
+
+    <ol class="list">
+      @for (item of store.items(); track item.isrc + item.status) {
+        <li class="list__item">
+          @switch (item.status) {
+            @case (LookupStatus.FOUND) {
+              <strong>{{ item.track.title }}</strong>
+              <span class="muted">
+                {{ item.track.artists.join(', ') }} · {{ duration(item.track.durationMs) }}
+              </span>
+            }
+            @case (LookupStatus.NOT_FOUND) {
+              <strong>{{ item.isrc }}</strong>
+              <span class="muted">{{ notFound() }}</span>
+            }
+            @default {
+              <strong>{{ item.isrc }}</strong>
+              <span class="muted">{{ failed() }}</span>
+            }
+          }
+        </li>
+      }
+    </ol>
+  } @else {
+    <p class="visually-hidden" role="status">{{ loading() }}</p>
+    <div class="placeholders" aria-hidden="true">
+      @for (placeholder of placeholders; track placeholder) {
+        <p-skeleton height="4.5rem" borderRadius="1rem" />
+      }
+    </div>
+  }
+</section>

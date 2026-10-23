@@ -1,5 +1,6 @@
 import { DOCUMENT, isPlatformServer } from '@angular/common';
 import { PLATFORM_ID, REQUEST, Injectable, computed, inject, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { detectLanguage, parseAcceptLanguage } from './detect-language';
@@ -13,6 +14,7 @@ export class I18n {
   private readonly _transloco = inject(TranslocoService);
   private readonly _storage = inject(LanguageStorage);
   private readonly _document = inject(DOCUMENT);
+  private readonly _title = inject(Title);
   private readonly _isServer = isPlatformServer(inject(PLATFORM_ID));
   /** Only present while rendering on the server. */
   private readonly _request = inject(REQUEST, { optional: true });
@@ -82,6 +84,7 @@ export class I18n {
     this._transloco.setActiveLang(language);
     this._language.set(language);
     this._document.documentElement.lang = this._localeOf(language);
+    this._title.setTitle(this._transloco.translate('app.title'));
     return true;
   }
 

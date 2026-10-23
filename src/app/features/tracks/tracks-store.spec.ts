@@ -28,6 +28,7 @@ describe('TracksStore', () => {
     expect(store.status()).toBe(TracksLoadStatus.IDLE);
     expect(store.items()).toEqual([]);
     expect(store.isLoading()).toBe(false);
+    expect(store.isReady()).toBe(false);
     expect(store.isUnavailable()).toBe(false);
     expect(lookup).not.toHaveBeenCalled();
   });
@@ -65,6 +66,7 @@ describe('TracksStore', () => {
       requests[0].next([foundResult('Repente'), foundResult('Louca'), foundResult('Quase Nua')]);
 
       expect(store.status()).toBe(TracksLoadStatus.READY);
+      expect(store.isReady()).toBe(true);
       expect(store.isLoading()).toBe(false);
       expect(titles(store.items())).toEqual(['Louca', 'Quase Nua', 'Repente']);
     });

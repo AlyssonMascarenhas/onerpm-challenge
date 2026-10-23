@@ -2,7 +2,13 @@
   "app": {
     "title": "ISRC ausentes",
     "subtitle": "Pistas del contrato del productor que aún no están en nuestras bases de datos.",
-    "language": "Idioma"
+    "language": "Idioma",
+    "eyebrow": "Consulta de ISRC",
+    "skipToContent": "Saltar al contenido",
+    "theme": {
+      "toDark": "Cambiar al tema oscuro",
+      "toLight": "Cambiar al tema claro"
+    }
   },
   "tracks": {
     "listLabel": "Pistas",

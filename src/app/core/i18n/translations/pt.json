@@ -2,7 +2,13 @@
   "app": {
     "title": "ISRCs ausentes",
     "subtitle": "Faixas do contrato do produtor que ainda não constam em nossas bases.",
-    "language": "Idioma"
+    "language": "Idioma",
+    "eyebrow": "Consulta de ISRC",
+    "skipToContent": "Pular para o conteúdo",
+    "theme": {
+      "toDark": "Mudar para o tema escuro",
+      "toLight": "Mudar para o tema claro"
+    }
   },
   "tracks": {
     "listLabel": "Faixas",

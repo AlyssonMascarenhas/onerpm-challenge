@@ -111,6 +111,18 @@ describe('I18n', () => {
       expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
     });
 
+    it.each([
+      [Language.EN, 'Missing ISRCs'],
+      [Language.PT, 'ISRCs ausentes'],
+      [Language.RU, 'Отсутствующие ISRC'],
+    ])('translates the document title (%s)', async (language, title) => {
+      const { i18n } = setup();
+
+      await i18n.setLanguage(language);
+
+      expect(document.title).toBe(title);
+    });
+
     it('sets <html lang> to the locale, with the region where it matters', async () => {
       const { i18n } = setup({ browserLanguages: ['pt-PT'] });
 

@@ -22,6 +22,7 @@ ordenadas por título. Sem persistência. O enunciado original está no `README.
 - **CI** (`.github/workflows/ci.yml` e `pr-title.yml`, ADR 0009): em PRs para `main` roda commitlint (commits e título), lint, Prettier, typecheck, testes com cobertura mínima e build. Antes de abrir PR, rode `npm run lint && npm run format:check && npm run typecheck && npm run test:ci && npm run build`.
 - **Front (ADR 0010)**: a lista é ordenada com `sortResults` (localidade fixa `en`, nunca `und`; ignora acento e pontuação); duração via `formatDuration` (`mm:ss`); estado em `TracksStore` (signals). ISRCs sem faixa continuam na lista, depois das faixas.
 - **i18n (ADR 0011)**: Transloco, seis idiomas (`en pt es ru fr tr`) em `src/app/core/i18n/translations/`. Toda chave nova entra nos seis arquivos (o teste de paridade falha se faltar) e sem plural dependente de idioma. Idioma: escolha salva → navegador → inglês; no servidor, `Accept-Language`. Datas via `formatReleaseDate` (UTC).
+- **Tema e layout (ADR 0012)**: PrimeNG 21 com preset em `src/app/core/theme`; cores só em `theme.constants.ts` (paleta própria, não oficial da ONErpm); modo escuro pela classe `app-dark`, aplicada antes da pintura pelo script do `index.html` (mantenha-o igual às constantes). Contraste AA é testado. Componentes de UI em `src/app/layout` e `src/app/features/*`.
 - Siga `.claude/skills/angular-developer` e `.claude/skills/angular-new-app` (instaladas de https://github.com/angular/skills).
 
 ## Angular — regras do projeto
