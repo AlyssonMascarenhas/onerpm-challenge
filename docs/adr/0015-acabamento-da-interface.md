@@ -68,6 +68,16 @@ Esc fecha e devolve o foco ao botão; o modal tem "Tentar novamente", que refaz 
 espaço abaixo, para não colar nos cartões. Alternativas: ancorar/rolar até o primeiro cartão com falha (não mostra a lista
 inteira nem funciona bem com muitos) e listar tudo dentro do próprio aviso (o aviso cresceria sem limite).
 
+### Integração indisponível: painel centrado, não barra
+
+- **Um painel centrado, e não uma barra de largura total.** Quando o Spotify não responde, a página mostra um
+  painel (`role="alert"`) com ícone, título, texto e o botão "Tentar novamente", centrado e com no máximo 30 rem de largura; no
+  celular o painel ocupa a largura útil e o botão preenche o painel (tamanho grande, fácil de tocar). A primeira versão era um
+  `p-message` de largura total com o botão ao lado, que ficava largo demais no desktop e quebrava de forma estranha em telas
+  estreitas. O botão é o `p-button` com `fluid`, dimensionado pelo seu elemento hospedeiro (sem `::ng-deep`). Os textos são os mesmos
+  nos seis idiomas. Um e2e mede o painel a 1280 px (centrado, ≤ 30 rem) e a 320 px (sem rolagem lateral, botão cheio), e o axe
+  já cobria esse estado.
+
 ## Consequências
 
 - Positivas: visual coerente e alinhado em qualquer largura e idioma; um só lugar para o estilo das ações; identidade da aba

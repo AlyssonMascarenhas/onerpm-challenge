@@ -30,6 +30,38 @@ test.describe('when the Spotify integration is unavailable', () => {
     await expect(page.getByRole('alert')).toBeVisible();
   });
 
+  test('the alert is a centred panel on a wide screen, 30rem wide at most', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/');
+
+    const panel = (await page.getByRole('alert').boundingBox())!;
+    const button = (await page.getByRole('button', { name: 'Try again' }).boundingBox())!;
+
+    expect(panel.width).toBeLessThanOrEqual(480 + 1); // 30rem
+    expect(Math.abs(panel.x + panel.width / 2 - 1280 / 2)).toBeLessThanOrEqual(1);
+    expect(button.width).toBeLessThanOrEqual(16 * 16 + 1); // 16rem
+  });
+
+  test('the alert fits a very narrow phone: no sideways scroll, a full-width button', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 320, height: 640 });
+    await page.goto('/');
+
+    const panel = (await page.getByRole('alert').boundingBox())!;
+    const button = (await page.getByRole('button', { name: 'Try again' }).boundingBox())!;
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+
+    expect(overflow).toBe(0);
+    expect(panel.x).toBeGreaterThanOrEqual(0);
+    expect(panel.x + panel.width).toBeLessThanOrEqual(320);
+    // The button fills the panel (less its padding), and is tall enough to tap.
+    expect(button.width).toBeGreaterThan(panel.width - 80);
+    expect(button.height).toBeGreaterThanOrEqual(40);
+  });
+
   test('the alert speaks the visitor language', async ({ page }) => {
     await page.goto('/');
     await chooseLanguage(page, 'Português');

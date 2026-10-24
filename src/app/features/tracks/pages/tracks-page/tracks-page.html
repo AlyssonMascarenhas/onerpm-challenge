@@ -5,22 +5,22 @@
 
 <section class="content" [attr.aria-label]="listLabel()" [attr.aria-busy]="busy()">
   @if (store.isUnavailable()) {
-    <p-message severity="error" role="alert">
-      <div class="alert">
-        <div>
-          <strong class="alert__title">{{ unavailableTitle() }}</strong>
-          <p class="alert__text">{{ unavailableMessage() }}</p>
-        </div>
-        <p-button
-          severity="danger"
-          icon="pi pi-refresh"
-          [label]="retry()"
-          [outlined]="true"
-          [buttonProps]="{ autofocus: false }"
-          (onClick)="reload()"
-        />
-      </div>
-    </p-message>
+    <div class="unavailable" role="alert">
+      <span class="unavailable__icon" aria-hidden="true">
+        <i class="pi pi-cloud"></i>
+      </span>
+      <h2 class="unavailable__title">{{ unavailableTitle() }}</h2>
+      <p class="unavailable__text">{{ unavailableMessage() }}</p>
+      <p-button
+        class="unavailable__retry"
+        [fluid]="true"
+        size="large"
+        icon="pi pi-refresh"
+        [label]="retry()"
+        [buttonProps]="{ autofocus: false }"
+        (onClick)="reload()"
+      />
+    </div>
   } @else if (store.isReady()) {
     <div class="toolbar">
       <div class="toolbar__search" role="search">
