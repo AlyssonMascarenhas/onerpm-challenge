@@ -55,10 +55,15 @@
     "filterClear": "Borrar el filtro",
     "filterCount": "Mostrando {{shown}} de {{total}}",
     "filterEmpty": "Nada coincide con “{{query}}”.",
-    "summary": "{{found}} de {{total}} ISRC encontrados",
+    "summary": "Canciones en Spotify: {{count}}",
     "missingButton": "ISRC que no constan en nuestra base: {{count}}",
     "missingTitle": "ISRC que no constan en nuestra base",
-    "missingHint": "Spotify no tiene pista para estos ISRC. Cópialos para buscarlos en otro lugar."
+    "missingHint": "Spotify no tiene pista para estos ISRC. Cópialos para buscarlos en otro lugar.",
+    "sortAsc": "Título A–Z",
+    "sortDesc": "Título Z–A",
+    "sortHint": "Invertir el orden",
+    "sortedAsc": "Ordenado por título, de la A a la Z",
+    "sortedDesc": "Ordenado por título, de la Z a la A"
   },
   "copy": {
     "copyIsrc": "Copiar el ISRC {{isrc}}",

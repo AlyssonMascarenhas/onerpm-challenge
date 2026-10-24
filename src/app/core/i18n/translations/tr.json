@@ -55,10 +55,15 @@
     "filterClear": "Filtreyi temizle",
     "filterCount": "{{total}} içinden {{shown}} gösteriliyor",
     "filterEmpty": "“{{query}}” ile eşleşen bir şey yok.",
-    "summary": "{{total}} ISRC’nin {{found}} tanesi bulundu",
+    "summary": "Spotify’daki parçalar: {{count}}",
     "missingButton": "Veri tabanımızda olmayan ISRC’ler: {{count}}",
     "missingTitle": "Veri tabanımızda olmayan ISRC’ler",
-    "missingHint": "Spotify’da bu ISRC’ler için parça yok. Başka yerde aramak için kopyalayın."
+    "missingHint": "Spotify’da bu ISRC’ler için parça yok. Başka yerde aramak için kopyalayın.",
+    "sortAsc": "Başlık A–Z",
+    "sortDesc": "Başlık Z–A",
+    "sortHint": "Sıralamayı tersine çevir",
+    "sortedAsc": "Başlığa göre sıralı, A’dan Z’ye",
+    "sortedDesc": "Başlığa göre sıralı, Z’den A’ya"
   },
   "copy": {
     "copyIsrc": "{{isrc}} ISRC’sini kopyala",

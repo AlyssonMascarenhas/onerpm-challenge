@@ -55,10 +55,15 @@
     "filterClear": "Сбросить фильтр",
     "filterCount": "Показано {{shown}} из {{total}}",
     "filterEmpty": "Ничего не найдено по запросу «{{query}}».",
-    "summary": "Найдено ISRC: {{found}} из {{total}}",
+    "summary": "Треков в Spotify: {{count}}",
     "missingButton": "ISRC, которых нет в нашей базе: {{count}}",
     "missingTitle": "ISRC, которых нет в нашей базе",
-    "missingHint": "В Spotify нет треков для этих ISRC. Скопируйте их, чтобы поискать в другом месте."
+    "missingHint": "В Spotify нет треков для этих ISRC. Скопируйте их, чтобы поискать в другом месте.",
+    "sortAsc": "Название A–Z",
+    "sortDesc": "Название Z–A",
+    "sortHint": "Изменить порядок на обратный",
+    "sortedAsc": "Отсортировано по названию, от A до Z",
+    "sortedDesc": "Отсортировано по названию, от Z до A"
   },
   "copy": {
     "copyIsrc": "Копировать ISRC {{isrc}}",
