@@ -21,6 +21,9 @@ queremos que o que está no ar seja sempre uma versão **numerada e rastreável*
   processo não é _root_ e que `node_modules`/`src` não estão na imagem. Um `Dockerfile` quebrado reprova o PR.
 - **Versões e releases com release-please**: a cada merge na `main` ele mantém um PR de release (versão pelo
   Conventional Commits, `CHANGELOG.md`). **Integrar esse PR cria a tag `vX.Y.Z` e a release no GitHub.**
+  Dois ajustes de configuração são necessários e testados (`src/release-config.spec.ts`): `include-component-in-tag: false`
+  (no modo _manifest_ o padrão seria `onerpm-tracks-v0.1.0`, que o workflow recusaria) e `group-pull-request-title-pattern`
+  (o título por pacote é ignorado no PR agrupado, que sairia como `chore: release main`, em vez de `chore(release): X.Y.Z`).
 - **O deploy só acontece quando há release, a partir da tag.** O workflow `Release` só constrói a imagem quando o
   release-please acabou de criar uma release (ou quando alguém dispara o workflow à mão informando uma tag existente, para
   reimplantar). Ele valida que a tag é `vX.Y.Z`, faz _checkout_ **da tag**, publica no GitHub Container Registry
