@@ -1,15 +1,20 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { TracksResponse } from '../../../../contract/tracks.interfaces';
 import { TracksApi } from './tracks-api';
 import { TracksUnavailableError } from './tracks-unavailable-error';
-import { TRACKS_REQUEST_TIMEOUT_MS } from './api.constants';
+import { TRACKS_REQUEST_TIMEOUT_MS, TRACKS_SERVER_REQUEST_TIMEOUT_MS } from './api.constants';
 import { errorResult, foundResult, notFoundResult } from '../testing/builders';
 
-function setup() {
+function setup(platform: 'browser' | 'server' = 'browser') {
   TestBed.configureTestingModule({
-    providers: [provideHttpClient(), provideHttpClientTesting()],
+    providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      { provide: PLATFORM_ID, useValue: platform },
+    ],
   });
   return { api: TestBed.inject(TracksApi), http: TestBed.inject(HttpTestingController) };
 }
@@ -103,6 +108,18 @@ describe('TracksApi', () => {
 
       expect(outcome.error).toBeInstanceOf(TracksUnavailableError);
       expect(request.cancelled).toBe(true);
+    });
+
+    it('gives up sooner on the server, where the page waits for the answer', () => {
+      vi.useFakeTimers();
+      const { api, http } = setup('server');
+
+      const outcome = capture(api.lookup(['A']));
+      http.expectOne((req) => req.url === '/api/tracks');
+      vi.advanceTimersByTime(TRACKS_SERVER_REQUEST_TIMEOUT_MS + 1);
+
+      expect(TRACKS_SERVER_REQUEST_TIMEOUT_MS).toBeLessThan(TRACKS_REQUEST_TIMEOUT_MS);
+      expect(outcome.error).toBeInstanceOf(TracksUnavailableError);
     });
 
     it('does not time out a response that arrives in time', () => {

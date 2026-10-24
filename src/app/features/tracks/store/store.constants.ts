@@ -1,3 +1,9 @@
+import { makeStateKey } from '@angular/core';
+import { TrackLookupResult } from '../../../../contract/tracks.types';
+
+/** What the server looked up, handed to the browser so it does not ask again (see `TracksStore`). */
+export const TRACKS_TRANSFER_KEY = makeStateKey<readonly TrackLookupResult[] | null>('tracks');
+
 /** The ISRCs from the challenge statement, missing from our databases, in the order they were given. */
 export const CHALLENGE_ISRCS: readonly string[] = [
   'NO1R42509310',

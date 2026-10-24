@@ -66,7 +66,7 @@ flowchart TB
 
 1. O navegador pede `GET /api/tracks?isrc=…` ao servidor.
 2. O servidor usa _Client Credentials_ e busca cada ISRC na Spotify Web API.
-3. O servidor devolve o HTML já renderizado, no idioma do visitante.
+3. O servidor devolve o HTML já renderizado, no idioma do visitante e **com as faixas** (ele mesmo faz a busca 1 e passa o resultado ao navegador, que não pede de novo).
 4. O player do Spotify (iframe) só é carregado quando a pessoa clica em ouvir.
 
 - **O segredo nunca vai ao navegador.** O Client Secret do Spotify vive só no servidor, que troca as credenciais por um token
@@ -102,8 +102,8 @@ se **paga**.
 ### BFF dentro do servidor do Angular — [ADR 0003](docs/adr/0003-bff-no-angular-ssr.md)
 
 - **Por quê:** o Spotify exige Client Secret, que não pode ir ao navegador; um servidor separado dobraria o que há para implantar.
-- **Ganha:** segredo isolado, um só artefato, cache e controle de taxa no servidor, HTML renderizado na primeira resposta.
-- **Paga:** o app deixa de ser estático (precisa de Node); o cache e o limitador valem por instância. O cache guarda por 6 h e, se o Spotify falhar (ex.: `429` de ~1 h), serve a resposta vencida por até 24 h ([ADR 0024](docs/adr/0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)).
+- **Ganha:** segredo isolado, um só artefato, cache e controle de taxa no servidor, HTML renderizado na primeira resposta **já com as faixas** (o servidor busca no próprio BFF e entrega o resultado ao navegador por `TransferState`; o store usa `rxResource`, [ADR 0025](docs/adr/0025-ssr-renderiza-as-faixas-e-store-com-rxresource.md)).
+- **Paga:** o app deixa de ser estático (precisa de Node); a primeira resposta espera o BFF (até 6 s; se falhar, sai o esqueleto e o navegador refaz); o cache e o limitador valem por instância. O cache guarda por 6 h e, se o Spotify falhar (ex.: `429` de ~1 h), serve a resposta vencida por até 24 h ([ADR 0024](docs/adr/0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)).
 
 ### Regras do Spotify e anti-corruption layer — [ADR 0005](docs/adr/0005-regras-de-consulta-ao-spotify.md), [0007](docs/adr/0007-estrutura-do-bff-e-testes.md)
 
@@ -195,7 +195,7 @@ NG_ALLOWED_HOSTS=localhost npm run serve:ssr:onerpm-tracks   # http://localhost:
 ```
 
 No PowerShell: `$env:NG_ALLOWED_HOSTS='localhost'; npm run serve:ssr:onerpm-tracks`. Sem `NG_ALLOWED_HOSTS` o Angular só
-renderiza no navegador, e a página perde o idioma já renderizado pelo servidor.
+renderiza no navegador, e a página perde o idioma e as faixas já renderizados pelo servidor.
 
 **Com Docker** (a mesma imagem publicada a cada release):
 

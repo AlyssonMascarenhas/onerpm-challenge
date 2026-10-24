@@ -8,6 +8,17 @@ import { TracksApi } from '../../api/tracks-api';
 import { TracksUnavailableError } from '../../api/tracks-unavailable-error';
 import { TracksPage } from './tracks-page';
 
+/**
+ * Lets effects run, requests settle and the view catch up. It does not use `whenStable()`: a request still waiting
+ * for its Subject is a pending task, so the fixture would never be stable while the test waits for the answer.
+ */
+async function flush(fixture: ComponentFixture<unknown>): Promise<void> {
+  for (let round = 0; round < 3; round++) {
+    fixture.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+  }
+}
+
 /** One Subject per request, so each test decides when and how the BFF answers. */
 async function render(options: { language?: Language } = {}) {
   const requests: Subject<readonly TrackLookupResult[]>[] = [];
@@ -22,15 +33,12 @@ async function render(options: { language?: Language } = {}) {
   });
   await useLanguage(options.language);
   const fixture = TestBed.createComponent(TracksPage);
-  await fixture.whenStable();
+  await flush(fixture);
   return { fixture, lookup, requests };
 }
 
 const root = (fixture: ComponentFixture<TracksPage>) => fixture.nativeElement as HTMLElement;
-const settle = async (fixture: ComponentFixture<TracksPage>) => {
-  await fixture.whenStable();
-  fixture.detectChanges();
-};
+const settle = (fixture: ComponentFixture<TracksPage>) => flush(fixture);
 const text = (element: Element | null | undefined) =>
   element?.textContent?.replace(/\s+/g, ' ').trim();
 /** What each list entry shows as its headline: a track's title, or an ISRC with the reason it has no track. */
@@ -73,7 +81,7 @@ describe('TracksPage', () => {
   });
 
   describe('loading', () => {
-    it('asks for the tracks once, after the first render in the browser', async () => {
+    it('asks for the tracks once, as soon as the page is shown', async () => {
       const { lookup } = await render();
 
       expect(lookup).toHaveBeenCalledTimes(1);
@@ -602,6 +610,7 @@ describe('TracksPage', () => {
       const { fixture, requests } = await unavailable();
 
       (root(fixture).querySelector('[role="alert"] button') as HTMLButtonElement).click();
+      await settle(fixture);
       requests[1].next([foundResult('Louca')]);
       await settle(fixture);
 
@@ -613,6 +622,7 @@ describe('TracksPage', () => {
       const { fixture, requests } = await unavailable();
 
       (root(fixture).querySelector('[role="alert"] button') as HTMLButtonElement).click();
+      await settle(fixture);
       requests[1].error(new TracksUnavailableError());
       await settle(fixture);
 

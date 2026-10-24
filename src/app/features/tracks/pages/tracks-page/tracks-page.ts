@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  afterNextRender,
   computed,
   inject,
   signal,
@@ -60,18 +59,13 @@ export class TracksPage {
   protected readonly LookupStatus = LookupStatus;
   protected readonly placeholders = [1, 2, 3, 4];
 
-  constructor() {
-    // Browser only: the server render shows the placeholders instead of waiting on Spotify.
-    afterNextRender(() => this.store.load());
-  }
-
   protected reload(): void {
-    this.store.load();
+    this.store.reload();
   }
 
   protected retryAffected(): void {
     this.affectedOpen.set(false);
-    this.store.load();
+    this.store.reload();
   }
 
   protected clearQuery(): void {
