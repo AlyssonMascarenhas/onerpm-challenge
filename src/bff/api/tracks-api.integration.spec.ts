@@ -59,16 +59,19 @@ describe('GET /api/health', () => {
     const response = await get('/api/health');
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: 'ok' });
+    expect(await response.json()).toEqual({ status: 'ok', spotify: 'configured' });
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(fake.searches).toHaveLength(0);
     expect(fake.tokenRequests()).toBe(0);
   });
 
-  it('answers even when Spotify credentials are missing', async () => {
+  it('answers even when Spotify credentials are missing, and says so', async () => {
     await startApi({}, {});
 
-    expect((await get('/api/health')).status).toBe(200);
+    const response = await get('/api/health');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: 'ok', spotify: 'missing_credentials' });
   });
 });
 

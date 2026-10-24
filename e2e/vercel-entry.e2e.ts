@@ -63,7 +63,7 @@ test('renders on the server behind the headers that Vercel adds, in the language
 test('answers the BFF routes under /api', async ({ request }) => {
   const health = await request.get(`${origin}/api/health`);
   expect(health.status()).toBe(200);
-  expect(await health.json()).toEqual({ status: 'ok' });
+  expect(await health.json()).toEqual({ status: 'ok', spotify: 'missing_credentials' });
 
   const tracks = await request.get(`${origin}/api/tracks?isrc=BR1SP1200071`);
   expect(tracks.status()).toBe(503);

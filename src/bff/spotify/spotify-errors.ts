@@ -5,15 +5,19 @@ import { SpotifyErrorDetails } from './spotify.interfaces';
 export class SpotifyUnavailableError extends Error {
   public override readonly name = 'SpotifyUnavailableError';
   public readonly status?: number;
+  public readonly retryAfterMs?: number;
 
   constructor(
     public readonly reason: SpotifyFailureReason,
     details: SpotifyErrorDetails = {},
   ) {
-    super(
-      `Spotify integration unavailable: ${reason}${details.status ? ` (HTTP ${details.status})` : ''}`,
-      { cause: details.cause },
-    );
+    const status = details.status ? ` (HTTP ${details.status})` : '';
+    const wait =
+      details.retryAfterMs === undefined
+        ? ''
+        : `, retry after ${Math.ceil(details.retryAfterMs / 1000)}s`;
+    super(`Spotify integration unavailable: ${reason}${status}${wait}`, { cause: details.cause });
     this.status = details.status;
+    this.retryAfterMs = details.retryAfterMs;
   }
 }

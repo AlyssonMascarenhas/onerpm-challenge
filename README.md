@@ -38,7 +38,7 @@ essas?" sem cadastro, sem banco e sem expor credenciais. Cada requisito do enunc
 | Prévia do áudio | Player oficial (embed) do Spotify, numa barra fixa e carregado só ao clicar | [ADR 0013](docs/adr/0013-cartoes-de-faixa-e-player-do-spotify.md), [0016](docs/adr/0016-barra-de-reproducao-fixa.md) |
 | Disponível no Brasil (BR) | Busca com `market=BR` e `is_playable`; selo com ícone **e** texto | [ADR 0005](docs/adr/0005-regras-de-consulta-ao-spotify.md) |
 | Ordem alfabética por título | `sortResults` (sem acento, maiúsculas ou pontuação); botão A–Z / Z–A | [ADR 0010](docs/adr/0010-dominio-de-faixas-no-front.md), [0019](docs/adr/0019-endurecimento-do-servidor-e-ordem.md) |
-| Sem armazenamento | Nada é persistido; só um cache curto em memória no servidor | [ADR 0003](docs/adr/0003-bff-no-angular-ssr.md) |
+| Sem armazenamento | Nada é persistido; só um cache em memória no servidor (horas, com resposta antiga se o Spotify falhar) | [ADR 0003](docs/adr/0003-bff-no-angular-ssr.md) |
 | Alerta se a integração cair | A API responde `503 integration_unavailable` e o front mostra o alerta com "tentar novamente" | [ADR 0005](docs/adr/0005-regras-de-consulta-ao-spotify.md) |
 | Responsivo | Grade de 4 colunas no desktop e cartão compacto no celular | [ADR 0017](docs/adr/0017-grade-de-4-colunas-e-cartao-compacto.md) |
 | Angular LTS | Angular 21 (LTS) | [ADR 0002](docs/adr/0002-angular-21-lts.md) |
@@ -103,7 +103,7 @@ se **paga**.
 
 - **Por quê:** o Spotify exige Client Secret, que não pode ir ao navegador; um servidor separado dobraria o que há para implantar.
 - **Ganha:** segredo isolado, um só artefato, cache e controle de taxa no servidor, HTML renderizado na primeira resposta.
-- **Paga:** o app deixa de ser estático (precisa de Node); o cache e o limitador valem por instância.
+- **Paga:** o app deixa de ser estático (precisa de Node); o cache e o limitador valem por instância. O cache guarda por 6 h e, se o Spotify falhar (ex.: `429` de ~1 h), serve a resposta vencida por até 24 h ([ADR 0024](docs/adr/0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)).
 
 ### Regras do Spotify e anti-corruption layer — [ADR 0005](docs/adr/0005-regras-de-consulta-ao-spotify.md), [0007](docs/adr/0007-estrutura-do-bff-e-testes.md)
 
@@ -204,7 +204,7 @@ docker build -t onerpm-tracks .
 docker run --rm -p 4000:4000 --env-file .env -e NG_ALLOWED_HOSTS=localhost onerpm-tracks
 ```
 
-Sem credenciais o servidor sobe do mesmo jeito: `/api/health` responde `ok` e `/api/tracks` responde `503`, o que faz a
+Sem credenciais o servidor sobe do mesmo jeito: `/api/health` responde `ok` (com `spotify: "missing_credentials"`) e `/api/tracks` responde `503`, o que faz a
 página mostrar o alerta de integração indisponível (útil para ver esse estado).
 
 ## Garantindo que está tudo certo

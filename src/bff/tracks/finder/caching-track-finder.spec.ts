@@ -17,11 +17,12 @@ const track = (isrc: string): Track => ({
   availableInBR: true,
 });
 
-function setup(options: { ttlMs?: number; maxEntries?: number } = {}) {
+function setup(options: { ttlMs?: number; staleIfErrorMs?: number; maxEntries?: number } = {}) {
   const clock = { now: 0 };
   const inner = { findByIsrc: vi.fn<TrackFinder['findByIsrc']>(async (isrc) => track(isrc)) };
   const cache = new CachingTrackFinder(inner, {
     ttlMs: options.ttlMs ?? 1000,
+    staleIfErrorMs: options.staleIfErrorMs,
     maxEntries: options.maxEntries ?? 100,
     now: () => clock.now,
   });
@@ -85,6 +86,52 @@ describe('CachingTrackFinder', () => {
     await expect(cache.findByIsrc('A')).resolves.toMatchObject({ isrc: 'A' });
 
     expect(inner.findByIsrc).toHaveBeenCalledTimes(2);
+  });
+
+  describe('when Spotify cannot be asked again', () => {
+    it('serves the expired answer within the stale window instead of failing', async () => {
+      const { cache, inner, clock } = setup({ ttlMs: 1000, staleIfErrorMs: 5000 });
+      const first = await cache.findByIsrc('A');
+
+      clock.now = 2000;
+      inner.findByIsrc.mockRejectedValueOnce(new Error('rate limited'));
+
+      await expect(cache.findByIsrc('A')).resolves.toBe(first);
+    });
+
+    it('asks Spotify again on the next call, and refreshes once it answers', async () => {
+      const { cache, inner, clock } = setup({ ttlMs: 1000, staleIfErrorMs: 5000 });
+      await cache.findByIsrc('A');
+      clock.now = 2000;
+      inner.findByIsrc.mockRejectedValueOnce(new Error('rate limited'));
+      await cache.findByIsrc('A');
+
+      const refreshed = await cache.findByIsrc('A');
+      await cache.findByIsrc('A'); // fresh again: no new lookup
+
+      expect(refreshed).toMatchObject({ isrc: 'A' });
+      expect(inner.findByIsrc).toHaveBeenCalledTimes(3);
+    });
+
+    it('fails once the stale window is over', async () => {
+      const { cache, inner, clock } = setup({ ttlMs: 1000, staleIfErrorMs: 5000 });
+      await cache.findByIsrc('A');
+
+      clock.now = 6000;
+      inner.findByIsrc.mockRejectedValueOnce(new Error('down'));
+
+      await expect(cache.findByIsrc('A')).rejects.toThrow('down');
+    });
+
+    it('does not serve stale answers unless a window was configured', async () => {
+      const { cache, inner, clock } = setup({ ttlMs: 1000 });
+      await cache.findByIsrc('A');
+
+      clock.now = 1000;
+      inner.findByIsrc.mockRejectedValueOnce(new Error('down'));
+
+      await expect(cache.findByIsrc('A')).rejects.toThrow('down');
+    });
   });
 
   it('evicts the oldest entry beyond maxEntries', async () => {

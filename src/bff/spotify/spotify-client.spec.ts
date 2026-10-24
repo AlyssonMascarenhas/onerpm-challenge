@@ -195,6 +195,15 @@ describe('SpotifyClient.searchByIsrc', () => {
         expect(sleep).not.toHaveBeenCalled();
       });
 
+      it('says how long Spotify asked us to wait, so the log shows why the page is down', async () => {
+        const { client } = setup([failure(429, { 'Retry-After': '3403' })]);
+
+        const error = await client.searchByIsrc('A').catch((e: unknown) => e);
+
+        expect(error).toMatchObject({ status: 429, retryAfterMs: 3_403_000 });
+        expect((error as Error).message).toContain('retry after 3403s');
+      });
+
       it('rejects other searches locally, without calling Spotify, until the cooldown ends', async () => {
         const { client, fetchFn } = setup([failure(429, { 'Retry-After': '30' })]);
         await expect(client.searchByIsrc('A')).rejects.toBeInstanceOf(SpotifyUnavailableError);
