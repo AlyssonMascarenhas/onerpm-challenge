@@ -4,7 +4,7 @@ import { Track } from '../../contract/tracks.interfaces';
 import { Logger } from '../shared/shared.interfaces';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
 import { SpotifyFailureReason } from '../spotify/spotify.enums';
-import { TrackFinder } from './tracks.interfaces';
+import { TrackFinder } from './finder/finder.interfaces';
 import { TracksService } from './tracks-service';
 
 const track = (isrc: string): Track => ({

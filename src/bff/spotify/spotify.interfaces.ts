@@ -1,6 +1,6 @@
 /** Subset of the Spotify Web API payloads the BFF reads, plus the ports of the Spotify adapters. */
 import { ReleaseDatePrecision } from '../../contract/tracks.enums';
-import { Clock, FetchFn, Sleep } from './http.types';
+import { Clock, FetchFn, Sleep } from '../shared/shared.types';
 
 export interface SpotifyImage {
   readonly url: string;

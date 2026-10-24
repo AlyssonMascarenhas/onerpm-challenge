@@ -1,4 +1,4 @@
-import { FetchFn } from '../spotify/http.types';
+import { FetchFn } from '../shared/shared.types';
 import { SpotifyTrack } from '../spotify/spotify.interfaces';
 
 export function jsonResponse(body: unknown, init: ResponseInit = {}): Response {

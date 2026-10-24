@@ -8,7 +8,7 @@ import {
 import { provideTransloco } from '@jsverse/transloco';
 import { I18n } from './i18n';
 import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from './i18n.constants';
-import { TranslationLoader } from './translation-loader';
+import { TranslationLoader } from './translations/translation-loader';
 
 /** Transloco wired to the lazy translation chunks. Reused by tests, which init the language themselves. */
 export function provideTranslation(): EnvironmentProviders {
