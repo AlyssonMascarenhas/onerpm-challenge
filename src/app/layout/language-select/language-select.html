@@ -4,7 +4,7 @@
   optionValue="id"
   [options]="options"
   [ngModel]="i18n.language()"
-  [ariaLabel]="label()"
+  [ariaLabel]="'app.language' | transloco"
   [autofocus]="false"
   scrollHeight="20rem"
   (onChange)="select($event.value)"

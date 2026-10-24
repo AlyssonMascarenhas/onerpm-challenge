@@ -1,22 +1,26 @@
 <section class="hero" aria-labelledby="page-title">
-  <h1 id="page-title" class="hero__title">{{ title() }}</h1>
-  <p class="hero__subtitle">{{ subtitle() }}</p>
+  <h1 id="page-title" class="hero__title">{{ 'app.title' | transloco }}</h1>
+  <p class="hero__subtitle">{{ 'app.subtitle' | transloco }}</p>
 </section>
 
-<section class="content" [attr.aria-label]="listLabel()" [attr.aria-busy]="busy()">
+<section
+  class="content"
+  [attr.aria-label]="'tracks.listLabel' | transloco"
+  [attr.aria-busy]="busy()"
+>
   @if (store.isUnavailable()) {
     <div class="unavailable" role="alert">
       <span class="unavailable__icon" aria-hidden="true">
         <i class="pi pi-cloud"></i>
       </span>
-      <h2 class="unavailable__title">{{ unavailableTitle() }}</h2>
-      <p class="unavailable__text">{{ unavailableMessage() }}</p>
+      <h2 class="unavailable__title">{{ 'status.unavailableTitle' | transloco }}</h2>
+      <p class="unavailable__text">{{ 'status.unavailableMessage' | transloco }}</p>
       <p-button
         class="unavailable__retry"
         [fluid]="true"
         size="large"
         icon="pi pi-refresh"
-        [label]="retry()"
+        [label]="'status.retry' | transloco"
         [buttonProps]="{ autofocus: false }"
         (onClick)="reload()"
       />
@@ -34,8 +38,8 @@
             autocomplete="off"
             spellcheck="false"
             [value]="query()"
-            [attr.aria-label]="filterLabel()"
-            [placeholder]="filterPlaceholder()"
+            [attr.aria-label]="'list.filterLabel' | transloco"
+            [placeholder]="'list.filterPlaceholder' | transloco"
             (input)="onQuery($event)"
             (keydown.escape)="clearQuery()"
           />
@@ -43,8 +47,8 @@
             <button
               type="button"
               class="toolbar__clear"
-              [attr.aria-label]="filterClear()"
-              [title]="filterClear()"
+              [attr.aria-label]="'list.filterClear' | transloco"
+              [title]="'list.filterClear' | transloco"
               (click)="clearQuery()"
             >
               <i class="pi pi-times" aria-hidden="true"></i>
@@ -53,19 +57,29 @@
         </p-iconfield>
       </div>
 
-      <p class="toolbar__summary" role="status">{{ summary() }}</p>
+      <p class="toolbar__summary" role="status">
+        @if (filtering()) {
+          {{
+            'list.filterCount'
+              | transloco: { shown: visibleItems().length, total: store.totalCount() }
+          }}
+        } @else {
+          {{ 'list.summary' | transloco: { count: store.foundCount() } }}
+        }
+      </p>
 
+      @let sortText = sortLabelKey() | transloco;
       <button
         type="button"
         class="toolbar__button toolbar__sort"
-        [title]="sortHint()"
-        [attr.aria-label]="sortHint() + ': ' + sortLabel()"
+        [title]="'list.sortHint' | transloco"
+        [attr.aria-label]="('list.sortHint' | transloco) + ': ' + sortText"
         (click)="store.toggleDirection()"
       >
         <i [class]="sortIcon()" aria-hidden="true"></i>
-        {{ sortLabel() }}
+        {{ sortText }}
       </button>
-      <span class="visually-hidden" role="status">{{ sortAnnouncement() }}</span>
+      <span class="visually-hidden" role="status">{{ sortAnnouncementKey() | transloco }}</span>
 
       @if (store.notFoundCount() > 0) {
         <button
@@ -76,7 +90,7 @@
           (click)="missingOpen.set(true)"
         >
           <i class="pi pi-list" aria-hidden="true"></i>
-          {{ missingButton() }}
+          {{ 'list.missingButton' | transloco: { count: store.notFoundCount() } }}
         </button>
       }
     </div>
@@ -84,7 +98,7 @@
     @if (store.failedCount() > 0) {
       <p-message class="warning" severity="warn" role="status">
         <div class="alert">
-          <span>{{ partialFailure() }}</span>
+          <span>{{ 'status.partialFailure' | transloco: { count: store.failedCount() } }}</span>
           <button
             #affectedTrigger
             type="button"
@@ -92,7 +106,7 @@
             aria-haspopup="dialog"
             (click)="affectedOpen.set(true)"
           >
-            {{ showAffected() }}
+            {{ 'status.showAffected' | transloco }}
           </button>
         </div>
       </p-message>
@@ -100,9 +114,9 @@
       <orp-isrc-list-dialog
         [(visible)]="affectedOpen"
         [isrcs]="store.failedIsrcs()"
-        [title]="affectedTitle()"
-        [hint]="affectedHint()"
-        [listLabel]="affectedList()"
+        [title]="'status.affectedTitle' | transloco"
+        [hint]="'status.affectedHint' | transloco"
+        [listLabel]="'status.affectedList' | transloco"
         [retryable]="true"
         (retry)="retryAffected()"
         (closed)="affectedTrigger.focus()"
@@ -113,20 +127,20 @@
       <orp-isrc-list-dialog
         [(visible)]="missingOpen"
         [isrcs]="store.notFoundIsrcs()"
-        [title]="missingTitle()"
-        [hint]="missingHint()"
-        [listLabel]="missingTitle()"
+        [title]="'list.missingTitle' | transloco"
+        [hint]="'list.missingHint' | transloco"
+        [listLabel]="'list.missingTitle' | transloco"
         (closed)="focusMissingTrigger()"
       />
     }
 
     @if (visibleItems().length === 0) {
       <div class="empty" role="status">
-        <p class="empty__text">{{ filterEmpty() }}</p>
+        <p class="empty__text">{{ 'list.filterEmpty' | transloco: { query: query() } }}</p>
         <p-button
           severity="secondary"
           icon="pi pi-times"
-          [label]="filterClear()"
+          [label]="'list.filterClear' | transloco"
           [outlined]="true"
           [buttonProps]="{ autofocus: false }"
           (onClick)="clearQuery()"
@@ -146,7 +160,7 @@
       }
     </ul>
   } @else {
-    <p class="visually-hidden" role="status">{{ loading() }}</p>
+    <p class="visually-hidden" role="status">{{ 'status.loading' | transloco }}</p>
     <div class="grid" aria-hidden="true">
       @for (placeholder of placeholders; track placeholder) {
         <div class="grid__placeholder">

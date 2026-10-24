@@ -6,7 +6,7 @@ import {
   inject,
   input,
 } from '@angular/core';
-import { translateSignal } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Track } from '../../../../../contract/tracks.interfaces';
 import { ActionButton } from '../../../../shared/action-button/action-button';
 import { ActionIcon } from '../../../../shared/action-button/action-button.enums';
@@ -19,7 +19,7 @@ import { buildEmbedUrl } from '../../spotify/spotify-embed';
  */
 @Component({
   selector: 'orp-track-player',
-  imports: [ActionButton],
+  imports: [ActionButton, TranslocoPipe],
   templateUrl: './track-player.html',
   styleUrl: './track-player.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,10 +29,6 @@ export class TrackPlayer {
 
   private readonly _nowPlaying = inject(NowPlaying);
   private readonly _host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private readonly _listen = translateSignal('tracks.listen');
-  private readonly _playing = translateSignal('tracks.nowPlaying');
-
-  protected readonly regionLabel = translateSignal('tracks.preview');
 
   /** The id was not a Spotify id: there is nothing safe to embed, so no player is offered. */
   protected readonly available = computed(() => buildEmbedUrl(this.track().id, false) !== null);
@@ -42,7 +38,9 @@ export class TrackPlayer {
   protected readonly icon = computed(() =>
     this.current() ? ActionIcon.EQUALIZER : ActionIcon.PLAY,
   );
-  protected readonly label = computed(() => (this.current() ? this._playing() : this._listen()));
+  protected readonly labelKey = computed(() =>
+    this.current() ? 'tracks.nowPlaying' : 'tracks.listen',
+  );
 
   /** Also called by the play button over the cover: the focus later returns to this card's own button. */
   public play(): void {

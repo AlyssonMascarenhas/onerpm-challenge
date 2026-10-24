@@ -7,7 +7,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { translateSignal } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Tag } from 'primeng/tag';
 import { Track } from '../../../../../contract/tracks.interfaces';
 import { I18n } from '../../../../core/i18n/i18n';
@@ -24,7 +24,7 @@ import { TrackPlayer } from '../track-player/track-player';
 /** One track: cover, title, artists, release date, duration, Brazil availability, player and link. */
 @Component({
   selector: 'orp-track-card',
-  imports: [ActionButton, CopyButton, Tag, TrackPlayer],
+  imports: [ActionButton, CopyButton, Tag, TrackPlayer, TranslocoPipe],
   templateUrl: './track-card.html',
   styleUrl: './track-card.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -56,23 +56,6 @@ export class TrackCard {
   protected readonly coverUrl = computed(() =>
     this._coverFailed() ? null : this.track().coverUrl,
   );
-
-  protected readonly labels = {
-    coverAlt: translateSignal('tracks.coverAlt', {
-      album: computed(() => this.track().albumName),
-    }),
-    coverMissing: translateSignal('tracks.coverMissing'),
-    released: translateSignal('tracks.released'),
-    duration: translateSignal('tracks.duration'),
-    album: translateSignal('tracks.album'),
-    isrc: translateSignal('tracks.isrc'),
-    available: translateSignal('tracks.availableInBR'),
-    unavailable: translateSignal('tracks.unavailableInBR'),
-    openOnSpotify: translateSignal('tracks.openOnSpotify'),
-    copyIsrc: translateSignal('copy.copyIsrc', { isrc: computed(() => this.track().isrc) }),
-    copied: translateSignal('copy.copied'),
-    newTab: translateSignal('app.newTab'),
-  };
 
   /** The same action as the "listen" button below, for a click on the cover: it plays this track. */
   protected playFromCover(): void {

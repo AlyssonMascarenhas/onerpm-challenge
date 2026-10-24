@@ -11,7 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { translateSignal } from '@jsverse/transloco';
+import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 import { Track } from '../../../../../contract/tracks.interfaces';
 import { Theme } from '../../../../core/theme/theme';
 import { NowPlaying } from '../../store/now-playing';
@@ -36,6 +36,7 @@ import {
   selector: 'orp-player-bar',
   templateUrl: './player-bar.html',
   styleUrl: './player-bar.scss',
+  imports: [TranslocoPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PlayerBar {
@@ -58,9 +59,6 @@ export class PlayerBar {
   protected readonly height = SPOTIFY_EMBED_HEIGHT;
   protected readonly track = this._nowPlaying.track;
   protected readonly ready = this._ready.asReadonly();
-  protected readonly regionLabel = translateSignal('tracks.preview');
-  protected readonly loadingLabel = translateSignal('tracks.loadingPlayer');
-  protected readonly closeLabel = translateSignal('tracks.closePlayer');
   protected readonly playerTitle = translateSignal('tracks.playerTitle', {
     title: computed(() => this._nowPlaying.track()?.title ?? ''),
   });
