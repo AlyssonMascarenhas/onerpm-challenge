@@ -41,3 +41,6 @@ modo de desenvolvimento divide entre visitas, testes e2e e desenvolvimento local
   `health` separa configuração faltando de indisponibilidade.
 - Negativas / dívidas assumidas: o cache continua **por instância** (uma instância fria durante o bloqueio ainda responde `503`);
   uma faixa nova ou alterada no Spotify só aparece após o TTL (6 h); `not_found` também fica 6 h guardado.
+
+**Atualização (24/10/2026):** o cache em memória passou a ser LRU e as respostas completas ganharam `s-maxage` para a CDN dividi-las
+entre as instâncias ([ADR 0028](0028-csp-com-nonce-e-cache-compartilhado.md)).

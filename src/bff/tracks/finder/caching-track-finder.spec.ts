@@ -134,6 +134,19 @@ describe('CachingTrackFinder', () => {
     });
   });
 
+  it('evicts the least recently used entry, not the oldest one written', async () => {
+    const { cache, inner } = setup({ maxEntries: 2 });
+
+    await cache.findByIsrc('A');
+    await cache.findByIsrc('B');
+    await cache.findByIsrc('A'); // read: A is now the newest
+    await cache.findByIsrc('C'); // evicts B, which nobody asked for
+    await cache.findByIsrc('A'); // still cached
+    await cache.findByIsrc('B'); // looked up again
+
+    expect(inner.findByIsrc.mock.calls.map(([isrc]) => isrc)).toEqual(['A', 'B', 'C', 'B']);
+  });
+
   it('evicts the oldest entry beyond maxEntries', async () => {
     const { cache, inner } = setup({ maxEntries: 2 });
 

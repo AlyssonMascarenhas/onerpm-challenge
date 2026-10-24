@@ -4,7 +4,7 @@ import { Clock } from '../../shared/shared.types';
 import { CacheEntry, CachingOptions, TrackFinder } from './finder.interfaces';
 
 /**
- * Short-lived in-memory cache (Decorator). It shields Spotify's rate limits and de-duplicates concurrent
+ * In-memory cache (Decorator), least recently used first out. It shields Spotify's rate limits and de-duplicates concurrent
  * lookups; nothing is persisted. Failures are never cached, but when Spotify is down (or rate limiting us for
  * a long while) an answer that has just expired is served instead of an error, for `staleIfErrorMs` more.
  */
@@ -23,6 +23,7 @@ export class CachingTrackFinder implements TrackFinder {
     const now = this._now();
     const cached = this._entries.get(isrc);
     if (cached && cached.expiresAt > now) {
+      this._store(isrc, cached); // a read makes it the newest, so the entries nobody asks for are the ones that go
       return cached.result;
     }
 

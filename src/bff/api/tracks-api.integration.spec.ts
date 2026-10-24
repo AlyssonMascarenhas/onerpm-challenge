@@ -202,7 +202,9 @@ describe('GET /api/tracks', () => {
     const healthy = await get('/api/tracks?isrc=BR1SP1200071');
 
     expect(partial.headers.get('cache-control')).toBe('no-store');
-    expect(healthy.headers.get('cache-control')).toBe('public, max-age=60');
+    expect(healthy.headers.get('cache-control')).toBe(
+      'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=86400',
+    );
   });
 
   it('answers 503 integration_unavailable when Spotify auth is down', async () => {
@@ -266,12 +268,16 @@ describe('GET /api/tracks', () => {
     expect(fake.tokenRequests()).toBe(1);
   });
 
-  it('allows browsers to reuse successful responses for a minute', async () => {
+  it('lets browsers reuse a complete answer for a minute and a shared cache keep it for an hour', async () => {
     await startApi();
 
     const response = await get('/api/tracks?isrc=BRC310600002');
+    const cacheControl = response.headers.get('cache-control') ?? '';
 
-    expect(response.headers.get('cache-control')).toBe('public, max-age=60');
+    expect(cacheControl).toContain('public');
+    expect(cacheControl).toContain('max-age=60');
+    expect(cacheControl).toContain('s-maxage=3600');
+    expect(cacheControl).toContain('stale-while-revalidate');
   });
 
   describe('validation', () => {

@@ -187,11 +187,11 @@ se **paga**.
   barra de largura total.
 - **Paga:** dependência do iframe e da iFrame API do Spotify; o volume não existe na API do embed.
 
-### Servidor endurecido — [ADR 0019](docs/adr/0019-endurecimento-do-servidor-e-ordem.md)
+### Servidor endurecido — [ADR 0019](docs/adr/0019-endurecimento-do-servidor-e-ordem.md), [0028](docs/adr/0028-csp-com-nonce-e-cache-compartilhado.md)
 
 - **Por quê:** a página é pública.
-- **Ganha:** sem `X-Powered-By`, cabeçalhos de segurança (CSP parcial, `nosniff`, `X-Frame-Options`, HSTS em HTTPS…), compressão.
-- **Paga:** a CSP não restringe `script-src` (exigiria _nonces_); fica como próximo passo.
+- **Ganha:** sem `X-Powered-By`, cabeçalhos de segurança (`nosniff`, `X-Frame-Options`, HSTS em HTTPS…), compressão e uma **CSP com `script-src` e _nonce_ por resposta** (um _script_ injetado não executa; e2e sem nenhuma violação). O cache de faixas é LRU e as respostas completas levam `s-maxage`, para a CDN dividi-las entre as instâncias.
+- **Paga:** o HTML passa por um `replace` do _nonce_ no servidor; `style-src` segue livre (PrimeNG escreve estilos em linha); o limitador de concorrência continua por instância.
 
 ### Commits semânticos, CI e `main` protegida — [ADR 0004](docs/adr/0004-commits-semanticos-e-fluxo-de-prs.md), [0009](docs/adr/0009-ci-com-github-actions.md)
 
@@ -324,7 +324,7 @@ sem CI verde, então só se lança a partir da `main` verde. A imagem do contêi
 
 ## Evolução possível
 
-- **CSP completa** (`script-src`) com _nonces_ por requisição ([ADR 0019](docs/adr/0019-endurecimento-do-servidor-e-ordem.md)).
+- **`style-src`** restrito (exige o _nonce_ também nos estilos do PrimeNG) e um limitador de concorrência **global** (hoje por instância).
 - **Cache e limitador compartilhados** (Redis ou KV da plataforma) em vez de por instância, para que várias instâncias não
   somem chamadas ao Spotify.
 - **Teste de contrato contra o Spotify**, agendado (o formato da API mudou em 2026 e pode mudar de novo; hoje só o _mapper_ absorve isso).

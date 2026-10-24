@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SECURITY_HEADERS } from './bff/http/http.constants';
+import { STATIC_SECURITY_HEADERS } from './bff/http/http.constants';
 
 /**
  * Vercel serves the static files from its CDN and runs the Angular SSR server as one function. Neither the CDN
@@ -77,7 +77,13 @@ describe('vercel.json', () => {
       (everything?.headers ?? []).map(({ key, value }) => [key, value]),
     );
 
-    expect(sent).toEqual(SECURITY_HEADERS);
+    expect(sent).toEqual(STATIC_SECURITY_HEADERS);
+  });
+
+  it('leaves the Content-Security-Policy of the pages to the server, which has the nonce of each response', () => {
+    const everything = config.headers.find((rule) => rule.source === '/(.*)');
+
+    expect(everything?.headers.map(({ key }) => key)).not.toContain('Content-Security-Policy');
   });
 
   it('caches the hashed files for a year, and nothing else', () => {

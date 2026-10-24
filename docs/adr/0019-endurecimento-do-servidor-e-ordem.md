@@ -53,3 +53,9 @@ principal passa de 300 KB sem compressão), e a página não oferecia inverter a
   rede, e dois recursos de uso diário (inverter a ordem, ver a disponibilidade). Tudo coberto por testes unitários e e2e
   contra o servidor real (cabeçalhos presentes, `X-Powered-By` ausente, HSTS só em HTTPS, `Content-Encoding: gzip`).
 - Negativas: a CSP ainda não limita _scripts_ (ver acima); a compressão gasta CPU do servidor, o que uma CDN faria por nós.
+
+## Atualização (24/10/2026): a CSP agora restringe `script-src`
+
+Os _scripts_ em linha que impediam a restrição passaram a levar um _nonce_ por resposta e a CSP da página ganhou `script-src` (e
+o cache virou LRU e passou a ser compartilhado pela CDN): ver o [ADR 0028](0028-csp-com-nonce-e-cache-compartilhado.md). O que
+este ADR diz sobre a CSP parcial vale para os arquivos e a API, que mantêm a política de base.
