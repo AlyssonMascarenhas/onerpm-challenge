@@ -8,7 +8,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { translateSignal } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from 'primeng/button';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
@@ -36,6 +36,7 @@ import { TracksStore } from '../../store/tracks-store';
     Message,
     Skeleton,
     TrackCard,
+    TranslocoPipe,
   ],
   templateUrl: './tracks-page.html',
   styleUrl: './tracks-page.scss',
@@ -50,56 +51,15 @@ export class TracksPage {
   /** What the visitor typed to filter the list by track title or ISRC. */
   protected readonly query = signal('');
 
-  protected readonly title = translateSignal('app.title');
-  protected readonly subtitle = translateSignal('app.subtitle');
-  protected readonly loading = translateSignal('status.loading');
-  protected readonly unavailableTitle = translateSignal('status.unavailableTitle');
-  protected readonly unavailableMessage = translateSignal('status.unavailableMessage');
-  protected readonly retry = translateSignal('status.retry');
-  protected readonly listLabel = translateSignal('tracks.listLabel');
-  protected readonly showAffected = translateSignal('status.showAffected');
-  protected readonly affectedTitle = translateSignal('status.affectedTitle');
-  protected readonly affectedList = translateSignal('status.affectedList');
-  protected readonly affectedHint = translateSignal('status.affectedHint');
-  protected readonly filterLabel = translateSignal('list.filterLabel');
-  protected readonly filterPlaceholder = translateSignal('list.filterPlaceholder');
-  protected readonly filterClear = translateSignal('list.filterClear');
-  protected readonly missingTitle = translateSignal('list.missingTitle');
-  protected readonly missingHint = translateSignal('list.missingHint');
-  protected readonly partialFailure = translateSignal('status.partialFailure', {
-    count: computed(() => String(this.store.failedCount())),
-  });
-  protected readonly missingButton = translateSignal('list.missingButton', {
-    count: computed(() => String(this.store.notFoundCount())),
-  });
-
   /** The results the filter lets through, in display order. */
   protected readonly visibleItems = computed(() => filterResults(this.store.items(), this.query()));
 
-  private readonly _foundSummary = translateSignal('list.summary', {
-    count: computed(() => String(this.store.foundCount())),
-  });
-  private readonly _filteredSummary = translateSignal('list.filterCount', {
-    shown: computed(() => String(this.visibleItems().length)),
-    total: computed(() => String(this.store.totalCount())),
-  });
+  /** Whether the visitor is filtering: the summary then counts the list the filter shows. */
+  protected readonly filtering = computed(() => this.query().trim() !== '');
 
-  /** "Tracks on Spotify: 8", or, while filtering, how many of the list the filter shows. */
-  protected readonly summary = computed(() =>
-    this.query().trim() === '' ? this._foundSummary() : this._filteredSummary(),
-  );
-  protected readonly filterEmpty = translateSignal('list.filterEmpty', { query: this.query });
-
-  private readonly _sortAsc = translateSignal('list.sortAsc');
-  private readonly _sortDesc = translateSignal('list.sortDesc');
-  private readonly _sortedAsc = translateSignal('list.sortedAsc');
-  private readonly _sortedDesc = translateSignal('list.sortedDesc');
-
-  protected readonly sortHint = translateSignal('list.sortHint');
-
-  /** The text of the button that reverses the order: it names the order the list is in now. */
-  protected readonly sortLabel = computed(() =>
-    this.store.direction() === SortDirection.ASC ? this._sortAsc() : this._sortDesc(),
+  /** Translation key of the button that reverses the order: it names the order the list is in now. */
+  protected readonly sortLabelKey = computed(() =>
+    this.store.direction() === SortDirection.ASC ? 'list.sortAsc' : 'list.sortDesc',
   );
   protected readonly sortIcon = computed(() =>
     this.store.direction() === SortDirection.ASC
@@ -107,8 +67,8 @@ export class TracksPage {
       : 'pi pi-sort-alpha-down-alt',
   );
   /** Said to screen readers when the order changes (the button's own text is not a live region). */
-  protected readonly sortAnnouncement = computed(() =>
-    this.store.direction() === SortDirection.ASC ? this._sortedAsc() : this._sortedDesc(),
+  protected readonly sortAnnouncementKey = computed(() =>
+    this.store.direction() === SortDirection.ASC ? 'list.sortedAsc' : 'list.sortedDesc',
   );
 
   /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */

@@ -6,7 +6,7 @@ import { provideTranslation } from '../core/i18n/provide-i18n';
 /** Real Transloco with the real translation files, for component tests. */
 export const i18nTestProviders = [provideTranslation()];
 
-/** Loads and activates a language so `translateSignal`s resolve to real text. */
+/** Loads and activates a language so the `transloco` pipe resolves to real text. */
 export async function useLanguage(language: Language = Language.EN): Promise<void> {
   await TestBed.inject(I18n).setLanguage(language);
 }

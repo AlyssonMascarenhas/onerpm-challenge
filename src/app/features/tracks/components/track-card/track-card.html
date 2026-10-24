@@ -8,11 +8,11 @@
         loading="lazy"
         decoding="async"
         [src]="url"
-        [alt]="labels.coverAlt()"
+        [alt]="'tracks.coverAlt' | transloco: { album: track().albumName }"
         (error)="onCoverError()"
       />
     } @else {
-      <div class="card__fallback" role="img" [attr.aria-label]="labels.coverMissing()">
+      <div class="card__fallback" role="img" [attr.aria-label]="'tracks.coverMissing' | transloco">
         <i class="pi pi-image" aria-hidden="true"></i>
       </div>
     }
@@ -35,32 +35,34 @@
       class="card__badge"
       [severity]="track().availableInBR ? 'success' : 'danger'"
       [icon]="track().availableInBR ? 'pi pi-check-circle' : 'pi pi-times-circle'"
-      [value]="track().availableInBR ? labels.available() : labels.unavailable()"
+      [value]="
+        (track().availableInBR ? 'tracks.availableInBR' : 'tracks.unavailableInBR') | transloco
+      "
     />
     <h2 class="card__title" [id]="titleId()">{{ track().title }}</h2>
     <p class="card__artists">{{ artists() }}</p>
 
     <dl class="card__meta">
       <div>
-        <dt>{{ labels.released() }}</dt>
+        <dt>{{ 'tracks.released' | transloco }}</dt>
         <dd>{{ released() }}</dd>
       </div>
       <div>
-        <dt>{{ labels.duration() }}</dt>
+        <dt>{{ 'tracks.duration' | transloco }}</dt>
         <dd>{{ duration() }}</dd>
       </div>
       <div>
-        <dt>{{ labels.album() }}</dt>
+        <dt>{{ 'tracks.album' | transloco }}</dt>
         <dd>{{ track().albumName }}</dd>
       </div>
       <div>
         <dt>
-          {{ labels.isrc() }}
+          {{ 'tracks.isrc' | transloco }}
           <orp-copy-button
             class="card__copy"
             [value]="track().isrc"
-            [label]="labels.copyIsrc()"
-            [copiedLabel]="labels.copied()"
+            [label]="'copy.copyIsrc' | transloco: { isrc: track().isrc }"
+            [copiedLabel]="'copy.copied' | transloco"
           />
         </dt>
         <dd class="card__isrc">{{ track().isrc }}</dd>
@@ -73,8 +75,8 @@
       class="card__link"
       [href]="track().spotifyUrl"
       [icon]="spotifyIcon"
-      [label]="labels.openOnSpotify()"
-      [newTabLabel]="labels.newTab()"
+      [label]="'tracks.openOnSpotify' | transloco"
+      [newTabLabel]="'app.newTab' | transloco"
     />
   </div>
 </article>

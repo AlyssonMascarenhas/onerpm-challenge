@@ -55,3 +55,11 @@ chegaria em inglês e "piscaria" para o idioma do visitante.
 - **Atenção na implantação:** desde o Angular 20 o SSR só aceita hosts autorizados. Sem `NG_ALLOWED_HOSTS`
   (ex.: `NG_ALLOWED_HOSTS=meu-dominio.com`) o servidor cai para renderização no cliente e o `lang` volta a `en` —
   foi o que o teste local mostrou com `localhost`. O PR de deploy deve configurar essa variável.
+
+## Atualização (24/10/2026): textos no template, pelo pipe
+
+Os componentes liam cada texto com `translateSignal`, um campo por _string_ (a página de faixas chegou a 27), e o diálogo de
+ISRCs lia `I18n.locale()` só para o `computed` depender da língua. Os textos agora entram pelo **pipe `transloco` no
+template** (`'chave' | transloco: { parâmetro }`), que já reage à troca de idioma e aceita parâmetros: sem campo por texto e
+sem esse truque. Só ficam em TypeScript os textos que o código precisa escrever no DOM (o título do iframe do player). O ADR
+não muda de decisão (Transloco, seis idiomas, mesmos arquivos); muda como o componente os consome.
