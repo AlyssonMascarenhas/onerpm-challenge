@@ -33,3 +33,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0017 | [Grade de 4 colunas e cartão compacto no celular](0017-grade-de-4-colunas-e-cartao-compacto.md) | Aceito |
 | 0018 | [Filtro, cópia de ISRC e lista dos ISRCs que não constam na base](0018-filtro-copia-e-isrcs-ausentes.md) | Aceito |
 | 0019 | [Cabeçalhos de segurança, compressão, ordem A–Z/Z–A](0019-endurecimento-do-servidor-e-ordem.md) | Aceito |
+| 0020 | [Imagem de contêiner e deploy a partir da release (tag)](0020-imagem-e-deploy-por-release.md) | Aceito |
