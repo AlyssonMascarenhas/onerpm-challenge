@@ -1,6 +1,6 @@
 import { REQUEST_TIMEOUT_MS, TOKEN_EXPIRY_MARGIN_MS, TOKEN_URL } from './spotify.constants';
-import { systemClock } from './http';
-import { Clock, FetchFn } from './http.types';
+import { systemClock } from '../shared/system-time';
+import { Clock, FetchFn } from '../shared/shared.types';
 import { SpotifyUnavailableError } from './spotify-errors';
 import { SpotifyFailureReason } from './spotify.enums';
 import {

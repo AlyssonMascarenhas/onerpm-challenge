@@ -1,9 +1,9 @@
-import { Track } from '../../contract/tracks.interfaces';
-import { TrackSearch } from '../spotify/spotify.interfaces';
-import { selectBestTrack } from './select-best-track';
-import { toTrack } from './track-mapper';
-import { BRAZIL_MARKET } from './tracks.constants';
-import { TrackFinder } from './tracks.interfaces';
+import { Track } from '../../../contract/tracks.interfaces';
+import { TrackSearch } from '../../spotify/spotify.interfaces';
+import { selectBestTrack } from '../mapping/select-best-track';
+import { toTrack } from '../mapping/track-mapper';
+import { BRAZIL_MARKET } from './finder.constants';
+import { TrackFinder } from './finder.interfaces';
 
 /**
  * Availability in Brazil comes from searching with `market=BR`: Spotify then flags each

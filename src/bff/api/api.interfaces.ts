@@ -1,5 +1,5 @@
 import { Logger } from '../shared/shared.interfaces';
-import { Clock, FetchFn, Sleep } from '../spotify/http.types';
+import { Clock, FetchFn, Sleep } from '../shared/shared.types';
 
 export interface ApiRouterOptions {
   readonly env: NodeJS.ProcessEnv;

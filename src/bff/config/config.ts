@@ -1,5 +1,5 @@
 import { ENV_SPOTIFY_CLIENT_ID, ENV_SPOTIFY_CLIENT_SECRET } from './config.constants';
-import { SpotifyCredentials } from './spotify/spotify.interfaces';
+import { SpotifyCredentials } from '../spotify/spotify.interfaces';
 
 /** Returns the Spotify credentials, or `null` when they are not configured. */
 export function readSpotifyCredentials(env: NodeJS.ProcessEnv): SpotifyCredentials | null {

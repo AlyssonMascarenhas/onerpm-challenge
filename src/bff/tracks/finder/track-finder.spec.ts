@@ -1,8 +1,8 @@
 // @vitest-environment node
-import { SpotifyUnavailableError } from '../spotify/spotify-errors';
-import { SpotifyFailureReason } from '../spotify/spotify.enums';
-import { SpotifyTrack, TrackSearch } from '../spotify/spotify.interfaces';
-import { spotifyAlbum, spotifyTrack } from '../testing/builders';
+import { SpotifyUnavailableError } from '../../spotify/spotify-errors';
+import { SpotifyFailureReason } from '../../spotify/spotify.enums';
+import { SpotifyTrack, TrackSearch } from '../../spotify/spotify.interfaces';
+import { spotifyAlbum, spotifyTrack } from '../../testing/builders';
 import { SpotifyTrackFinder } from './track-finder';
 
 const ISRC = 'BR1SP1200071';

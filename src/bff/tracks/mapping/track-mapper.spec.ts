@@ -1,6 +1,6 @@
-import { ReleaseDatePrecision } from '../../contract/tracks.enums';
+import { ReleaseDatePrecision } from '../../../contract/tracks.enums';
 // @vitest-environment node
-import { spotifyAlbum, spotifyTrack } from '../testing/builders';
+import { spotifyAlbum, spotifyTrack } from '../../testing/builders';
 import { toTrack } from './track-mapper';
 
 const CONTEXT = { isrc: 'BR1SP1200071', availableInBR: true };

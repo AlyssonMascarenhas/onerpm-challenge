@@ -1,5 +1,5 @@
-import { systemClock, systemSleep } from './http';
-import { Clock, FetchFn, Sleep } from './http.types';
+import { systemClock, systemSleep } from '../shared/system-time';
+import { Clock, FetchFn, Sleep } from '../shared/shared.types';
 import { isSpotifyTrack } from './is-spotify-track';
 import { SpotifyUnavailableError } from './spotify-errors';
 import {

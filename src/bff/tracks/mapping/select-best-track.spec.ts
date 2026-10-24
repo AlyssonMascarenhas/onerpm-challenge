@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { spotifyAlbum, spotifyTrack } from '../testing/builders';
+import { spotifyAlbum, spotifyTrack } from '../../testing/builders';
 import { selectBestTrack } from './select-best-track';
 
 const releasedOn = (id: string, release_date: string) =>

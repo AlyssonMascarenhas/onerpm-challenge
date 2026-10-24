@@ -8,7 +8,7 @@ import compression from 'compression';
 import express from 'express';
 import { join } from 'node:path';
 import { createApiRouter } from './bff/api/create-api-router';
-import { loadLocalEnvFile } from './bff/config';
+import { loadLocalEnvFile } from './bff/config/config';
 import { securityHeaders } from './bff/http/security-headers';
 
 loadLocalEnvFile();

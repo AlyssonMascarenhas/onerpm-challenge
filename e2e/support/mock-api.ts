@@ -5,8 +5,8 @@ import { LookupErrorCode, LookupStatus } from '../../src/contract/tracks.enums';
 import { TracksResponse } from '../../src/contract/tracks.interfaces';
 import { TrackLookupResult } from '../../src/contract/tracks.types';
 import { SpotifySearchResponse } from '../../src/bff/spotify/spotify.interfaces';
-import { selectBestTrack } from '../../src/bff/tracks/select-best-track';
-import { toTrack } from '../../src/bff/tracks/track-mapper';
+import { selectBestTrack } from '../../src/bff/tracks/mapping/select-best-track';
+import { toTrack } from '../../src/bff/tracks/mapping/track-mapper';
 
 const FIXTURES = join(__dirname, '..', '..', 'src', 'bff', 'testing', 'fixtures');
 

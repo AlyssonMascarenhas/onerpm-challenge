@@ -2,7 +2,7 @@ import { LookupErrorCode, LookupStatus } from '../../contract/tracks.enums';
 import { TrackLookupResult } from '../../contract/tracks.types';
 import { Logger } from '../shared/shared.interfaces';
 import { SpotifyUnavailableError } from '../spotify/spotify-errors';
-import { TrackFinder } from './tracks.interfaces';
+import { TrackFinder } from './finder/finder.interfaces';
 
 /**
  * Looks up many ISRCs, isolating failures so one bad ISRC never hides the others.

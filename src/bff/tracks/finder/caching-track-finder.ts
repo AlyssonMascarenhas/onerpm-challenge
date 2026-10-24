@@ -1,7 +1,7 @@
-import { Track } from '../../contract/tracks.interfaces';
-import { systemClock } from '../spotify/http';
-import { Clock } from '../spotify/http.types';
-import { CacheEntry, CachingOptions, TrackFinder } from './tracks.interfaces';
+import { Track } from '../../../contract/tracks.interfaces';
+import { systemClock } from '../../shared/system-time';
+import { Clock } from '../../shared/shared.types';
+import { CacheEntry, CachingOptions, TrackFinder } from './finder.interfaces';
 
 /**
  * Short-lived in-memory cache (Decorator). It only shields Spotify's rate limits and

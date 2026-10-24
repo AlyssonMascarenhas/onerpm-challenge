@@ -1,7 +1,7 @@
-import { Track } from '../../contract/tracks.interfaces';
-import { SpotifyImage, SpotifyTrack } from '../spotify/spotify.interfaces';
-import { PREFERRED_COVER_WIDTH } from './tracks.constants';
-import { TrackContext } from './tracks.interfaces';
+import { Track } from '../../../contract/tracks.interfaces';
+import { SpotifyImage, SpotifyTrack } from '../../spotify/spotify.interfaces';
+import { PREFERRED_COVER_WIDTH } from './mapping.constants';
+import { TrackContext } from './mapping.interfaces';
 
 /** Anti-corruption layer: the only place that knows Spotify's payload shape. */
 export function toTrack(dto: SpotifyTrack, context: TrackContext): Track {

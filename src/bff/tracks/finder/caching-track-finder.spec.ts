@@ -1,8 +1,8 @@
-import { ReleaseDatePrecision } from '../../contract/tracks.enums';
+import { ReleaseDatePrecision } from '../../../contract/tracks.enums';
 // @vitest-environment node
-import { Track } from '../../contract/tracks.interfaces';
+import { Track } from '../../../contract/tracks.interfaces';
 import { CachingTrackFinder } from './caching-track-finder';
-import { TrackFinder } from './tracks.interfaces';
+import { TrackFinder } from './finder.interfaces';
 
 const track = (isrc: string): Track => ({
   id: `id-${isrc}`,
