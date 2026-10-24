@@ -1,6 +1,7 @@
 import { LookupStatus } from '../../../contract/tracks.enums';
 import { TrackLookupResult } from '../../../contract/tracks.types';
 import { RESULT_ORDER, TITLE_SORT_LOCALE } from './tracks.constants';
+import { SortDirection } from './tracks.enums';
 
 /**
  * Orders the page: found tracks alphabetically by title, then ISRCs Spotify does not know,
@@ -8,10 +9,12 @@ import { RESULT_ORDER, TITLE_SORT_LOCALE } from './tracks.constants';
  *
  * Titles ignore case, accents and punctuation, so "...É pra Você" files under E, and digits
  * compare as numbers ("Track 2" before "Track 10"). Equal titles keep their input order.
+ * With `SortDirection.DESC` the tracks go from Z to A; the ISRCs without a track stay where they are.
  */
 export function sortResults(
   results: readonly TrackLookupResult[],
   locale: string = TITLE_SORT_LOCALE,
+  direction: SortDirection = SortDirection.ASC,
 ): TrackLookupResult[] {
   const collator = new Intl.Collator(locale, {
     sensitivity: 'base',
@@ -25,7 +28,8 @@ export function sortResults(
       return byKind;
     }
     if (a.status === LookupStatus.FOUND && b.status === LookupStatus.FOUND) {
-      return collator.compare(a.track.title, b.track.title);
+      const byTitle = collator.compare(a.track.title, b.track.title);
+      return direction === SortDirection.DESC ? -byTitle : byTitle;
     }
     return a.isrc.localeCompare(b.isrc);
   });

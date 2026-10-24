@@ -16,6 +16,7 @@ import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { LookupStatus } from '../../../../contract/tracks.enums';
+import { SortDirection } from '../tracks.enums';
 import { filterResults } from '../filter-results';
 import { IsrcCard } from '../isrc-card/isrc-card';
 import { IsrcListDialog } from '../isrc-list-dialog/isrc-list-dialog';
@@ -76,19 +77,39 @@ export class TracksPage {
   protected readonly visibleItems = computed(() => filterResults(this.store.items(), this.query()));
 
   private readonly _foundSummary = translateSignal('list.summary', {
-    found: computed(() => String(this.store.foundCount())),
-    total: computed(() => String(this.store.totalCount())),
+    count: computed(() => String(this.store.foundCount())),
   });
   private readonly _filteredSummary = translateSignal('list.filterCount', {
     shown: computed(() => String(this.visibleItems().length)),
     total: computed(() => String(this.store.totalCount())),
   });
 
-  /** "8 of 10 ISRCs found", or, while filtering, how many of the list the filter shows. */
+  /** "Tracks on Spotify: 8", or, while filtering, how many of the list the filter shows. */
   protected readonly summary = computed(() =>
     this.query().trim() === '' ? this._foundSummary() : this._filteredSummary(),
   );
   protected readonly filterEmpty = translateSignal('list.filterEmpty', { query: this.query });
+
+  private readonly _sortAsc = translateSignal('list.sortAsc');
+  private readonly _sortDesc = translateSignal('list.sortDesc');
+  private readonly _sortedAsc = translateSignal('list.sortedAsc');
+  private readonly _sortedDesc = translateSignal('list.sortedDesc');
+
+  protected readonly sortHint = translateSignal('list.sortHint');
+
+  /** The text of the button that reverses the order: it names the order the list is in now. */
+  protected readonly sortLabel = computed(() =>
+    this.store.direction() === SortDirection.ASC ? this._sortAsc() : this._sortDesc(),
+  );
+  protected readonly sortIcon = computed(() =>
+    this.store.direction() === SortDirection.ASC
+      ? 'pi pi-sort-alpha-down'
+      : 'pi pi-sort-alpha-down-alt',
+  );
+  /** Said to screen readers when the order changes (the button's own text is not a live region). */
+  protected readonly sortAnnouncement = computed(() =>
+    this.store.direction() === SortDirection.ASC ? this._sortedAsc() : this._sortedDesc(),
+  );
 
   /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */
   protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());

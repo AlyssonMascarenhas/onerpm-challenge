@@ -333,7 +333,76 @@ describe('TracksPage', () => {
       it('says how many ISRCs were found out of the total', async () => {
         const { fixture } = await loaded();
 
-        expect(summary(fixture)).toBe('3 of 5 ISRCs found');
+        expect(summary(fixture)).toBe('Tracks on Spotify: 3');
+      });
+
+      it('counts only the tracks Spotify has, not the ISRCs without one', async () => {
+        const { fixture } = await loaded(undefined, [
+          foundResult('Louca'),
+          foundResult('Quase Nua'),
+          notFoundResult('XX1AA0000001'),
+          errorResult('XX1AA0000002'),
+        ]);
+
+        expect(summary(fixture)).toBe('Tracks on Spotify: 2');
+      });
+
+      describe('the order of the tracks', () => {
+        const sortButton = (fixture: ComponentFixture<TracksPage>) =>
+          root(fixture).querySelector('button.toolbar__sort') as HTMLButtonElement;
+        const announcement = (fixture: ComponentFixture<TracksPage>) =>
+          text(sortButton(fixture).parentElement?.querySelector('span.visually-hidden'));
+
+        it('is A to Z at first, said by the button and by a note for screen readers', async () => {
+          const { fixture } = await loaded();
+
+          expect(text(sortButton(fixture))).toBe('Title A–Z');
+          expect(sortButton(fixture).title).toBe('Reverse the order');
+          expect(sortButton(fixture).getAttribute('aria-label')).toBe(
+            'Reverse the order: Title A–Z',
+          );
+          expect(announcement(fixture)).toBe('Sorted by title, A to Z');
+          expect(sortButton(fixture).querySelector('i')?.className).toContain('pi-sort-alpha-down');
+          expect(sortButton(fixture).querySelector('i')?.getAttribute('aria-hidden')).toBe('true');
+          expect(items(fixture).slice(0, 3)).toEqual(['...É pra Você', 'IRON MAIDEN', 'Louca']);
+        });
+
+        it('is reversed by the button, and back by pressing it again', async () => {
+          const { fixture } = await loaded();
+
+          sortButton(fixture).click();
+          await settle(fixture);
+          expect(text(sortButton(fixture))).toBe('Title Z–A');
+          expect(announcement(fixture)).toBe('Sorted by title, Z to A');
+          expect(sortButton(fixture).querySelector('i')?.className).toContain('alt');
+          expect(items(fixture).slice(0, 3)).toEqual(['Louca', 'IRON MAIDEN', '...É pra Você']);
+
+          sortButton(fixture).click();
+          await settle(fixture);
+          expect(text(sortButton(fixture))).toBe('Title A–Z');
+          expect(items(fixture).slice(0, 3)).toEqual(['...É pra Você', 'IRON MAIDEN', 'Louca']);
+        });
+
+        it('keeps the ISRCs that have no track after the tracks, and works with the filter', async () => {
+          const { fixture } = await loaded();
+          sortButton(fixture).click();
+          await settle(fixture);
+
+          expect(items(fixture).slice(3)).toEqual([
+            'XX1AA0000001 ISRC not found on Spotify',
+            'XX1AA0000002 ISRC not found on Spotify',
+          ]);
+
+          await type(fixture, 'o');
+          expect(items(fixture)[0]).toBe('Louca');
+        });
+
+        it('is in the visitor language', async () => {
+          const { fixture } = await loaded(Language.PT);
+
+          expect(text(sortButton(fixture))).toBe('Título A–Z');
+          expect(sortButton(fixture).title).toBe('Inverter a ordem');
+        });
       });
 
       it('has no toolbar before the answer arrives, or when the provider is down', async () => {
@@ -456,7 +525,7 @@ describe('TracksPage', () => {
       it('is in the visitor language', async () => {
         const { fixture } = await loaded(Language.PT);
 
-        expect(summary(fixture)).toBe('3 de 5 ISRCs encontrados');
+        expect(summary(fixture)).toBe('Faixas no Spotify: 3');
         expect(text(missingTrigger(fixture))).toBe('ISRCs que não constam na nossa base: 2');
         expect(input(fixture).getAttribute('aria-label')).toBe(
           'Filtrar por nome da música ou ISRC',

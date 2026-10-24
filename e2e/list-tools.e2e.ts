@@ -37,7 +37,7 @@ test.describe('filter', () => {
     await expect(page.getByRole('search')).toBeVisible();
     await expect(filterInput(page)).toHaveValue('');
     await expect(filterInput(page)).toHaveAttribute('placeholder', 'Track name or ISRC');
-    await expect(summary(page)).toHaveText('10 of 14 ISRCs found');
+    await expect(summary(page)).toHaveText('Tracks on Spotify: 10');
   });
 
   test('keeps the tracks whose title contains what is typed, and says how many', async ({
@@ -149,7 +149,71 @@ test.describe('filter', () => {
     await expect(
       page.getByRole('textbox', { name: 'Filtrar por nome da música ou ISRC' }),
     ).toBeVisible();
-    await expect(summary(page)).toHaveText('10 de 14 ISRCs encontrados');
+    await expect(summary(page)).toHaveText('Faixas no Spotify: 10');
+  });
+});
+
+test.describe('order and summary', () => {
+  test.beforeEach(async ({ page }) => {
+    await openWithMissing(page);
+  });
+
+  const titles = (page: Page) => page.locator('orp-track-card h2').allTextContents();
+
+  test('the tracks start from A to Z, and one button reverses them to Z to A and back', async ({
+    page,
+  }) => {
+    const button = page.getByRole('button', { name: 'Title A–Z' });
+    const ascending = await titles(page);
+    expect(ascending).toHaveLength(10);
+
+    await button.click();
+
+    await expect(page.getByRole('button', { name: 'Title Z–A' })).toBeVisible();
+    await expect.poll(() => titles(page)).toEqual([...ascending].reverse());
+    await expect(page.locator('orp-isrc-card').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Title Z–A' }).click();
+
+    await expect.poll(() => titles(page)).toEqual(ascending);
+  });
+
+  test('keeps the ISRCs without a track after the tracks, in either order', async ({ page }) => {
+    await page.getByRole('button', { name: 'Title A–Z' }).click();
+
+    const kinds = await page
+      .locator('main li > *')
+      .evaluateAll((nodes) => nodes.map((node) => node.tagName.toLowerCase()));
+    expect(kinds.slice(0, 10).every((kind) => kind === 'orp-track-card')).toBe(true);
+    expect(kinds.slice(10).every((kind) => kind === 'orp-isrc-card')).toBe(true);
+  });
+
+  test('works together with the filter', async ({ page }) => {
+    await filterInput(page).fill('iron');
+    const ascending = await titles(page);
+    expect(ascending.length).toBeGreaterThan(1);
+
+    await page.getByRole('button', { name: 'Title A–Z' }).click();
+
+    await expect.poll(() => titles(page)).toEqual([...ascending].reverse());
+  });
+
+  test('says how many tracks Spotify has, not counting the ISRCs without one', async ({ page }) => {
+    await expect(summary(page)).toHaveText('Tracks on Spotify: 10');
+  });
+
+  test('tells screen readers the new order', async ({ page }) => {
+    await page.getByRole('button', { name: 'Title A–Z' }).click();
+
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Sorted by title, Z to A' }),
+    ).toHaveCount(1);
+  });
+
+  test('is in the visitor language', async ({ page }) => {
+    await chooseLanguage(page, 'Português');
+
+    await expect(page.getByRole('button', { name: 'Título A–Z' })).toBeVisible();
   });
 });
 
@@ -273,7 +337,7 @@ test.describe('ISRCs not in our database', () => {
     await expect(page.locator('orp-track-card')).toHaveCount(10);
 
     await expect(page.locator('.toolbar__missing')).toHaveCount(0);
-    await expect(summary(page)).toHaveText('10 of 10 ISRCs found');
+    await expect(summary(page)).toHaveText('Tracks on Spotify: 10');
   });
 
   test('are in the visitor language', async ({ page }) => {

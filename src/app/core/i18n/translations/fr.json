@@ -55,10 +55,15 @@
     "filterClear": "Effacer le filtre",
     "filterCount": "{{shown}} affichés sur {{total}}",
     "filterEmpty": "Aucun résultat pour « {{query}} ».",
-    "summary": "{{found}} ISRC trouvés sur {{total}}",
+    "summary": "Morceaux sur Spotify : {{count}}",
     "missingButton": "ISRC absents de notre base : {{count}}",
     "missingTitle": "ISRC absents de notre base",
-    "missingHint": "Spotify n'a pas de morceau pour ces ISRC. Copiez-les pour les chercher ailleurs."
+    "missingHint": "Spotify n'a pas de morceau pour ces ISRC. Copiez-les pour les chercher ailleurs.",
+    "sortAsc": "Titre A–Z",
+    "sortDesc": "Titre Z–A",
+    "sortHint": "Inverser l’ordre",
+    "sortedAsc": "Trié par titre, de A à Z",
+    "sortedDesc": "Trié par titre, de Z à A"
   },
   "copy": {
     "copyIsrc": "Copier l'ISRC {{isrc}}",

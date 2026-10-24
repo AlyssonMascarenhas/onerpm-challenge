@@ -1,9 +1,66 @@
 import { LookupStatus } from '../../../contract/tracks.enums';
 import { sortResults } from './sort-results';
 import { TITLE_SORT_LOCALE } from './tracks.constants';
+import { SortDirection } from './tracks.enums';
 import { errorResult, foundResult, notFoundResult, titles } from './testing/builders';
 
 describe('sortResults', () => {
+  describe('descending (Z to A)', () => {
+    it('orders found tracks from Z to A, with the same collation (accents, case, punctuation)', () => {
+      const sorted = sortResults(
+        [
+          foundResult('Érica'),
+          foundResult('...Zebra'),
+          foundResult('dani'),
+          foundResult('Eduardo'),
+        ],
+        TITLE_SORT_LOCALE,
+        SortDirection.DESC,
+      );
+
+      expect(titles(sorted)).toEqual(['...Zebra', 'Érica', 'Eduardo', 'dani']);
+    });
+
+    it('keeps the ISRCs without a track after the tracks, in the same order as ascending', () => {
+      const input = [
+        errorResult('BR1SP1200071'),
+        foundResult('Louca'),
+        notFoundResult('XX1AA0000002'),
+        foundResult('Quase Nua'),
+        notFoundResult('XX1AA0000001'),
+      ];
+
+      const descending = sortResults(input, TITLE_SORT_LOCALE, SortDirection.DESC);
+
+      expect(titles(descending).slice(0, 2)).toEqual(['Quase Nua', 'Louca']);
+      expect(descending.slice(2).map((result) => result.isrc)).toEqual(
+        sortResults(input)
+          .slice(2)
+          .map((result) => result.isrc),
+      );
+    });
+
+    it('keeps equal titles in their input order, as ascending does', () => {
+      const first = foundResult('Same', { id: 'first' });
+      const second = foundResult('Same', { id: 'second' });
+
+      const sorted = sortResults([first, second], TITLE_SORT_LOCALE, SortDirection.DESC);
+
+      expect(sorted).toEqual([first, second]);
+    });
+
+    it('is the exact reverse of ascending when every title is different', () => {
+      const input = ['Dani', 'Érica', 'Louca', 'Quase Nua', 'Zebra'].map((title) =>
+        foundResult(title),
+      );
+
+      const ascending = titles(sortResults(input));
+      const descending = titles(sortResults(input, TITLE_SORT_LOCALE, SortDirection.DESC));
+
+      expect(descending).toEqual([...ascending].reverse());
+    });
+  });
+
   it('orders found tracks alphabetically by title', () => {
     const sorted = sortResults([
       foundResult('Quase Nua'),

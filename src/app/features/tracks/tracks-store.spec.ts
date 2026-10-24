@@ -6,7 +6,7 @@ import { TracksApi } from './tracks-api';
 import { TracksStore } from './tracks-store';
 import { TracksUnavailableError } from './tracks-unavailable-error';
 import { CHALLENGE_ISRCS } from './tracks.constants';
-import { TracksLoadStatus } from './tracks.enums';
+import { SortDirection, TracksLoadStatus } from './tracks.enums';
 import { errorResult, foundResult, notFoundResult, titles } from './testing/builders';
 
 /** The API is replaced by one Subject per request, so each test decides when and how it answers. */
@@ -31,6 +31,60 @@ describe('TracksStore', () => {
     expect(store.isReady()).toBe(false);
     expect(store.isUnavailable()).toBe(false);
     expect(lookup).not.toHaveBeenCalled();
+  });
+
+  describe('sort direction', () => {
+    const loaded = () => {
+      const page = setup();
+      page.store.load();
+      page.requests[0].next([
+        foundResult('Quase Nua'),
+        notFoundResult('XX1AA0000001'),
+        foundResult('Louca'),
+        foundResult('Repente'),
+      ]);
+      return page.store;
+    };
+
+    it('starts from A to Z', () => {
+      const store = loaded();
+
+      expect(store.direction()).toBe(SortDirection.ASC);
+      expect(titles(store.items()).slice(0, 3)).toEqual(['Louca', 'Quase Nua', 'Repente']);
+    });
+
+    it('reverses the tracks when toggled, and goes back when toggled again', () => {
+      const store = loaded();
+
+      store.toggleDirection();
+      expect(store.direction()).toBe(SortDirection.DESC);
+      expect(titles(store.items()).slice(0, 3)).toEqual(['Repente', 'Quase Nua', 'Louca']);
+
+      store.toggleDirection();
+      expect(store.direction()).toBe(SortDirection.ASC);
+      expect(titles(store.items()).slice(0, 3)).toEqual(['Louca', 'Quase Nua', 'Repente']);
+    });
+
+    it('keeps the ISRCs that are not in the database after the tracks, in both directions', () => {
+      const store = loaded();
+
+      store.toggleDirection();
+
+      expect(store.items()[3].isrc).toBe('XX1AA0000001');
+      expect(store.notFoundIsrcs()).toEqual(['XX1AA0000001']);
+    });
+
+    it('survives a new load: the visitor chose it', () => {
+      const { store, requests } = setup();
+      store.load();
+      requests[0].next([foundResult('Louca'), foundResult('Quase Nua')]);
+      store.toggleDirection();
+
+      store.load();
+      requests[1].next([foundResult('Louca'), foundResult('Quase Nua')]);
+
+      expect(titles(store.items())).toEqual(['Quase Nua', 'Louca']);
+    });
   });
 
   describe('load', () => {

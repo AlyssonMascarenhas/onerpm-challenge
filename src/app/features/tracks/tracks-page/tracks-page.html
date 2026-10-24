@@ -55,11 +55,23 @@
 
       <p class="toolbar__summary" role="status">{{ summary() }}</p>
 
+      <button
+        type="button"
+        class="toolbar__button toolbar__sort"
+        [title]="sortHint()"
+        [attr.aria-label]="sortHint() + ': ' + sortLabel()"
+        (click)="store.toggleDirection()"
+      >
+        <i [class]="sortIcon()" aria-hidden="true"></i>
+        {{ sortLabel() }}
+      </button>
+      <span class="visually-hidden" role="status">{{ sortAnnouncement() }}</span>
+
       @if (store.notFoundCount() > 0) {
         <button
           #missingTrigger
           type="button"
-          class="toolbar__missing"
+          class="toolbar__button toolbar__missing"
           aria-haspopup="dialog"
           (click)="missingOpen.set(true)"
         >

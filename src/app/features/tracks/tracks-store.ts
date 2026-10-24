@@ -3,8 +3,8 @@ import { Subscription } from 'rxjs';
 import { LookupStatus } from '../../../contract/tracks.enums';
 import { TrackLookupResult } from '../../../contract/tracks.types';
 import { sortResults } from './sort-results';
-import { CHALLENGE_ISRCS } from './tracks.constants';
-import { TracksLoadStatus } from './tracks.enums';
+import { CHALLENGE_ISRCS, TITLE_SORT_LOCALE } from './tracks.constants';
+import { SortDirection, TracksLoadStatus } from './tracks.enums';
 import { TracksApi } from './tracks-api';
 
 /** State of the tracks page: what is loading, what came back and how it should be ordered. */
@@ -13,12 +13,18 @@ export class TracksStore {
   private readonly _api = inject(TracksApi);
   private readonly _status = signal(TracksLoadStatus.IDLE);
   private readonly _results = signal<readonly TrackLookupResult[]>([]);
+  private readonly _direction = signal(SortDirection.ASC);
   private _inflight: Subscription | null = null;
 
   public readonly status = this._status.asReadonly();
 
+  /** The order of the tracks by title. */
+  public readonly direction = this._direction.asReadonly();
+
   /** Results in display order (see `sortResults`). */
-  public readonly items = computed(() => sortResults(this._results()));
+  public readonly items = computed(() =>
+    sortResults(this._results(), TITLE_SORT_LOCALE, this._direction()),
+  );
   public readonly isReady = computed(() => this._status() === TracksLoadStatus.READY);
   public readonly isLoading = computed(() => this._status() === TracksLoadStatus.LOADING);
   public readonly isUnavailable = computed(() => this._status() === TracksLoadStatus.UNAVAILABLE);
@@ -46,6 +52,13 @@ export class TracksStore {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this._inflight?.unsubscribe());
+  }
+
+  /** Reverses the order of the tracks by title (A to Z, then Z to A). */
+  public toggleDirection(): void {
+    this._direction.update((direction) =>
+      direction === SortDirection.ASC ? SortDirection.DESC : SortDirection.ASC,
+    );
   }
 
   /** Loads the ISRCs; calling it again (e.g. "try again") cancels a request still in flight. */
