@@ -55,7 +55,7 @@ const restrictDeclarations = (...allowed) => [
 ];
 
 /**
- * Layer rules (ADR 0022): a folder only depends on the folders below it, never upwards.
+ * Layer rules (ADR 0023): a folder only depends on the folders below it, never upwards.
  * `forbid('store', 'pages')` bans importing from any folder with those names.
  */
 /**
@@ -68,7 +68,7 @@ const forbid = (...layers) => [
     patterns: [
       {
         group: layers.map((layer) => `**/${layer}/**`),
-        message: `This layer must not depend on ${layers.join(', ')} (ADR 0022).`,
+        message: `This layer must not depend on ${layers.join(', ')} (ADR 0023).`,
       },
     ],
   },

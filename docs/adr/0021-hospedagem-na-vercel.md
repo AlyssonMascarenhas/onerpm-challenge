@@ -1,7 +1,7 @@
 # 0021 — Hospedagem na Vercel, com deploy a partir da tag da release
 
-- **Status:** Aceito (complementa o ADR 0020: o deploy continua só por release; a imagem do contêiner passa a ser um artefato
-  portátil)
+- **Status:** Aceito (complementa o ADR 0020: o deploy continua só por release, agora criada à mão, ADR 0022; a imagem do
+  contêiner passa a ser um artefato portátil)
 - **Data:** 2026-10-23
 
 ## Contexto
@@ -55,7 +55,7 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
    (o domínio que a Vercel mostra depois do primeiro deploy, por exemplo `onerpm-challenge-ssr.vercel.app`; vários, separados por vírgula). Sem `NG_ALLOWED_HOSTS` o Angular cai na renderização
    no navegador e a página perde o idioma já renderizado no servidor.
 4. **Segredos do repositório no GitHub:** `VERCEL_TOKEN` (Account Settings → Tokens), `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`
-   (do `.vercel/project.json`), e `RELEASE_PLEASE_TOKEN` (ADR 0020).
+   (do `.vercel/project.json`).
 5. **Primeiro deploy, para validar a configuração** antes da primeira release: na branch com estes arquivos,
    `npx vercel@65 deploy --prod` (compila na Vercel; depois disso, os deploys são da release).
 

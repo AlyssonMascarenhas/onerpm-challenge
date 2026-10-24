@@ -1,4 +1,4 @@
-# 0022 — Organização de pastas por responsabilidade e camada
+# 0023 — Organização de pastas por responsabilidade e camada
 
 - **Status:** Aceito
 - **Data:** 2026-10-24

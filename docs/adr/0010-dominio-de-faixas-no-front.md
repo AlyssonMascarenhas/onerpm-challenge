@@ -33,7 +33,7 @@ Código da feature em `src/app/features/tracks/`, sem componentes ainda (a UI ve
     carregaram: aviso, não bloqueio).
   - `load()` cancela a requisição anterior (útil para "tentar novamente") e mantém os itens antigos visíveis
     durante o recarregamento; ao destruir o store, a requisição pendente é cancelada.
-- **`CHALLENGE_ISRCS`** (as 10 do enunciado) fica em `store/store.constants.ts` (pastas: ADR 0022); `load()` as usa por padrão.
+- **`CHALLENGE_ISRCS`** (as 10 do enunciado) fica em `store/store.constants.ts` (pastas: ADR 0023); `load()` as usa por padrão.
 
 ## Alternativas consideradas
 
