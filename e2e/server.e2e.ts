@@ -59,6 +59,18 @@ test.describe('security headers', () => {
   });
 });
 
+test.describe('health', () => {
+  test('GET /api/health says the server is up, even with no Spotify credentials', async ({
+    request,
+  }) => {
+    const response = await request.get('/api/health');
+
+    expect(response.status()).toBe(200);
+    expect(await response.json()).toEqual({ status: 'ok' });
+    expect(response.headers()['cache-control']).toBe('no-store');
+  });
+});
+
 test.describe('compression', () => {
   test('the page, the scripts and the styles are sent compressed', async ({ request }) => {
     const html = await request.get('/', { headers: { 'Accept-Encoding': 'gzip' } });

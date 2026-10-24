@@ -14,6 +14,7 @@ import { TrackFinder } from '../tracks/tracks.interfaces';
 import { TracksService } from '../tracks/tracks-service';
 import { TRACK_CACHE_MAX_ENTRIES, TRACK_CACHE_TTL_MS } from './api.constants';
 import { ApiRouterOptions } from './api.interfaces';
+import { createHealthRouter } from './health-router';
 import { apiNotFound, createApiErrorHandler, createTracksRouter } from './tracks-router';
 
 /** Composition root of the BFF: wires config → Spotify adapters → finder → service → HTTP routes. */
@@ -22,6 +23,7 @@ export function createApiRouter(options: ApiRouterOptions): Router {
   const service = new TracksService(createTrackFinder(options, logger), logger);
 
   const router = Router();
+  router.use(createHealthRouter());
   router.use(createTracksRouter(service));
   router.use(apiNotFound);
   router.use(createApiErrorHandler(logger));
