@@ -68,3 +68,16 @@ degradês radiais têm tamanho fixo (24rem de altura): no celular o bloco é mai
 deixando uma linha dura. Um teste e2e lê os pixels da última linha do bloco e da primeira abaixo dele (nos dois temas e nos
 dois tamanhos de tela) e exige que a diferença seja imperceptível. A área do conteúdo também ganhou um respiro no topo, para o
 campo de filtro não encostar no bloco.
+
+## Atualização (24/10/2026): preset só com o que a página usa
+
+Uma revisão apontou o PrimeNG pesando para uma única página (bundle inicial de 772 kB brutos, 174 kB transferidos). A medição
+(`ng build --stats-json`) mostrou que o preset **Aura inteiro** respondia por ~106 kB: ele carrega os _tokens_ de uns noventa
+componentes e a página usa oito. O preset passou a ser montado de `@primeuix/themes/aura/base` mais **só os componentes
+usados** (`button`, `dialog`, `iconfield`, `inputtext`, `message`, `select`, `skeleton`, `tag`): o bundle inicial caiu para
+**706 kB brutos (169 kB transferidos)** e o aviso de orçamento passou de 800 para 750 kB, para a economia não se perder. A aparência não muda
+(os _tokens_ dos componentes usados são os mesmos). **Atenção:** um componente PrimeNG novo precisa dos seus _tokens_ em
+`theme-preset.ts`, senão aparece sem tema.
+
+Também foi testado trocar o `p-select` do idioma por um `<select>` nativo (−~110 kB e sem `@angular/forms`, bundle inicial em
+**521 kB**), mas o visual nativo destoou do resto da interface e foi descartado: o `p-select` fica.

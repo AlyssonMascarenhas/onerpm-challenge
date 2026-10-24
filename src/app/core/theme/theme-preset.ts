@@ -1,5 +1,14 @@
 import { definePreset } from '@primeuix/themes';
-import Aura from '@primeuix/themes/aura';
+import base from '@primeuix/themes/aura/base';
+import button from '@primeuix/themes/aura/button';
+import css from '@primeuix/themes/aura/css';
+import dialog from '@primeuix/themes/aura/dialog';
+import iconfield from '@primeuix/themes/aura/iconfield';
+import inputtext from '@primeuix/themes/aura/inputtext';
+import message from '@primeuix/themes/aura/message';
+import select from '@primeuix/themes/aura/select';
+import skeleton from '@primeuix/themes/aura/skeleton';
+import tag from '@primeuix/themes/aura/tag';
 import {
   ACCENT_PALETTE,
   ACTION_COLORS,
@@ -8,13 +17,25 @@ import {
 } from './theme.constants';
 
 /**
+ * Aura, but only the components the page uses (`primeng/*` imports in `src/app`): the whole preset carries the
+ * tokens of some ninety components, about 100 kB of the initial bundle. A PrimeNG component added later needs its
+ * tokens here (`@primeuix/themes/aura/<component>`), or it renders without a theme.
+ */
+const AuraSubset = {
+  ...base,
+  components: { button, dialog, iconfield, inputtext, message, select, skeleton, tag },
+  // The package declares a named export, but at runtime `aura/css` is a string, the default export (as Aura itself uses it).
+  css: css as unknown as string,
+};
+
+/**
  * Aura with our accent and ink surfaces; light and dark keep AA contrast (see `ACCENT_PALETTE`).
  *
  * Aura's light message and outlined-button texts use the 500/600 steps of red, yellow and green on
  * very pale backgrounds, which measure 2.5:1 to 3.7:1 (axe flagged them). The light scheme moves
  * them to darker steps; the dark scheme already passes.
  */
-export const OnerpmPreset = definePreset(Aura, {
+export const OnerpmPreset = definePreset(AuraSubset, {
   semantic: {
     primary: ACCENT_PALETTE,
     colorScheme: {
