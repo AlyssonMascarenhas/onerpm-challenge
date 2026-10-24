@@ -42,3 +42,11 @@ o motivo de a página existir), sem rolar até os cartões de "não encontrado" 
   axe nos dois temas (modal aberto e filtro sem resultado).
 - Negativas: no Windows a área de transferência recebe quebra de linha CRLF no "Copiar todos" (é o esperado para colar lá;
   os testes normalizam); o filtro olha título e ISRC, não artista nem álbum (não foi pedido; ampliar é trocar `filterResults`).
+
+## Atualização (24/10/2026): a página dividida em componentes
+
+`tracks-page.scss` passou do orçamento de estilo de componente (4 kB) e a página reunia filtro, ordem e o painel de
+indisponível. A barra de ferramentas virou `TracksToolbar` (filtro em `model`, resumo, ordem e botão dos ISRCs ausentes) e o
+alerta de integração virou `UnavailablePanel`, cada um com seu `.scss`. A página ficou com o _hero_, os avisos e a grade; os
+limites da grade continuam juntos em `tracks-page.scss` e `track-card.scss` ([ADR 0017](0017-grade-de-4-colunas-e-cartao-compacto.md)).
+Nenhum limite de orçamento foi alterado.
