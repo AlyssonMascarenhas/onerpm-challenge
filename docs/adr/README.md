@@ -35,3 +35,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0019 | [Cabeçalhos de segurança, compressão, ordem A–Z/Z–A](0019-endurecimento-do-servidor-e-ordem.md) | Aceito |
 | 0020 | [Imagem de contêiner e deploy a partir da release (tag)](0020-imagem-e-deploy-por-release.md) | Aceito |
 | 0021 | [Hospedagem na Vercel, com deploy a partir da tag da release](0021-hospedagem-na-vercel.md) | Aceito |
+| 0022 | [Releases criadas à mão; publicar a release dispara o deploy](0022-releases-criadas-a-mao.md) | Aceito |

@@ -1,19 +1,17 @@
 name: Release
 
-# release-please keeps a release PR up to date after every merge to main (version and CHANGELOG from the semantic
-# commits). Merging that PR creates the tag and the GitHub release, and ONLY THEN the release is deployed to Vercel
-# and its container image is published, both built from that tag. A merge to main with no release deploys nothing.
-# See ADR 0020 and ADR 0021.
+# A release is created by hand on GitHub (Releases → Draft a new release → a new tag `vX.Y.Z` on main →
+# Publish). Publishing it deploys that tag to Vercel and publishes its container image. A merge to main, or a
+# release that is only a draft, deploys nothing. See ADR 0020, ADR 0021 and ADR 0022.
 on:
-  push:
-    branches: [main]
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       tag:
         description: 'Deploy an existing release tag (for example v1.2.3) again, without a new release'
-        required: false
+        required: true
         type: string
-        default: ''
 
 permissions:
   contents: read
@@ -23,44 +21,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release-please:
-    name: Release PR and tag
-    # Re-deploying a tag by hand does not touch the release PR.
-    if: ${{ inputs.tag == '' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: write
-      pull-requests: write
-      issues: write # release-please labels the release PR (autorelease: pending/tagged)
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - name: Run release-please
-        id: release
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        with:
-          # A PR opened with the default token does not start the CI workflow, so the required checks never
-          # appear on it. Set RELEASE_PLEASE_TOKEN (a token that can write contents and pull requests) to avoid it.
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
   # The site: built and deployed to Vercel from the tag, as the production deployment.
   vercel:
     name: Deploy to Vercel
-    needs: release-please
-    # Only for a new release, or for a tag chosen by hand: never for an ordinary merge to main.
-    if: >-
-      ${{ !cancelled() && needs.release-please.result != 'failure' &&
-      (needs.release-please.outputs.release_created == 'true' || inputs.tag != '') }}
+    # A pre-release (v1.2.3-rc.1) is not deployed; a tag chosen by hand always is.
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
     env:
-      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
       # From `.vercel/project.json`, after `vercel link` (they are identifiers, not secrets).
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -101,17 +72,14 @@ jobs:
   # The same app as a portable container image (ADR 0020), for any host that runs images.
   image:
     name: Container image of the release
-    needs: release-please
-    if: >-
-      ${{ !cancelled() && needs.release-please.result != 'failure' &&
-      (needs.release-please.outputs.release_created == 'true' || inputs.tag != '') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
       packages: write
     env:
-      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - name: Check the tag is a release tag
         run: |
