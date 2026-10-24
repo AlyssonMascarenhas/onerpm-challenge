@@ -63,3 +63,9 @@ ISRCs lia `I18n.locale()` só para o `computed` depender da língua. Os textos a
 template** (`'chave' | transloco: { parâmetro }`), que já reage à troca de idioma e aceita parâmetros: sem campo por texto e
 sem esse truque. Só ficam em TypeScript os textos que o código precisa escrever no DOM (o título do iframe do player). O ADR
 não muda de decisão (Transloco, seis idiomas, mesmos arquivos); muda como o componente os consome.
+
+## Atualização (24/10/2026): a escolha salva passa a ser um cookie
+
+A escolha de idioma deixou de ficar em `localStorage` e passou a um cookie que o servidor também lê, para que o HTML
+inicial já saia no idioma escolhido e não haja troca após a hidratação ([ADR 0026](0026-idioma-salvo-em-cookie.md)). O resto
+deste ADR (Transloco, seis idiomas, arquivos lazy) segue valendo.

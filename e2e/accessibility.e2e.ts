@@ -32,7 +32,9 @@ async function expectNoViolations(page: Page) {
 const setTheme = (page: Page, theme: 'light' | 'dark') =>
   page.addInitScript((value) => localStorage.setItem('orp.theme', value), theme);
 const setLanguage = (page: Page, language: string) =>
-  page.addInitScript((value) => localStorage.setItem('orp.language', value), language);
+  page
+    .context()
+    .addCookies([{ name: 'orp.language', value: language, domain: 'localhost', path: '/' }]);
 
 test.beforeEach(async ({ page }) => {
   await isolateSpotify(page);

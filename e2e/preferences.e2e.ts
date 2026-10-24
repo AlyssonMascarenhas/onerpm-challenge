@@ -88,6 +88,47 @@ test.describe('server-rendered language', () => {
       expect(response.headers()['vary']).toContain('Accept-Language');
     });
   }
+
+  test('the saved choice (a cookie) wins over Accept-Language, and the response varies on it', async ({
+    request,
+  }) => {
+    const response = await request.get('/', {
+      headers: { 'accept-language': 'fr', cookie: 'orp.language=tr' },
+    });
+    const html = await response.text();
+
+    expect(html).toContain('<html lang="tr"');
+    expect(html).toContain("Eksik ISRC'ler");
+    expect(response.headers()['vary']).toContain('Cookie');
+  });
+
+  test('ignores a cookie that is not a language and follows Accept-Language', async ({
+    request,
+  }) => {
+    const response = await request.get('/', {
+      headers: { 'accept-language': 'es', cookie: 'orp.language=klingon' },
+    });
+
+    expect(await response.text()).toContain('<html lang="es"');
+  });
+
+  test('a language chosen in the page comes back from the server on the next visit', async ({
+    page,
+  }) => {
+    await isolateSpotify(page);
+    await mockTracks(page);
+    await openLoaded(page);
+    await chooseLanguage(page, 'Français');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('ISRC manquants');
+
+    // Same browser context, so the request carries the cookie the page saved: no JavaScript involved.
+    const html = await (
+      await page.request.get('/', { headers: { 'accept-language': 'en' } })
+    ).text();
+
+    expect(html).toContain('<html lang="fr"');
+    expect(html).toContain('ISRC manquants');
+  });
 });
 
 test.describe('theme', () => {
