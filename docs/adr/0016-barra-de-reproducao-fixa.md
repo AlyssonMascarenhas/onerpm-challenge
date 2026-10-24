@@ -66,3 +66,33 @@ com o sistema e a aba. Só seria possível tocando áudio próprio (`preview_url
 - Negativas: um _script_ de terceiros (oficial, sob demanda) passa a existir na página após o primeiro clique; o tema escuro
   do embed (`?theme=0`) só vale no modo de contingência, pois a iFrame API não o expõe; o início automático depende da
   política de _autoplay_ do navegador (o clique do visitante é o gesto que a libera).
+
+## Atualização (24/10/2026): a orquestração saiu do componente
+
+O `PlayerBar` tinha cerca de 220 linhas e controlava o início do player com um contador de tentativas, _flags_
+(`_creating`, `_wantedUri`), um prazo e _effects_ que mexiam no DOM: funcionava e tinha testes, mas era difícil de manter. A
+orquestração foi para `SpotifyEmbedPlayer` (`features/tracks/spotify/`), uma pequena máquina de estados explícita
+(`SpotifyPlayerState`: `IDLE → STARTING → READY`, ou `FAILED`), e o componente ficou com o template, o ponto de montagem e o
+embed de contingência (cerca de 100 linhas).
+
+- O que o visitante quer é só "este URI neste ponto de montagem": pedir outra faixa enquanto o script ou o embed ainda
+  carregam apenas troca o URI, e **vence a mais nova**; um embed que chega depois de um `stop()` ou do prazo é destruído.
+- Toda resposta que pode chegar tarde (script, embed, "ready") leva o número da execução a que pertence; `stop()` e a falha
+  o trocam, e o que vem de uma execução antiga é ignorado. Há um só prazo, que o "ready" cancela.
+- O comportamento da barra não mudou: o `player-bar.spec.ts` inteiro passou sem alterações, e o novo
+  `spotify-embed-player.spec.ts` cobre cada transição e as corridas (trocar de faixa durante o carregamento do script,
+  fechar e reabrir com outro ponto de montagem, falha depois do `stop()`).
+
+## Atualização (24/10/2026): o player abre no idioma da página
+
+O player do Spotify abria no idioma **do navegador** (quem escolhia espanhol numa página em português ouvia a interface do
+Spotify em português), porque o embed segue o `Accept-Language` do navegador. Verificado em `open.spotify.com`: o embed aceita
+`?locale=<tag>` (`en`, `es`, `ru`, `fr`, `tr`, `pt-BR`; um `pt` sozinho não é reconhecido e cai em inglês), e o script da iFrame
+API lê `window.SpotifyIframeConfig.locale` e o repassa ao iframe.
+
+- `SpotifyEmbedPlayer.setLocale` grava o idioma em `SpotifyIframeConfig.locale` **antes de criar o embed**; o embed de contingência usa
+  `buildEmbedUrl(id, dark, locale)`, que só aceita uma tag de idioma (`SPOTIFY_LOCALE_PATTERN`) e a deixa de fora se for outra
+  coisa. A tag é `I18n.locale()` (`pt-BR`, `es`…).
+- O embed de contingência segue o idioma ao vivo (o iframe recarrega, como já fazia com o tema). **O embed da iFrame API não:**
+  ele guarda o idioma de quando foi criado; se o visitante trocar o idioma com a música tocando, a interface do Spotify só muda
+  no próximo embed (fechar e tocar de novo), para não interromper a música.
