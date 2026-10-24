@@ -55,3 +55,6 @@ Thumbs.db
 /test-results/
 /playwright-report/
 /blob-report/
+
+# Vercel CLI: the link to the project (ids) and the local build output
+.vercel

@@ -1,16 +1,16 @@
 name: Release
 
 # release-please keeps a release PR up to date after every merge to main (version and CHANGELOG from the semantic
-# commits). Merging that PR creates the tag and the GitHub release, and ONLY THEN the image is built, from that
-# tag, published to GitHub Container Registry and the host is told to deploy. A merge to main with no release
-# deploys nothing. See ADR 0020.
+# commits). Merging that PR creates the tag and the GitHub release, and ONLY THEN the release is deployed to Vercel
+# and its container image is published, both built from that tag. A merge to main with no release deploys nothing.
+# See ADR 0020 and ADR 0021.
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Publish and deploy the image of an existing release tag (for example v1.2.3), without a new release'
+        description: 'Deploy an existing release tag (for example v1.2.3) again, without a new release'
         required: false
         type: string
         default: ''
@@ -47,10 +47,61 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  image:
-    name: Image and deploy of the release
+  # The site: built and deployed to Vercel from the tag, as the production deployment.
+  vercel:
+    name: Deploy to Vercel
     needs: release-please
     # Only for a new release, or for a tag chosen by hand: never for an ordinary merge to main.
+    if: >-
+      ${{ !cancelled() && needs.release-please.result != 'failure' &&
+      (needs.release-please.outputs.release_created == 'true' || inputs.tag != '') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+      # From `.vercel/project.json`, after `vercel link` (they are identifiers, not secrets).
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_CLI: vercel@65.2.0
+    steps:
+      - name: Check the tag is a release tag
+        run: |
+          # The whole value, not line by line: a tag with a line break must not slip through.
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$TAG' is not a release tag (vX.Y.Z)"
+            exit 1
+          fi
+
+      - name: Check out the tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
+
+      - name: Set up project
+        uses: ./.github/actions/setup-project
+
+      # The token (read from the environment by the CLI, so it is never on a command line) is given only to the
+      # two steps that talk to Vercel. The build runs the project's own code and does not get it.
+      - name: Pull the production settings
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production
+
+      - name: Build for production
+        run: npx --yes "$VERCEL_CLI" build --prod
+
+      - name: Deploy the build to production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes "$VERCEL_CLI" deploy --prebuilt --prod
+
+  # The same app as a portable container image (ADR 0020), for any host that runs images.
+  image:
+    name: Container image of the release
+    needs: release-please
     if: >-
       ${{ !cancelled() && needs.release-please.result != 'failure' &&
       (needs.release-please.outputs.release_created == 'true' || inputs.tag != '') }}
@@ -106,15 +157,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # Optional: DEPLOY_HOOK_URL is a URL that makes the hosting provider pull the new image (Render, Railway, ...).
-      # It is a secret, so it is given only to this step, not to the actions above.
-      - name: Tell the host to deploy
-        env:
-          DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$DEPLOY_HOOK_URL" ]; then
-            echo "No DEPLOY_HOOK_URL secret: the image is published, the host is not notified."
-            exit 0
-          fi
-          curl --fail --silent --show-error --request POST "$DEPLOY_HOOK_URL"

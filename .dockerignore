@@ -20,3 +20,6 @@ e2e
 !README.md
 Dockerfile
 .dockerignore
+.vercel
+api
+vercel.json

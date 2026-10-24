@@ -75,9 +75,31 @@ describe('release workflow', () => {
     expect(workflow).toContain('ref: refs/tags/${{ env.TAG }}');
   });
 
-  it('keeps the deploy hook secret out of the actions that do not need it', () => {
-    const outsideTheDeployStep = workflow.split('- name: Tell the host to deploy')[0];
+  it('deploys to Vercel with a pinned CLI version', () => {
+    expect(workflow).toMatch(/VERCEL_CLI: vercel@\d+\.\d+\.\d+\n/);
+    expect(workflow).toContain('deploy --prebuilt --prod');
+  });
 
-    expect(outsideTheDeployStep).not.toContain('secrets.DEPLOY_HOOK_URL');
+  it('gives the Vercel token only to the two steps that talk to Vercel, never to the build or the whole job', () => {
+    const vercelJob = workflow.slice(workflow.indexOf('  vercel:'), workflow.indexOf('  image:'));
+    const jobSettings = vercelJob.slice(0, vercelJob.indexOf('    steps:'));
+
+    expect(jobSettings).not.toContain('VERCEL_TOKEN');
+    expect(vercelJob.match(/VERCEL_TOKEN: \$\{\{ secrets\.VERCEL_TOKEN \}\}/g)).toHaveLength(2);
+    expect(workflow.match(/secrets\.VERCEL_TOKEN/g)).toHaveLength(2);
+    expect(workflow).not.toContain('--token');
+  });
+
+  it('runs the Vercel deploy and the image publication under the same release condition', () => {
+    const conditions = workflow.match(/if: >-\n\s+\$\{\{ !cancelled\(\)[^}]*\}\}/g) ?? [];
+
+    expect(conditions).toHaveLength(2);
+    expect(conditions[0]).toBe(conditions[1]);
+  });
+
+  it('builds the Vercel deploy from the tag too', () => {
+    const vercelJob = workflow.slice(workflow.indexOf('  vercel:'), workflow.indexOf('  image:'));
+
+    expect(vercelJob).toContain('ref: refs/tags/${{ env.TAG }}');
   });
 });

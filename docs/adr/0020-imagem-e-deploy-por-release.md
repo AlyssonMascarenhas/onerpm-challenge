@@ -27,20 +27,20 @@ queremos que o que está no ar seja sempre uma versão **numerada e rastreável*
 - **O deploy só acontece quando há release, a partir da tag.** O workflow `Release` só constrói a imagem quando o
   release-please acabou de criar uma release (ou quando alguém dispara o workflow à mão informando uma tag existente, para
   reimplantar). Ele valida que a tag é `vX.Y.Z`, faz _checkout_ **da tag**, publica no GitHub Container Registry
-  (`ghcr.io/<dono>/<repo>`) com as etiquetas `X.Y.Z`, `X.Y` e `latest` e, se o _segredo_ `DEPLOY_HOOK_URL` existir, chama esse
-  endereço para a hospedagem baixar a nova imagem. **Um merge comum na `main` não publica nem implanta nada.**
+  (`ghcr.io/<dono>/<repo>`) com as etiquetas `X.Y.Z`, `X.Y` e `latest`. (A hospedagem escolhida acabou sendo a Vercel, que não
+  usa a imagem: ver o ADR 0021. A imagem continua publicada como artefato portátil, para qualquer hospedagem que rode imagens.) **Um merge comum na `main` não publica nem implanta nada.**
 - **Dependabot** também acompanha a imagem-base do `Dockerfile`.
 
 ## Como colocar no ar
 
-1. Hospedagem que rode imagens (Render, Railway, Fly.io…): crie o serviço a partir de `ghcr.io/<dono>/<repo>:latest`.
-2. Variáveis de ambiente do serviço: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` e `NG_ALLOWED_HOSTS` (o domínio público); caminho
-   de saúde `/api/health`; porta `4000`.
-3. O pacote publicado no GHCR **nasce privado**: ou torne o pacote público (Configurações do pacote no GitHub) ou dê à
-   hospedagem uma credencial de leitura (um _token_ com `read:packages`).
-4. Segredo do repositório `DEPLOY_HOOK_URL` com o _deploy hook_ do serviço (opcional: sem ele, a hospedagem puxa a imagem quando
-   for configurada para isso).
-5. Segredo `RELEASE_PLEASE_TOKEN` (**necessário** com a `main` protegida): sem ele, o PR de release é aberto com o token padrão
+O site vai para a Vercel (ADR 0021). Para rodar a **imagem** em outra hospedagem (Render, Railway, Fly.io…): crie o serviço a
+partir de `ghcr.io/<dono>/<repo>:latest`, com as variáveis `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` e `NG_ALLOWED_HOSTS` (o
+domínio público), caminho de saúde `/api/health` e porta `4000`. O pacote publicado no GHCR **nasce privado**: torne-o público
+(Configurações do pacote no GitHub) ou dê à hospedagem uma credencial de leitura (um _token_ com `read:packages`).
+
+Em qualquer caso:
+
+1. Segredo `RELEASE_PLEASE_TOKEN` (**necessário** com a `main` protegida): sem ele, o PR de release é aberto com o token padrão
    do GitHub e **não dispara o CI**, então os _checks_ obrigatórios (`CI OK`, `PR title`) nunca aparecem nele e a proteção
    bloqueia o merge. Com um token que escreve conteúdo e PRs, aparecem. O `CHANGELOG.md` gerado fica fora do Prettier
    (`.prettierignore`), para o PR de release não reprovar a checagem de formato.
