@@ -312,12 +312,16 @@ sem CI verde, então só se lança a partir da `main` verde. A imagem do contêi
   antiga por até 24 h se o Spotify falhar ([ADR 0024](docs/adr/0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)); uma
   instância fria durante um bloqueio ainda não tem o que servir.
 - **Cache e limitador por instância.** Cada instância da função tem o seu cache em memória e o seu limitador de concorrência;
-  várias somam chamadas ao Spotify. O `s-maxage` das respostas faz a CDN dividir uma resposta entre as instâncias, mas o limitador não
-  é global.
+  várias somam chamadas ao Spotify. As respostas completas de `/api/tracks` levam `Cache-Control: public, max-age=60, s-maxage=3600,
+  stale-while-revalidate=86400, stale-if-error=86400`, o que permite à CDN da Vercel dividir uma resposta entre as instâncias (respostas
+  parciais e de erro são `no-store`); isso é uma dica de cache, não uma garantia, e **não existe um limitador global** de chamadas
+  ao Spotify.
 - **A primeira resposta espera o BFF.** O servidor renderiza as faixas, então a primeira resposta espera a busca (até 6 s; se
   falhar, sai o esqueleto e o navegador refaz). O `rxResource` do Angular 21 ainda é experimental.
-- **Observabilidade mínima.** Cada falha é registrada no log com o motivo (e o `Retry-After`) e `/api/health` diz se as credenciais
-  estão configuradas, mas não há alerta automático; um monitor externo precisaria consultar `/api/tracks`.
+- **Observabilidade mínima.** Cada falha **que chega ao serviço** é registrada no log com o motivo (e o `Retry-After`) e `/api/health`
+  diz se as credenciais estão configuradas, mas não há alerta automático. **A indisponibilidade encoberta pelo cache não aparece**: quando
+  o cache serve uma resposta antiga porque o Spotify falhou, a falha não chega ao log do serviço e `/api/tracks` continua respondendo 200,
+  então um monitor externo só detecta o problema depois que o cache esvazia (instância nova, ou 24 h depois do último sucesso).
 - **Bundle e PrimeNG.** O bundle inicial é de ~706 kB brutos (~169 kB transferidos); o que mais pesa é o `p-select` do idioma e o
   roteador, que uma página só mal usa.
 - **Acessibilidade.** O axe não substitui um teste com leitor de tela, que não foi feito.
