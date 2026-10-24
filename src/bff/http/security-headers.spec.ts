@@ -3,7 +3,12 @@ import express from 'express';
 import { Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { HSTS_HEADER, SECURITY_HEADERS } from './http.constants';
-import { securityHeaders } from './security-headers';
+import {
+  addNonceToInlineScripts,
+  buildContentSecurityPolicy,
+  createNonce,
+  securityHeaders,
+} from './security-headers';
 
 let server: Server;
 
@@ -50,7 +55,7 @@ describe('securityHeaders', () => {
     }
   });
 
-  it('does not restrict scripts, which the page and the Spotify player need', async () => {
+  it('leaves the scripts to the policy of the page: the one on every response has no script-src', async () => {
     const response = await get();
 
     expect(response.headers.get('content-security-policy')).not.toContain('script-src');
@@ -82,5 +87,92 @@ describe('securityHeaders', () => {
     const response = await get();
 
     expect(await response.text()).toBe('ok');
+  });
+});
+
+describe('createNonce', () => {
+  it('is different every time, and long enough not to be guessed', () => {
+    const nonces = new Set(Array.from({ length: 50 }, () => createNonce()));
+
+    expect(nonces.size).toBe(50);
+    for (const nonce of nonces) {
+      expect(nonce).toMatch(/^[A-Za-z0-9+/]{22}==$/);
+    }
+  });
+});
+
+describe('buildContentSecurityPolicy', () => {
+  const policy = buildContentSecurityPolicy('abc123');
+  const directive = (name: string) =>
+    policy
+      .split(';')
+      .map((part) => part.trim())
+      .find((part) => part.startsWith(name));
+
+  it('lets scripts run only from the page itself, with the nonce, and from Spotify', () => {
+    expect(directive('script-src')).toBe(
+      "script-src 'self' 'nonce-abc123' https://open.spotify.com https://embed-cdn.spotifycdn.com",
+    );
+  });
+
+  it('never allows inline scripts without the nonce, eval or any host', () => {
+    expect(policy).not.toContain("'unsafe-inline'");
+    expect(policy).not.toContain("'unsafe-eval'");
+    expect(directive('script-src')).not.toMatch(/ \*|https: |http:/);
+  });
+
+  it('keeps the base directives', () => {
+    for (const base of [
+      "base-uri 'self'",
+      "object-src 'none'",
+      "form-action 'self'",
+      "frame-ancestors 'self'",
+    ]) {
+      expect(policy).toContain(base);
+    }
+  });
+
+  it('does not restrict styles or frames, which PrimeNG and the Spotify player need', () => {
+    expect(policy).not.toContain('style-src');
+    expect(policy).not.toContain('default-src');
+    expect(policy).not.toContain('frame-src');
+  });
+});
+
+describe('addNonceToInlineScripts', () => {
+  it('puts the nonce on the inline code, and not on scripts with a src or JSON data', () => {
+    const html =
+      '<script>theme()</script><script type="module" src="main.js"></script><script id="ng-state" type="application/json">{}</script>';
+
+    expect(addNonceToInlineScripts(html, 'n0')).toBe(
+      '<script nonce="n0">theme()</script><script type="module" src="main.js"></script><script id="ng-state" type="application/json">{}</script>',
+    );
+  });
+
+  it('puts it on the scripts that have other attributes but no src, like the event replay one', () => {
+    expect(
+      addNonceToInlineScripts(
+        '<script type="text/javascript" id="ng-event-dispatch-contract">x()</script>',
+        'n0',
+      ),
+    ).toBe(
+      '<script type="text/javascript" id="ng-event-dispatch-contract" nonce="n0">x()</script>',
+    );
+  });
+
+  it('leaves alone a script that already has a nonce', () => {
+    expect(addNonceToInlineScripts('<script nonce="mine">a()</script>', 'n0')).toBe(
+      '<script nonce="mine">a()</script>',
+    );
+  });
+
+  it('puts it on every one of them', () => {
+    expect(addNonceToInlineScripts('<script>a()</script><script>b()</script>', 'n0')).toBe(
+      '<script nonce="n0">a()</script><script nonce="n0">b()</script>',
+    );
+  });
+
+  it('leaves a page with no inline script alone', () => {
+    expect(addNonceToInlineScripts('<p>no scripts</p>', 'n0')).toBe('<p>no scripts</p>');
   });
 });

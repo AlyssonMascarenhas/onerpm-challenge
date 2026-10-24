@@ -9,7 +9,13 @@ import express from 'express';
 import { join } from 'node:path';
 import { createApiRouter } from './bff/api/create-api-router';
 import { loadLocalEnvFile } from './bff/config/config';
-import { securityHeaders } from './bff/http/security-headers';
+import { CONTENT_SECURITY_POLICY_HEADER } from './bff/http/http.constants';
+import {
+  addNonceToInlineScripts,
+  buildContentSecurityPolicy,
+  createNonce,
+  securityHeaders,
+} from './bff/http/security-headers';
 
 loadLocalEnvFile();
 
@@ -44,16 +50,38 @@ app.use(
 /**
  * Handle all other requests by rendering the Angular application.
  * The rendered language follows the saved choice (a cookie) and then `Accept-Language`, so caches must not share
- * pages across languages.
+ * pages across languages. Each page gets its own nonce: the policy lets only the scripts that carry it run, and the
+ * renderer puts it on the ones it writes (`CSP_NONCE`, see `app.config.server.ts`); the one of `index.html` gets it here.
  */
 app.use((req, res, next) => {
   res.vary('Accept-Language');
   res.vary('Cookie');
+  const nonce = createNonce();
   angularApp
-    .handle(req)
-    .then((response) => (response ? writeResponseToNodeResponse(response, res) : next()))
+    .handle(req, { nonce })
+    .then(async (response) => {
+      if (!response) {
+        return next();
+      }
+      res.setHeader(CONTENT_SECURITY_POLICY_HEADER, buildContentSecurityPolicy(nonce));
+      return writeResponseToNodeResponse(await withNonce(response, nonce), res);
+    })
     .catch(next);
 });
+
+/** An HTML page gets the nonce on its inline scripts; anything else (a redirect, a file) goes as it is. */
+async function withNonce(response: Response, nonce: string): Promise<Response> {
+  if (!response.headers.get('content-type')?.includes('text/html')) {
+    return response;
+  }
+  const headers = new Headers(response.headers);
+  headers.delete('content-length');
+  return new Response(addNonceToInlineScripts(await response.text(), nonce), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
 
 /**
  * Start the server if this module is the main entry point, or it is ran via PM2.
