@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { isolateSpotify } from './support/mock-api';
 // The second server of playwright.config.ts (SSR_PORT): it has the recorded Spotify preloaded, so it can render the tracks.
 test.use({ baseURL: 'http://localhost:4301' });
 
@@ -24,6 +25,8 @@ test.describe('the server renders the tracks', () => {
   test('the browser keeps what the server drew: no second lookup and no errors', async ({
     page,
   }) => {
+    // The cards carry real cover URLs: keep the CDN out of it, but leave /api/tracks alone (that is the path under test).
+    await isolateSpotify(page);
     const lookups: string[] = [];
     const problems: string[] = [];
     page.on('request', (request) => {
