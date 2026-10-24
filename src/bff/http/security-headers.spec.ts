@@ -4,10 +4,11 @@ import { Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import { HSTS_HEADER, SECURITY_HEADERS } from './http.constants';
 import {
-  addNonceToInlineScripts,
+  addNonceToTrustedScripts,
   buildContentSecurityPolicy,
   createNonce,
   securityHeaders,
+  trustedInlineScripts,
 } from './security-headers';
 
 let server: Server;
@@ -139,40 +140,67 @@ describe('buildContentSecurityPolicy', () => {
   });
 });
 
-describe('addNonceToInlineScripts', () => {
-  it('puts the nonce on the inline code, and not on scripts with a src or JSON data', () => {
-    const html =
-      '<script>theme()</script><script type="module" src="main.js"></script><script id="ng-state" type="application/json">{}</script>';
+const TEMPLATE = [
+  '<script>theme()</script>',
+  '<script type="text/javascript" id="ng-event-dispatch-contract">replay()</script>',
+  '<script src="main.js" type="module"></script>',
+  '<script id="ng-state" type="application/json">{}</script>',
+].join('');
 
-    expect(addNonceToInlineScripts(html, 'n0')).toBe(
-      '<script nonce="n0">theme()</script><script type="module" src="main.js"></script><script id="ng-state" type="application/json">{}</script>',
+describe('trustedInlineScripts', () => {
+  it('is the code of the inline scripts of the template, not the ones with a src or the JSON data', () => {
+    expect([...trustedInlineScripts(TEMPLATE)]).toEqual(['theme()', 'replay()']);
+  });
+
+  it('is empty when the template has no inline code', () => {
+    expect(trustedInlineScripts('<p>x</p><script src="a.js"></script>').size).toBe(0);
+  });
+});
+
+describe('addNonceToTrustedScripts', () => {
+  const trusted = trustedInlineScripts(TEMPLATE);
+
+  it('puts the nonce on the scripts of the template, whatever their other attributes', () => {
+    expect(addNonceToTrustedScripts(TEMPLATE, 'n0', trusted)).toBe(
+      [
+        '<script nonce="n0">theme()</script>',
+        '<script type="text/javascript" id="ng-event-dispatch-contract" nonce="n0">replay()</script>',
+        '<script src="main.js" type="module"></script>',
+        '<script id="ng-state" type="application/json">{}</script>',
+      ].join(''),
     );
   });
 
-  it('puts it on the scripts that have other attributes but no src, like the event replay one', () => {
-    expect(
-      addNonceToInlineScripts(
-        '<script type="text/javascript" id="ng-event-dispatch-contract">x()</script>',
-        'n0',
-      ),
-    ).toBe(
-      '<script type="text/javascript" id="ng-event-dispatch-contract" nonce="n0">x()</script>',
+  it('gives it to no other script: one that came in with some content stays without it', () => {
+    const rendered = `${TEMPLATE}<main><script>stealCookies()</script><script type="module">evil()</script></main>`;
+
+    const result = addNonceToTrustedScripts(rendered, 'n0', trusted);
+
+    expect(result).toContain('<script>stealCookies()</script>');
+    expect(result).toContain('<script type="module">evil()</script>');
+    expect(result).not.toContain('stealCookies()</script><script nonce');
+    expect(result.match(/nonce="n0"/g)).toHaveLength(2);
+  });
+
+  it('does not take a script that only starts with the code of a trusted one', () => {
+    const result = addNonceToTrustedScripts('<script>theme();evil()</script>', 'n0', trusted);
+
+    expect(result).toBe('<script>theme();evil()</script>');
+  });
+
+  it('leaves alone a script that already has a nonce (the ones Angular writes)', () => {
+    expect(addNonceToTrustedScripts('<script nonce="mine">theme()</script>', 'n0', trusted)).toBe(
+      '<script nonce="mine">theme()</script>',
     );
   });
 
-  it('leaves alone a script that already has a nonce', () => {
-    expect(addNonceToInlineScripts('<script nonce="mine">a()</script>', 'n0')).toBe(
-      '<script nonce="mine">a()</script>',
-    );
-  });
-
-  it('puts it on every one of them', () => {
-    expect(addNonceToInlineScripts('<script>a()</script><script>b()</script>', 'n0')).toBe(
-      '<script nonce="n0">a()</script><script nonce="n0">b()</script>',
+  it('gives it to nothing when there is nothing to trust', () => {
+    expect(addNonceToTrustedScripts('<script>theme()</script>', 'n0', new Set())).toBe(
+      '<script>theme()</script>',
     );
   });
 
   it('leaves a page with no inline script alone', () => {
-    expect(addNonceToInlineScripts('<p>no scripts</p>', 'n0')).toBe('<p>no scripts</p>');
+    expect(addNonceToTrustedScripts('<p>no scripts</p>', 'n0', trusted)).toBe('<p>no scripts</p>');
   });
 });

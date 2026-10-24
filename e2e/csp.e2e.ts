@@ -38,6 +38,13 @@ test.describe('Content-Security-Policy of the pages', () => {
     expect(nonceOf(second.headers()['content-security-policy'])).not.toBe(nonce);
   });
 
+  test('the fallback shell is never served as a document of its own', async ({ request }) => {
+    const response = await request.get('/index.csr.html', { maxRedirects: 0 });
+
+    expect(response.status()).toBe(302);
+    expect(response.headers()['location']).toBe('/');
+  });
+
   test('the files and the API keep the base policy, with no script-src', async ({ request }) => {
     const html = await (await request.get('/')).text();
     const script = /<script[^>]*\ssrc="([^"]*\.js)"/.exec(html)?.[1];
@@ -76,6 +83,15 @@ test.describe('Content-Security-Policy of the pages', () => {
       .getByRole('button', { name: /Listen|Play/ })
       .click();
     await expect(page.locator('orp-player-bar')).toBeVisible();
+    // The bar shows at once; the Spotify script and the embed come after. Wait until the music has started.
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () =>
+            (window as unknown as { __spotify?: { played: string[] } }).__spotify?.played.length,
+        ),
+      )
+      .toBe(1);
 
     expect(
       await page.evaluate(() => (window as unknown as { __violations: string[] }).__violations),

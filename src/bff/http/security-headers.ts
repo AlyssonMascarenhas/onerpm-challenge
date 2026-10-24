@@ -45,15 +45,40 @@ export function buildContentSecurityPolicy(nonce: string): string {
   return `${PAGE_BASE_DIRECTIVES}; script-src ${scriptSources}`;
 }
 
+const INLINE_SCRIPT = /<script((?:\s[^>]*)?)>([\s\S]*?)<\/script>/g;
+
+/** A script that is code written in the page: no `src` (covered by `'self'`), no nonce yet, and not JSON data. */
+const isInlineCode = (attributes: string): boolean =>
+  !/\s(src|nonce)=|application\/json/.test(attributes);
+
 /**
- * Puts the nonce on the inline scripts of a page that are code and do not have it yet: the script of `index.html` that
- * applies the theme before the first paint, and the one of the event replay that the build adds to it. Scripts with a
- * `src` are covered by `'self'`, and a JSON script (the state of the page) is data that the browser never runs.
+ * The code of the inline scripts of the page template (`index.html`, as the build leaves it for the server): the
+ * theme script, which runs before the first paint, and the one of the event replay. This is the only code the server
+ * vouches for; `addNonceToTrustedScripts` gives the nonce to scripts with exactly this code and to no other.
  */
-export function addNonceToInlineScripts(html: string, nonce: string): string {
-  return html.replace(/<script((?:\s[^>]*)?)>/g, (tag: string, attributes: string) =>
-    /\s(src|nonce)=|application\/json/.test(attributes)
-      ? tag
-      : `<script${attributes} nonce="${nonce}">`,
+export function trustedInlineScripts(template: string): ReadonlySet<string> {
+  const code = new Set<string>();
+  for (const [, attributes, body] of template.matchAll(INLINE_SCRIPT)) {
+    if (isInlineCode(attributes)) {
+      code.add(body);
+    }
+  }
+  return code;
+}
+
+/**
+ * Puts the nonce on the inline scripts of a rendered page whose code is one of the `trusted` ones. Anything else that
+ * ended up in the HTML (a script that came in with some content, say) gets no nonce, so the browser refuses it. The
+ * scripts that Angular writes itself carry the nonce already (`CSP_NONCE`).
+ */
+export function addNonceToTrustedScripts(
+  html: string,
+  nonce: string,
+  trusted: ReadonlySet<string>,
+): string {
+  return html.replace(INLINE_SCRIPT, (script: string, attributes: string, body: string) =>
+    isInlineCode(attributes) && trusted.has(body)
+      ? `<script${attributes} nonce="${nonce}">${body}</script>`
+      : script,
   );
 }
