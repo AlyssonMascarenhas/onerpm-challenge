@@ -144,7 +144,11 @@
   font-size: 0.9rem;
 }
 
+/* The copy button sits by the "ISRC" label, where there is room (the code takes the whole cell). */
 .card__meta dt {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -158,15 +162,15 @@
 }
 
 .card__isrc {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
   font-size: 0.85rem;
+  /* A code is never broken in two lines: it would no longer read as one. */
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 
-/* The copy button is taller than the text: it must not make the card taller. */
-.card__isrc orp-copy-button {
+/* It is taller than the label: it must not make the card taller. */
+.card__copy {
   margin-block: -0.5rem;
 }
 

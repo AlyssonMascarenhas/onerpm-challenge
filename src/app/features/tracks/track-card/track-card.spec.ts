@@ -252,9 +252,9 @@ describe('TrackCard', () => {
 
   describe('copy ISRC', () => {
     const copyButton = (fixture: ComponentFixture<TrackCard>) =>
-      root(fixture).querySelector('.card__isrc orp-copy-button button') as HTMLButtonElement | null;
+      root(fixture).querySelector('dt orp-copy-button button') as HTMLButtonElement | null;
 
-    it('is next to the ISRC, named after it', async () => {
+    it('is by the ISRC label, named after the code', async () => {
       const fixture = await render();
 
       expect(copyButton(fixture)?.getAttribute('aria-label')).toBe('Copy ISRC BR1SP1200071');

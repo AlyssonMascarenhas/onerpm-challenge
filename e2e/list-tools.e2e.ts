@@ -160,7 +160,7 @@ test.describe('copy ISRC', () => {
 
   test('copies the ISRC of a card and says so', async ({ page }) => {
     const card = page.locator('orp-track-card .card').first();
-    const isrc = (await card.locator('.card__isrc > span').first().textContent())!.trim();
+    const isrc = (await card.locator('.card__isrc').textContent())!.trim();
     const button = card.getByRole('button', { name: `Copy ISRC ${isrc}` });
 
     await button.click();

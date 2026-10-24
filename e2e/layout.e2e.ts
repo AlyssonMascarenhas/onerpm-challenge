@@ -57,6 +57,27 @@ test.describe('columns by width', () => {
   }
 });
 
+test.describe('the facts of a card', () => {
+  for (const width of [375, 640, 960, 1280, 1440, 1600]) {
+    test(`${width}px wide: no ISRC is broken in two lines or cut off`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 1000 });
+
+      await expect
+        .poll(() =>
+          page.locator('orp-track-card .card__isrc').evaluateAll((codes) =>
+            codes.map((code) => ({
+              broken:
+                code.getBoundingClientRect().height >
+                1.6 * parseFloat(getComputedStyle(code).lineHeight),
+              cut: code.scrollWidth > code.clientWidth,
+            })),
+          ),
+        )
+        .toEqual(Array.from({ length: 10 }, () => ({ broken: false, cut: false })));
+    });
+  }
+});
+
 test('on a phone the whole card fits on the screen, with no scrolling to read it', async ({
   page,
   isMobile,
