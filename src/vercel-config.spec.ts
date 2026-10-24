@@ -1,4 +1,6 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { SECURITY_HEADERS } from './bff/http/http.constants';
 
@@ -21,7 +23,10 @@ interface VercelConfig {
   readonly outputDirectory: string;
   readonly git: { readonly deploymentEnabled: boolean };
   readonly rewrites: readonly { readonly source: string; readonly destination: string }[];
-  readonly functions: Record<string, { readonly includeFiles?: string }>;
+  readonly functions: Record<
+    string,
+    { readonly includeFiles?: string; readonly excludeFiles?: string }
+  >;
   readonly headers: readonly {
     readonly source: string;
     readonly headers: readonly VercelHeader[];
@@ -37,9 +42,9 @@ const [project] = Object.keys(angularJson.projects);
 const outputPath = project; // `dist/<project>` is where the build, the entry and vercel.json meet
 
 describe('vercel.json', () => {
-  it('builds with the same command as everywhere else, with no framework preset', () => {
+  it('builds with the same command as everywhere else, plus the static copy, with no framework preset', () => {
     expect(config.framework).toBeNull();
-    expect(config.buildCommand).toBe('npm run build');
+    expect(config.buildCommand).toBe('npm run build && node scripts/vercel-static.mjs');
   });
 
   it('installs with the npm version pinned in package.json: the lockfile is not valid for every npm', () => {
@@ -49,8 +54,8 @@ describe('vercel.json', () => {
     expect(config.installCommand).toBe(`npx --yes npm@${npmVersion} ci`);
   });
 
-  it('serves the browser build of Angular as the static output', () => {
-    expect(config.outputDirectory).toBe(`dist/${outputPath}/browser`);
+  it('serves the copy of the browser build that has no index.csr.html as the static output', () => {
+    expect(config.outputDirectory).toBe(`dist/${outputPath}/static`);
   });
 
   it('sends every request that is not a static file to the function', () => {
@@ -63,6 +68,7 @@ describe('vercel.json', () => {
 
   it('ships the whole server build with the function', () => {
     expect(config.functions['api/index.mjs'].includeFiles).toBe(`dist/${outputPath}/**`);
+    expect(config.functions['api/index.mjs'].excludeFiles).toBe(`dist/${outputPath}/static/**`);
   });
 
   it('sends the same security headers as the Express middleware (the CDN does not run it)', () => {
@@ -110,6 +116,32 @@ describe('the Vercel function entry (api/index.mjs)', () => {
     expect(read('src/server.ts')).toContain(
       'export const reqHandler = createNodeRequestHandler(app);',
     );
+  });
+});
+
+describe('scripts/vercel-static.mjs', () => {
+  const script = join(root, 'scripts', 'vercel-static.mjs');
+  let build: string;
+
+  beforeEach(() => {
+    build = mkdtempSync(join(tmpdir(), 'vercel-static-'));
+    mkdirSync(join(build, 'browser', 'media'), { recursive: true });
+    writeFileSync(join(build, 'browser', 'index.csr.html'), '<orp-root></orp-root>');
+    writeFileSync(join(build, 'browser', 'main-ABC.js'), 'main');
+    writeFileSync(join(build, 'browser', 'media', 'font.woff2'), 'font');
+    execFileSync('node', [script, build]);
+  });
+
+  afterEach(() => rmSync(build, { recursive: true, force: true }));
+
+  it('copies the browser build for the CDN without the page that would be served for "/"', () => {
+    expect(existsSync(join(build, 'static', 'main-ABC.js'))).toBe(true);
+    expect(existsSync(join(build, 'static', 'media', 'font.woff2'))).toBe(true);
+    expect(existsSync(join(build, 'static', 'index.csr.html'))).toBe(false);
+  });
+
+  it('leaves the original in place: the server still needs it to fall back to the client', () => {
+    expect(existsSync(join(build, 'browser', 'index.csr.html'))).toBe(true);
   });
 });
 

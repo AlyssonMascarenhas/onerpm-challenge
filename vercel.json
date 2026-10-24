@@ -2,12 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npx --yes npm@11.6.2 ci",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/onerpm-tracks/browser",
+  "buildCommand": "npm run build && node scripts/vercel-static.mjs",
+  "outputDirectory": "dist/onerpm-tracks/static",
   "git": { "deploymentEnabled": false },
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }],
   "functions": {
-    "api/index.mjs": { "includeFiles": "dist/onerpm-tracks/**" }
+    "api/index.mjs": {
+      "includeFiles": "dist/onerpm-tracks/**",
+      "excludeFiles": "dist/onerpm-tracks/static/**"
+    }
   },
   "headers": [
     {

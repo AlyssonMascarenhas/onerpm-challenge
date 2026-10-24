@@ -25,6 +25,10 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
   `Release` (ADR 0020) faz _checkout_ da tag, `vercel pull`, `vercel build --prod` e `vercel deploy --prebuilt --prod`. A CLI
   tem versão fixa e lê o _token_ do ambiente (nunca na linha de comando); só os passos `pull` e `deploy` o recebem, o _build_
   (que roda o código do projeto) não.
+- **A CDN não pode servir o `index.csr.html`.** A Vercel entrega o conteúdo do diretório de saída antes de qualquer
+  _rewrite_, e entregava `index.csr.html` (a página vazia de contingência do Angular) para `/`: o servidor nunca renderizava a
+  página inicial. O passo `scripts/vercel-static.mjs`, depois do _build_, copia o `browser` para `static` sem esse arquivo; o
+  `outputDirectory` é `static`, a função continua com o original (de que o servidor precisa) e `excludeFiles` tira a cópia da função.
 - **A mesma versão do npm do CI.** O `package-lock.json` só passa no `npm ci` com o npm fixado em `packageManager` (11.6.2):
   o 11.4 e o 11.7 reclamam de `@emnapi/core` e `@emnapi/runtime` ausentes. O npm padrão da Vercel não é esse, e o primeiro
   deploy falhou exatamente aí. Por isso `installCommand` é `npx --yes npm@11.6.2 ci`, e um teste exige que a versão seja a
@@ -43,7 +47,7 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
    deploy confirma).
 3. **Variáveis de ambiente** (Settings → Environment Variables, ambiente **Production**): `SPOTIFY_CLIENT_ID`,
    `SPOTIFY_CLIENT_SECRET` (marque como _Sensitive_) e `NG_ALLOWED_HOSTS` com o domínio público
-   (por exemplo `onerpm-challenge.vercel.app`; vários, separados por vírgula). Sem `NG_ALLOWED_HOSTS` o Angular cai na renderização
+   (o domínio que a Vercel mostra depois do primeiro deploy, por exemplo `onerpm-challenge-ssr.vercel.app`; vários, separados por vírgula). Sem `NG_ALLOWED_HOSTS` o Angular cai na renderização
    no navegador e a página perde o idioma já renderizado no servidor.
 4. **Segredos do repositório no GitHub:** `VERCEL_TOKEN` (Account Settings → Tokens), `VERCEL_ORG_ID` e `VERCEL_PROJECT_ID`
    (do `.vercel/project.json`), e `RELEASE_PLEASE_TOKEN` (ADR 0020).
