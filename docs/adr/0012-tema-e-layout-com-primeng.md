@@ -36,7 +36,7 @@ não expõe cores oficiais), então não dá para afirmar fidelidade à marca.
   _Skip link_ para o conteúdo, `main` focável, `<h1>` único, nomes de idioma escritos no próprio idioma e marcados com
   `lang`.
 - **Componentes de UI do PrimeNG**: `p-select` (idioma), `p-button` (tema e "tentar novamente"), `p-message` (alertas),
-  `p-skeleton` (carregamento). Textos via o pipe `transloco` no template (combina com `OnPush` e _zoneless_ e reage à troca de idioma; ver [ADR 0011](0011-internacionalizacao-com-transloco.md)).
+  `p-skeleton` (carregamento). Textos via o pipe `transloco` no template (combina com `OnPush` e _zoneless_ e reage à troca de idioma; ver [ADR 0011](0011-i18n-com-transloco.md)).
 - **Estados da página**: placeholders enquanto carrega (anunciados por `role="status"`), alerta `role="alert"` com
   botão de nova tentativa quando o provedor está fora (a região só fica `aria-busy` enquanto carrega — com a falha ela já
   não está ocupada, senão leitores de tela podem adiar o anúncio do alerta), aviso `role="status"` quando só algumas ISRCs falham. A busca roda
