@@ -222,7 +222,7 @@ describe('PlayerBar', () => {
 
     it('hides the embed that is not ready from the keyboard and assistive technology', () => {
       const styles = readFileSync(
-        join(process.cwd(), 'src/app/features/tracks/player-bar/player-bar.scss'),
+        join(process.cwd(), 'src/app/features/tracks/components/player-bar/player-bar.scss'),
         'utf8',
       );
       const pending = /\.bar__mount--pending[^{]*\{([^}]*)\}/.exec(styles)?.[1] ?? '';

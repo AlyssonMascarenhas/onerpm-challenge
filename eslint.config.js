@@ -43,6 +43,10 @@ const DECLARATION_BANS = {
   ],
 };
 
+/**
+ * @param {...string} allowed declaration kinds a file may contain
+ * @returns {['error', ...unknown[]]}
+ */
 const restrictDeclarations = (...allowed) => [
   'error',
   ...Object.entries(DECLARATION_BANS)
@@ -53,6 +57,10 @@ const restrictDeclarations = (...allowed) => [
 /**
  * Layer rules (ADR 0022): a folder only depends on the folders below it, never upwards.
  * `forbid('store', 'pages')` bans importing from any folder with those names.
+ */
+/**
+ * @param {...string} layers
+ * @returns {['error', ...unknown[]]}
  */
 const forbid = (...layers) => [
   'error',
@@ -67,6 +75,10 @@ const forbid = (...layers) => [
 ];
 
 const TRACKS_FEATURE = 'src/app/features/tracks';
+/**
+ * @param {string[]} files
+ * @param {...string} layers
+ */
 const layerRule = (files, ...layers) => ({
   files,
   ignores: ['**/*.spec.ts', '**/testing/**'],
