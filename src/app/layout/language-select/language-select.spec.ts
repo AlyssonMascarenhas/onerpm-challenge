@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { Select } from 'primeng/select';
 import { I18n } from '../../core/i18n/i18n';
-import { LANGUAGE_STORAGE_KEY } from '../../core/i18n/i18n.constants';
+import { savedLanguage } from '../../testing/saved-language';
 import { Language } from '../../core/i18n/i18n.enums';
 import { i18nTestProviders, useLanguage } from '../../testing/i18n-testing';
 import { LanguageSelect } from './language-select';
@@ -86,7 +86,7 @@ describe('LanguageSelect', () => {
     await vi.waitFor(() => expect(i18n.language()).toBe(Language.FR));
     await fixture.whenStable();
 
-    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('fr');
+    expect(savedLanguage()).toBe('fr');
     expect(text(fixture)).toBe('Français');
   });
 
@@ -141,7 +141,7 @@ describe('LanguageSelect', () => {
       fixture.detectChanges();
 
       expect(text(fixture)).toBe('Русский');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
+      expect(savedLanguage()).toBe('ru');
     });
 
     it('puts the picker back on the active language when the chosen one cannot be loaded', async () => {
@@ -156,7 +156,7 @@ describe('LanguageSelect', () => {
 
       expect(i18n.language()).toBe(Language.ES);
       expect(text(fixture)).toBe('Español');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).not.toBe('ru');
+      expect(savedLanguage()).not.toBe('ru');
     });
   });
 

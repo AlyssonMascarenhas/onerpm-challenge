@@ -18,8 +18,9 @@ export const LANGUAGE_OPTIONS: readonly LanguageOption[] = [
 
 export const SUPPORTED_LANGUAGES: readonly Language[] = LANGUAGE_OPTIONS.map((option) => option.id);
 
-/** `localStorage` key holding the visitor's explicit choice. */
-export const LANGUAGE_STORAGE_KEY = 'orp.language';
+/** Cookie holding the visitor's explicit choice (a cookie, so the server reads it too: see `LanguageStorage`). */
+export const LANGUAGE_COOKIE_NAME = 'orp.language';
+export const LANGUAGE_COOKIE_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
 
 /** One lazy chunk per language: only the language in use is downloaded. */
 export const TRANSLATION_IMPORTS: Readonly<Record<Language, () => Promise<TranslationModule>>> = {

@@ -124,11 +124,11 @@ se **paga**.
 - **Ganha:** dá para saber onde cada coisa fica e o que ela pode usar; interfaces, tipos, enums e constantes em arquivos próprios.
 - **Paga:** caminhos de importação mais longos e a regra de decidir a camada certa para cada arquivo novo.
 
-### Internacionalização com Transloco, também no servidor — [ADR 0011](docs/adr/0011-i18n-com-transloco.md)
+### Internacionalização com Transloco, também no servidor — [ADR 0011](docs/adr/0011-i18n-com-transloco.md), [0026](docs/adr/0026-idioma-salvo-em-cookie.md)
 
-- **Por quê:** seis idiomas pedidos; o idioma vem da escolha salva, do navegador ou do `Accept-Language`.
+- **Por quê:** seis idiomas pedidos; o idioma vem da escolha salva (um **cookie**, que o servidor também lê), do navegador ou do `Accept-Language`, na mesma ordem nos dois lados.
 - **Ganha:** HTML correto desde a primeira resposta; troca instantânea; teste que falha se faltar chave em algum idioma.
-- **Paga:** cada requisição é renderizada no servidor; `Vary: Accept-Language` reduz o reaproveitamento de cache; todo texto novo vai em seis arquivos.
+- **Paga:** cada requisição é renderizada no servidor; `Vary: Accept-Language, Cookie` reduz o reaproveitamento de cache; todo texto novo vai em seis arquivos.
 
 ### PrimeNG com tema próprio e modo escuro — [ADR 0006](docs/adr/0006-primeng-e-mcp.md), [0012](docs/adr/0012-tema-e-layout-com-primeng.md)
 

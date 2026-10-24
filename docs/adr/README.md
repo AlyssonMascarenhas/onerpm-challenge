@@ -39,3 +39,4 @@ Formato inspirado no [MADR](https://adr.github.io/madr/). Idioma: português.
 | 0023 | [Organização de pastas por responsabilidade e camada](0023-organizacao-de-pastas-por-responsabilidade.md) | Aceito |
 | 0024 | [Cache longo com resposta antiga em caso de falha e saúde do Spotify](0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md) | Aceito |
 | 0025 | [O servidor renderiza as faixas; o store usa `rxResource`](0025-ssr-renderiza-as-faixas-e-store-com-rxresource.md) | Aceito |
+| 0026 | [A escolha de idioma fica em um cookie, lida também pelo servidor](0026-idioma-salvo-em-cookie.md) | Aceito |

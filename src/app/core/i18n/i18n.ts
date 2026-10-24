@@ -55,12 +55,15 @@ export class I18n {
     }
   }
 
-  /** Saved choice first, then the browser's preferences; on the server, the request's `Accept-Language`. */
+  /**
+   * The same order on both sides: the saved choice (a cookie, which the server receives too), then the preferences
+   * of the browser (`navigator.languages`; on the server, the request's `Accept-Language`).
+   */
   private _candidates(): (string | null | undefined)[] {
-    if (this._isServer) {
-      return parseAcceptLanguage(this._request?.headers.get('accept-language'));
-    }
-    return [this._storage.read(), ...(this._document.defaultView?.navigator.languages ?? [])];
+    const preferred = this._isServer
+      ? parseAcceptLanguage(this._request?.headers.get('accept-language'))
+      : (this._document.defaultView?.navigator.languages ?? []);
+    return [this._storage.read(), ...preferred];
   }
 
   /**

@@ -3,18 +3,25 @@ import { TestBed } from '@angular/core/testing';
 import { Translation, TranslocoService } from '@jsverse/transloco';
 import { ReplaySubject, throwError } from 'rxjs';
 import { I18n } from './i18n';
-import { LANGUAGE_STORAGE_KEY } from './i18n.constants';
+import { saveLanguage, savedLanguage } from '../../testing/saved-language';
 import { Language } from './i18n.enums';
 import { provideI18n, provideTranslation } from './provide-i18n';
 
 interface SetupOptions {
   readonly platform?: 'browser' | 'server';
   readonly acceptLanguage?: string;
+  /** The `Cookie` header of the request (server only). */
+  readonly cookie?: string;
   readonly browserLanguages?: readonly string[];
 }
 
 /** Real Transloco and real translation files; only the browser/request inputs are controlled. */
-function setup({ platform = 'browser', acceptLanguage, browserLanguages = [] }: SetupOptions = {}) {
+function setup({
+  platform = 'browser',
+  acceptLanguage,
+  cookie,
+  browserLanguages = [],
+}: SetupOptions = {}) {
   vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(browserLanguages);
   TestBed.configureTestingModule({
     providers: [
@@ -22,9 +29,15 @@ function setup({ platform = 'browser', acceptLanguage, browserLanguages = [] }: 
       { provide: PLATFORM_ID, useValue: platform },
       {
         provide: REQUEST,
-        useValue: acceptLanguage
-          ? new Request('http://localhost/', { headers: { 'accept-language': acceptLanguage } })
-          : null,
+        useValue:
+          acceptLanguage || cookie
+            ? new Request('http://localhost/', {
+                headers: {
+                  ...(acceptLanguage ? { 'accept-language': acceptLanguage } : {}),
+                  ...(cookie ? { cookie } : {}),
+                },
+              })
+            : null,
       },
     ],
   });
@@ -85,7 +98,7 @@ describe('I18n', () => {
     });
 
     it('prefers the saved choice over the browser', async () => {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, 'ru');
+      saveLanguage('ru');
       const { i18n, transloco } = setup({ browserLanguages: ['fr'] });
 
       await i18n.init();
@@ -95,7 +108,7 @@ describe('I18n', () => {
     });
 
     it('ignores an invalid saved value and uses the browser', async () => {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, 'klingon');
+      saveLanguage('klingon');
       const { i18n } = setup({ browserLanguages: ['es-AR'] });
 
       await i18n.init();
@@ -108,7 +121,7 @@ describe('I18n', () => {
 
       await i18n.init();
 
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+      expect(savedLanguage()).toBeNull();
     });
 
     it.each([
@@ -157,8 +170,45 @@ describe('I18n', () => {
       expect(i18n.language()).toBe(Language.RU);
     });
 
-    it('ignores the browser-only sources: storage and navigator.languages', async () => {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, 'tr');
+    it('prefers the language saved in the cookie of the request over Accept-Language', async () => {
+      const { i18n, transloco } = setup({
+        platform: 'server',
+        acceptLanguage: 'fr',
+        cookie: 'theme=dark; orp.language=ru',
+      });
+
+      await i18n.init();
+
+      expect(i18n.language()).toBe(Language.RU);
+      expect(transloco.translate('status.retry')).toBe('Повторить');
+    });
+
+    it('ignores a cookie that is not a supported language and follows Accept-Language', async () => {
+      const { i18n } = setup({
+        platform: 'server',
+        acceptLanguage: 'es',
+        cookie: 'orp.language=klingon',
+      });
+
+      await i18n.init();
+
+      expect(i18n.language()).toBe(Language.ES);
+    });
+
+    it('renders the same language the browser will pick, given the same choice', async () => {
+      const server = setup({ platform: 'server', acceptLanguage: 'en', cookie: 'orp.language=tr' });
+      await server.i18n.init();
+      TestBed.resetTestingModule();
+
+      saveLanguage('tr');
+      const browser = setup({ browserLanguages: ['en'] });
+      await browser.i18n.init();
+
+      expect(server.i18n.language()).toBe(browser.i18n.language());
+    });
+
+    it('ignores the browser-only sources: the page cookie and navigator.languages', async () => {
+      saveLanguage('tr');
       const { i18n } = setup({
         platform: 'server',
         acceptLanguage: 'es',
@@ -225,7 +275,7 @@ describe('I18n', () => {
 
       await i18n.setLanguage(Language.TR);
 
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('tr');
+      expect(savedLanguage()).toBe('tr');
     });
 
     it('wins over the browser language on the next visit', async () => {
@@ -258,7 +308,7 @@ describe('I18n', () => {
 
       expect(i18n.language()).toBe(Language.ES);
       expect(document.documentElement.lang).toBe('es');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('es');
+      expect(savedLanguage()).toBe('es');
     });
   });
 
@@ -276,7 +326,7 @@ describe('I18n', () => {
       expect(i18n.language()).toBe(Language.FR);
       expect(transloco.getActiveLang()).toBe('fr');
       expect(document.documentElement.lang).toBe('fr');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('fr');
+      expect(savedLanguage()).toBe('fr');
       expect(transloco.translate('status.retry')).toBe('Réessayer');
     });
 
@@ -289,7 +339,7 @@ describe('I18n', () => {
       await pending;
 
       expect(i18n.language()).toBe(Language.RU);
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('ru');
+      expect(savedLanguage()).toBe('ru');
     });
 
     it('does not report an error for an older request that failed after being superseded', async () => {
@@ -303,7 +353,7 @@ describe('I18n', () => {
 
       await expect(older).resolves.toBeUndefined();
       expect(i18n.language()).toBe(Language.FR);
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('fr');
+      expect(savedLanguage()).toBe('fr');
     });
 
     it('keeps the current language when the newest selection fails, instead of resurrecting an older one', async () => {
@@ -320,7 +370,7 @@ describe('I18n', () => {
 
       expect(i18n.language()).toBe(Language.EN);
       expect(document.documentElement.lang).toBe('en');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBeNull();
+      expect(savedLanguage()).toBeNull();
     });
 
     it('lets a language chosen during startup win over the detected one', async () => {
@@ -334,7 +384,7 @@ describe('I18n', () => {
 
       expect(i18n.language()).toBe(Language.TR);
       expect(transloco.getActiveLang()).toBe('tr');
-      expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('tr');
+      expect(savedLanguage()).toBe('tr');
     });
 
     it('does not fall back to English when startup was superseded', async () => {
