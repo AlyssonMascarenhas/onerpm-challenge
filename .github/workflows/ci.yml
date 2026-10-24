@@ -185,6 +185,66 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # The image must build and the container must answer, so a Dockerfile that no longer works fails the PR
+  # (the release workflow only publishes it after merge). No Spotify credentials: the page serves and the API
+  # answers its stable "integration unavailable" error.
+  docker:
+    name: Docker image
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build the image
+        run: docker build --tag onerpm-tracks:ci .
+
+      - name: Start the container
+        run: docker run --detach --name app --publish 4000:4000 --health-interval 2s --health-start-period 5s --env NG_ALLOWED_HOSTS=localhost onerpm-tracks:ci
+
+      - name: Wait until the container is healthy
+        run: |
+          for attempt in $(seq 1 30); do
+            status="$(docker inspect --format '{{.State.Health.Status}}' app)"
+            echo "health: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 2
+          done
+          docker logs app
+          exit 1
+
+      - name: Check the page and the API
+        run: |
+          curl --fail --silent http://localhost:4000/ | grep --quiet '<html lang="en"'
+          code="$(curl --silent --output /dev/null --write-out '%{http_code}' 'http://localhost:4000/api/tracks?isrc=BR1SP1200071')"
+          test "$code" = "503"
+
+          # Hardened as the app says it is: security headers on, framework not announced, responses compressed.
+          headers="$(curl --silent --dump-header - --output /dev/null --header 'Accept-Encoding: gzip' http://localhost:4000/)"
+          echo "$headers" | grep --ignore-case --quiet '^x-content-type-options: nosniff'
+          echo "$headers" | grep --ignore-case --quiet '^content-security-policy:'
+          echo "$headers" | grep --ignore-case --quiet '^content-encoding: gzip'
+          if echo "$headers" | grep --ignore-case --quiet '^x-powered-by:'; then
+            echo "::error::x-powered-by is still sent"
+            exit 1
+          fi
+
+          # Not root, and nothing but the build output in the image (a failed negation would not stop bash -e).
+          test "$(docker exec app id -u)" != "0"
+          for leftover in /app/node_modules /app/src /app/package.json; do
+            if docker exec app test -e "$leftover"; then
+              echo "::error::$leftover must not be in the image"
+              exit 1
+            fi
+          done
+
+      - name: Show the container log
+        if: always()
+        run: docker logs app || true
+
   audit:
     name: Dependency audit (informational)
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
@@ -208,7 +268,7 @@ jobs:
   ci-ok:
     name: CI OK
     if: always()
-    needs: [commits, quality, test, build, e2e]
+    needs: [commits, quality, test, build, e2e, docker]
     runs-on: ubuntu-latest
     steps:
       - name: Verify every required job

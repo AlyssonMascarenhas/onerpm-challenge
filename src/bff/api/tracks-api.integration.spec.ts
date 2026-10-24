@@ -52,6 +52,26 @@ afterEach(async () => {
   vi.clearAllMocks();
 });
 
+describe('GET /api/health', () => {
+  it('says the server is up, never cached, and without calling Spotify', async () => {
+    const fake = await startApi();
+
+    const response = await get('/api/health');
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ status: 'ok' });
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(fake.searches).toHaveLength(0);
+    expect(fake.tokenRequests()).toBe(0);
+  });
+
+  it('answers even when Spotify credentials are missing', async () => {
+    await startApi({}, {});
+
+    expect((await get('/api/health')).status).toBe(200);
+  });
+});
+
 describe('GET /api/tracks', () => {
   describe('with the 10 ISRCs of the challenge', () => {
     it('returns all of them found and available in Brazil', async () => {

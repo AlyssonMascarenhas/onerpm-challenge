@@ -21,6 +21,7 @@ Um workflow (`.github/workflows/ci.yml`) roda em **pull requests para `main`** (
 | `test`    | testes unitários e de integração com **cobertura mínima** (90% linhas/instruções/funções, 85% branches) |
 | `e2e`     | Playwright + axe contra o build real (ADR 0014)                                                         |
 | `build`   | build de produção (browser + servidor SSR)                                                              |
+| `docker`  | a imagem do contêiner constrói, sobe, fica saudável e responde com os cabeçalhos certos (ADR 0020)      |
 | `audit`   | `npm audit` das dependências de produção — **informativo** (`continue-on-error`)                        |
 | `ci-ok`   | agrega os obrigatórios acima; é o check a exigir na proteção da branch, junto com `PR title`            |
 
@@ -64,5 +65,5 @@ Detalhes que importam:
   O comando local `npm run e2e:install` não mudou. Limites: como o CI só roda em PRs, o _cache_ vale para novas
   execuções do mesmo PR (não para outros); e sem o `--with-deps` as fontes extras deixam de ser instaladas (a imagem
   fixa e a fonte Inter empacotada mantêm o layout estável; se aparecer variação visual, voltar a instalá-las).
-- Próximos passos: e2e (Playwright) e CD (imagem Docker + deploy) entram em PRs próprios; ativar a proteção da
-  `main` exigindo os checks `CI OK` e `PR title`.
+- Próximos passos: e2e (Playwright) e CD (imagem Docker + deploy) entram em PRs próprios (feitos: ADR 0014 e ADR 0020);
+  ativar a proteção da `main` exigindo os checks `CI OK` e `PR title`.
