@@ -1,7 +1,13 @@
 export const MAX_ISRCS_PER_REQUEST = 20;
 
-/** Browsers may reuse a response briefly; the server-side cache is the one that matters. */
-export const CACHE_CONTROL_PUBLIC = 'public, max-age=60';
+/**
+ * Browsers may reuse a response for a minute. A shared cache (the CDN in front of the function) keeps it for an hour,
+ * serves it stale for a day while it asks again, and also when the server errors: it is what makes the instances of a
+ * serverless function share one answer, which the in-memory cache of each of them cannot do. Only complete answers
+ * get this (see the router).
+ */
+export const CACHE_CONTROL_PUBLIC =
+  'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400, stale-if-error=86400';
 export const CACHE_CONTROL_NO_STORE = 'no-store';
 
 /**
