@@ -260,7 +260,7 @@ describe('PlayerBar', () => {
       await play(fixture);
 
       const frame = root(fixture).querySelector('iframe') as HTMLIFrameElement;
-      expect(frame.src).toBe(`https://open.spotify.com/embed/track/${ID}`);
+      expect(frame.src).toBe(`https://open.spotify.com/embed/track/${ID}?locale=en`);
       expect(frame.getAttribute('allow')).toBe('encrypted-media');
       expect(frame.getAttribute('height')).toBe('80');
     });
@@ -339,7 +339,7 @@ describe('PlayerBar', () => {
       await play(fixture);
 
       expect(root(fixture).querySelector('iframe')?.src).toBe(
-        `https://open.spotify.com/embed/track/${ID}?theme=0`,
+        `https://open.spotify.com/embed/track/${ID}?theme=0&locale=en`,
       );
     });
 
@@ -362,7 +362,7 @@ describe('PlayerBar', () => {
 
       expect(root(fixture).querySelectorAll('iframe')).toHaveLength(1);
       expect(root(fixture).querySelector('iframe')?.src).toBe(
-        `https://open.spotify.com/embed/track/${OTHER_ID}`,
+        `https://open.spotify.com/embed/track/${OTHER_ID}?locale=en`,
       );
     });
   });
@@ -494,7 +494,7 @@ describe('PlayerBar', () => {
       await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS);
 
       expect(root(fixture).querySelector('iframe')?.src).toBe(
-        `https://open.spotify.com/embed/track/${ID}`,
+        `https://open.spotify.com/embed/track/${ID}?locale=en`,
       );
     });
 
@@ -541,6 +541,55 @@ describe('PlayerBar', () => {
 
       expect(load).toHaveBeenCalledTimes(2);
       expect(root(fixture).querySelector('.bar__mount')).not.toBeNull();
+    });
+  });
+
+  describe('in the language of the page, not the one of the browser', () => {
+    afterEach(() => Reflect.deleteProperty(window, 'SpotifyIframeConfig'));
+
+    it.each([
+      [Language.PT, 'pt-BR'],
+      [Language.ES, 'es'],
+      [Language.RU, 'ru'],
+      [Language.FR, 'fr'],
+      [Language.TR, 'tr'],
+      [Language.EN, 'en'],
+    ])(
+      'asks the Spotify script for the embed in that language before making it (%s)',
+      async (language, locale) => {
+        const config: { locale?: string } = {};
+        Object.defineProperty(window, 'SpotifyIframeConfig', { configurable: true, value: config });
+        const { fixture } = await render({ language });
+        const seen: (string | undefined)[] = [];
+        TestBed.inject(SpotifyIframeApi).load = async () => ({
+          createController: () => seen.push(config.locale),
+        });
+
+        await play(fixture);
+
+        expect(seen).toEqual([locale]);
+      },
+    );
+
+    it('puts the plain embed in that language too, with the dark theme when the page is dark', async () => {
+      const { fixture } = await render({ language: Language.PT, scriptFails: true });
+      TestBed.inject(Theme).setMode(ThemeMode.DARK);
+
+      await play(fixture);
+
+      expect(root(fixture).querySelector('iframe')?.src).toBe(
+        `https://open.spotify.com/embed/track/${ID}?theme=0&locale=pt-BR`,
+      );
+    });
+
+    it('follows the language when it changes while the plain embed is on screen', async () => {
+      const { fixture } = await render({ language: Language.EN, scriptFails: true });
+      await play(fixture);
+
+      await useLanguage(Language.FR);
+      await settle(fixture);
+
+      expect(root(fixture).querySelector('iframe')?.src).toContain('locale=fr');
     });
   });
 

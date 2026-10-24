@@ -47,7 +47,7 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
 1. **Projeto sem ligação com o Git:** na pasta do repositório, `npx vercel@65 login` e `npx vercel@65 link` (escolha a conta,
    "Link to existing project: No", nome `onerpm-challenge`; **não** conecte o repositório do GitHub). Isso cria `.vercel/project.json`
    (fora do Git) com `orgId` e `projectId`.
-2. **Ajustes do projeto** (Settings → General): _Node.js Version_ **24.x**. O `engines.node` do `package.json` (`^22.22.1 || >=24`)
+2. **Ajustes do projeto** (Settings → General): _Node.js Version_ **24.x**. O `engines.node` do `package.json` (`^22.12 || >=24`)
    também é lido pela Vercel: se o primeiro deploy usar outra versão, ajuste um dos dois (esta é uma das coisas que o primeiro
    deploy confirma).
 3. **Variáveis de ambiente** (Settings → Environment Variables, ambiente **Production**): `SPOTIFY_CLIENT_ID`,
