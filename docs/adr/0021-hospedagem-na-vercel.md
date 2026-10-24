@@ -25,6 +25,11 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
   `Release` (ADR 0020) faz _checkout_ da tag, `vercel pull`, `vercel build --prod` e `vercel deploy --prebuilt --prod`. A CLI
   tem versão fixa e lê o _token_ do ambiente (nunca na linha de comando); só os passos `pull` e `deploy` o recebem, o _build_
   (que roda o código do projeto) não.
+- **O renderizador precisa confiar nos cabeçalhos da Vercel.** A Vercel manda `x-forwarded-for`, `-host`, `-proto` e `-port` (o cliente
+  não consegue forjá-los); sem `NG_TRUST_PROXY_HEADERS` o Angular os recusa e responde com a página vazia de contingência, sem
+  renderizar no servidor (a página funcionava, mas sem o idioma e as faixas já no HTML). `api/index.mjs` define a variável com
+  esses quatro cabeçalhos antes de carregar o servidor; o host continua validado por `NG_ALLOWED_HOSTS`. Um e2e envia esses
+  cabeçalhos e exige a página renderizada no idioma pedido.
 - **A CDN não pode servir o `index.csr.html`.** A Vercel entrega o conteúdo do diretório de saída antes de qualquer
   _rewrite_, e entregava `index.csr.html` (a página vazia de contingência do Angular) para `/`: o servidor nunca renderizava a
   página inicial. O passo `scripts/vercel-static.mjs`, depois do _build_, copia o `browser` para `static` sem esse arquivo; o

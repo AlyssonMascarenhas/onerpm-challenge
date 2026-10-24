@@ -106,10 +106,19 @@ describe('the Vercel function entry (api/index.mjs)', () => {
   it('serves the request handler that the Angular server build exports', () => {
     const entry = read('api/index.mjs');
 
-    expect(entry).toContain(
-      `import { reqHandler } from '../dist/${outputPath}/server/server.mjs';`,
-    );
+    expect(entry).toContain(`await import('../dist/${outputPath}/server/server.mjs')`);
     expect(entry).toContain('export default reqHandler;');
+  });
+
+  it('trusts the forwarded headers that Vercel sets, before the server is loaded', () => {
+    const entry = read('api/index.mjs');
+    const trust = entry.indexOf("process.env['NG_TRUST_PROXY_HEADERS']");
+
+    expect(trust).toBeGreaterThan(-1);
+    expect(trust).toBeLessThan(entry.indexOf('await import('));
+    for (const header of ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto']) {
+      expect(entry).toContain(header);
+    }
   });
 
   it('is built by the server, which exports that handler', () => {

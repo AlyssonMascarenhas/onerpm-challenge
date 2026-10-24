@@ -41,6 +41,25 @@ test('renders the page, as the function that Vercel runs', async ({ request }) =
   expect(html).toContain('<orp-root');
 });
 
+test('renders on the server behind the headers that Vercel adds, in the language asked for', async ({
+  request,
+}) => {
+  const response = await request.get(`${origin}/`, {
+    headers: {
+      'accept-language': 'pt-BR',
+      'x-forwarded-for': '203.0.113.7',
+      'x-forwarded-host': '127.0.0.1',
+      'x-forwarded-proto': 'https',
+      'x-forwarded-port': '443',
+    },
+  });
+  const html = await response.text();
+
+  // Without trusting those headers the renderer answers with the empty client-side page.
+  expect(html).toContain('<html lang="pt-BR"');
+  expect(html).toContain('ng-server-context="ssr"');
+});
+
 test('answers the BFF routes under /api', async ({ request }) => {
   const health = await request.get(`${origin}/api/health`);
   expect(health.status()).toBe(200);
