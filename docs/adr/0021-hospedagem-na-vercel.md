@@ -25,6 +25,10 @@ A **Vercel** não dorme: há uma partida a frio de poucos segundos, o HTTPS vem 
   `Release` (ADR 0020) faz _checkout_ da tag, `vercel pull`, `vercel build --prod` e `vercel deploy --prebuilt --prod`. A CLI
   tem versão fixa e lê o _token_ do ambiente (nunca na linha de comando); só os passos `pull` e `deploy` o recebem, o _build_
   (que roda o código do projeto) não.
+- **A mesma versão do npm do CI.** O `package-lock.json` só passa no `npm ci` com o npm fixado em `packageManager` (11.6.2):
+  o 11.4 e o 11.7 reclamam de `@emnapi/core` e `@emnapi/runtime` ausentes. O npm padrão da Vercel não é esse, e o primeiro
+  deploy falhou exatamente aí. Por isso `installCommand` é `npx --yes npm@11.6.2 ci`, e um teste exige que a versão seja a
+  de `packageManager`.
 - **Testado sem a Vercel:** um e2e (`e2e/vercel-entry.e2e.ts`) coloca `api/index.mjs` atrás de um servidor HTTP comum, como a
   Vercel faz, e pergunta o que um navegador perguntaria (página, `/api/health`, `/api/tracks`, 404 JSON, arquivos estáticos,
   cabeçalhos).

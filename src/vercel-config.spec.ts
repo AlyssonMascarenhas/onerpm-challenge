@@ -16,6 +16,7 @@ interface VercelHeader {
 }
 interface VercelConfig {
   readonly framework: string | null;
+  readonly installCommand: string;
   readonly buildCommand: string;
   readonly outputDirectory: string;
   readonly git: { readonly deploymentEnabled: boolean };
@@ -39,6 +40,13 @@ describe('vercel.json', () => {
   it('builds with the same command as everywhere else, with no framework preset', () => {
     expect(config.framework).toBeNull();
     expect(config.buildCommand).toBe('npm run build');
+  });
+
+  it('installs with the npm version pinned in package.json: the lockfile is not valid for every npm', () => {
+    const { packageManager } = JSON.parse(read('package.json')) as { packageManager: string };
+    const [, npmVersion] = packageManager.split('@');
+
+    expect(config.installCommand).toBe(`npx --yes npm@${npmVersion} ci`);
   });
 
   it('serves the browser build of Angular as the static output', () => {
