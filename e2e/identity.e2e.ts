@@ -57,12 +57,19 @@ test.describe('footer', () => {
     await page.goto('/');
     await expect(page.getByRole('contentinfo')).toBeVisible();
 
-    const { footerBottom, viewportHeight } = await page.evaluate(() => ({
-      footerBottom: document.querySelector('footer')!.getBoundingClientRect().bottom,
-      viewportHeight: innerHeight,
-    }));
-
-    expect(Math.round(footerBottom)).toBe(viewportHeight);
+    // The layout settles after hydration and the first paint: poll instead of measuring once.
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          footerBottom: Math.round(
+            document.querySelector('footer')!.getBoundingClientRect().bottom,
+          ),
+          viewportHeight: innerHeight,
+        })),
+      )
+      .toEqual(
+        await page.evaluate(() => ({ footerBottom: innerHeight, viewportHeight: innerHeight })),
+      );
   });
 });
 
