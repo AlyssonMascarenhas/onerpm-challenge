@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
   afterNextRender,
   computed,
   inject,
@@ -10,17 +9,15 @@ import {
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Button } from 'primeng/button';
-import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
-import { InputText } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { Skeleton } from 'primeng/skeleton';
 import { LookupStatus } from '../../../../../contract/tracks.enums';
-import { SortDirection } from '../../domain/domain.enums';
 import { filterResults } from '../../domain/filter-results';
 import { IsrcCard } from '../../components/isrc-card/isrc-card';
 import { IsrcListDialog } from '../../components/isrc-list-dialog/isrc-list-dialog';
 import { TrackCard } from '../../components/track-card/track-card';
+import { TracksToolbar } from '../../components/tracks-toolbar/tracks-toolbar';
+import { UnavailablePanel } from '../../components/unavailable-panel/unavailable-panel';
 import { TracksStore } from '../../store/tracks-store';
 
 /** The page: a hero, then the tracks (or why there are none), with a filter and the ISRCs that are missing. */
@@ -28,15 +25,14 @@ import { TracksStore } from '../../store/tracks-store';
   selector: 'orp-tracks-page',
   imports: [
     Button,
-    IconField,
-    InputIcon,
-    InputText,
     IsrcCard,
     IsrcListDialog,
     Message,
     Skeleton,
     TrackCard,
+    TracksToolbar,
     TranslocoPipe,
+    UnavailablePanel,
   ],
   templateUrl: './tracks-page.html',
   styleUrl: './tracks-page.scss',
@@ -45,31 +41,13 @@ import { TracksStore } from '../../store/tracks-store';
 export class TracksPage {
   protected readonly store = inject(TracksStore);
 
-  private readonly _missingTrigger = viewChild<ElementRef<HTMLElement>>('missingTrigger');
-  private readonly _filterInput = viewChild<ElementRef<HTMLInputElement>>('filterInput');
+  private readonly _toolbar = viewChild(TracksToolbar);
 
   /** What the visitor typed to filter the list by track title or ISRC. */
   protected readonly query = signal('');
 
   /** The results the filter lets through, in display order. */
   protected readonly visibleItems = computed(() => filterResults(this.store.items(), this.query()));
-
-  /** Whether the visitor is filtering: the summary then counts the list the filter shows. */
-  protected readonly filtering = computed(() => this.query().trim() !== '');
-
-  /** Translation key of the button that reverses the order: it names the order the list is in now. */
-  protected readonly sortLabelKey = computed(() =>
-    this.store.direction() === SortDirection.ASC ? 'list.sortAsc' : 'list.sortDesc',
-  );
-  protected readonly sortIcon = computed(() =>
-    this.store.direction() === SortDirection.ASC
-      ? 'pi pi-sort-alpha-down'
-      : 'pi pi-sort-alpha-down-alt',
-  );
-  /** Said to screen readers when the order changes (the button's own text is not a live region). */
-  protected readonly sortAnnouncementKey = computed(() =>
-    this.store.direction() === SortDirection.ASC ? 'list.sortedAsc' : 'list.sortedDesc',
-  );
 
   /** Busy until the lookup has finished, successfully or not: an alert in a busy region may go unannounced. */
   protected readonly busy = computed(() => !this.store.isReady() && !this.store.isUnavailable());
@@ -96,18 +74,12 @@ export class TracksPage {
     this.store.load();
   }
 
-  protected onQuery(event: Event): void {
-    this.query.set((event.target as HTMLInputElement).value);
-  }
-
-  /** Clears the filter and keeps the focus in the field: the button that was used goes away with the text. */
   protected clearQuery(): void {
-    this.query.set('');
-    this._filterInput()?.nativeElement.focus();
+    this._toolbar()?.clearQuery();
   }
 
   /** The list of missing ISRCs closed: the focus goes back to the button that opened it. */
   protected focusMissingTrigger(): void {
-    this._missingTrigger()?.nativeElement.focus();
+    this._toolbar()?.focusMissingTrigger();
   }
 }
