@@ -25,3 +25,9 @@ O token de acesso e as chamadas ao Spotify ficam só no servidor; o browser cons
 - Positivas: um único artefato/deploy (imagem Docker); segredo isolado; cache e controle de rate limit no servidor; SSR do shell.
 - Negativas: o app deixa de ser puramente estático (precisa de runtime Node); testes do servidor ficam num ambiente
   Vitest separado do jsdom do frontend.
+
+## Atualização (24/10/2026)
+
+O SSR deixou de entregar só o esqueleto: o servidor busca as faixas no próprio BFF, renderiza a lista no HTML e a passa ao
+navegador por `TransferState` ([ADR 0025](0025-ssr-renderiza-as-faixas-e-store-com-rxresource.md)). O cache do BFF dura horas e serve a
+resposta antiga se o Spotify falhar ([ADR 0024](0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)).

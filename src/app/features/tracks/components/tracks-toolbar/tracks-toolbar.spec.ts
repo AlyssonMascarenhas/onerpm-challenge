@@ -16,7 +16,11 @@ async function render(results: readonly TrackLookupResult[], query = '') {
     ],
   });
   await useLanguage();
-  TestBed.inject(TracksStore).load();
+  TestBed.inject(TracksStore);
+  for (let round = 0; round < 3; round++) {
+    TestBed.tick();
+    await new Promise<void>((resolve) => setTimeout(resolve));
+  }
   const fixture = TestBed.createComponent(TracksToolbar);
   fixture.componentRef.setInput('query', query);
   fixture.componentRef.setInput('visibleCount', results.length);

@@ -40,7 +40,7 @@ não expõe cores oficiais), então não dá para afirmar fidelidade à marca.
 - **Estados da página**: placeholders enquanto carrega (anunciados por `role="status"`), alerta `role="alert"` com
   botão de nova tentativa quando o provedor está fora (a região só fica `aria-busy` enquanto carrega — com a falha ela já
   não está ocupada, senão leitores de tela podem adiar o anúncio do alerta), aviso `role="status"` quando só algumas ISRCs falham. A busca roda
-  só no navegador (`afterNextRender`), para o servidor não esperar o Spotify. A lista de faixas desta etapa é simples; os
+  no store (`rxResource`), inclusive no servidor ([ADR 0025](0025-ssr-renderiza-as-faixas-e-store-com-rxresource.md)). A lista de faixas desta etapa é simples; os
   cartões (capa, data, player, link, selo do Brasil) vêm no próximo PR.
 - **Orçamento de _bundle_ inicial** subiu de 500 kB/1 MB para **800 kB/1,2 MB** (753 kB brutos, **171 kB** comprimidos):
   o preset do PrimeNG e o CDK são o grosso. Não há como ter o PrimeNG estilizado menor sem abrir mão do tema; a página
