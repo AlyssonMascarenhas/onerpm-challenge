@@ -1,7 +1,7 @@
 import { Clipboard } from '@angular/cdk/clipboard';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CopyButton } from './copy-button';
-import { COPY_FEEDBACK_MS } from './copy-button.constants';
+import { COPY_FEEDBACK_MS } from './copy-button';
 
 interface Inputs {
   value?: string;

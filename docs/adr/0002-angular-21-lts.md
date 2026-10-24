@@ -22,6 +22,6 @@ Usar **Angular 21** (stack: standalone, zoneless, signals, Vitest) com PrimeNG 2
 ## Consequências
 
 - Positivas: aderência literal ao requisito; funciona no Node do ambiente; suporte até 2027-06.
-- Negativas: migração para 22 será necessária depois; `engines` no `package.json` exige Node `^22.22.1 || >=24` (o piso vem do lint-staged 17 e do ESLint 10, não do Angular 21, que aceita `>=22.12`).
+- Negativas: migração para 22 será necessária depois; `engines` no `package.json` exige Node `^22.12 || >=24` (era `^22.22.1`, ver ADR 0027) (o piso vem do lint-staged 17 e do ESLint 10, não do Angular 21, que aceita `>=22.12`).
 - Observação: o npm 11.4.2 falha com `Cannot read properties of null (reading 'edgesOut')` ao resolver peers;
   o projeto exige npm >= 11.6 (`engines` e `packageManager`).

@@ -1,7 +1,9 @@
 import { Track } from '../../../contract/tracks.interfaces';
 import { SpotifyImage, SpotifyTrack } from '../../spotify/spotify.interfaces';
-import { PREFERRED_COVER_WIDTH } from './mapping.constants';
 import { TrackContext } from './mapping.interfaces';
+
+/** Thumbnail size we render; the API offers 640/300/64. */
+const PREFERRED_COVER_WIDTH = 300;
 
 /** Anti-corruption layer: the only place that knows Spotify's payload shape. */
 export function toTrack(dto: SpotifyTrack, context: TrackContext): Track {
