@@ -134,7 +134,9 @@ se **paga**.
 
 - **Por quê:** componentes acessíveis prontos, sem Tailwind; paleta própria inspirada em música (não é a marca oficial).
 - **Ganha:** consistência, tokens num só lugar (`theme.constants.ts`) e contraste AA testado.
-- **Paga:** dependência grande de UI; o tema escuro precisa de um script antes da pintura para não piscar.
+- **Paga:** dependência grande de UI; o tema escuro precisa de um script antes da pintura para não piscar. O preset leva só os
+  _tokens_ dos componentes usados (o Aura inteiro pesava ~106 kB): bundle inicial de 772 → **706 kB** brutos (174 → 169 kB
+  transferidos), com aviso de orçamento em 750 kB. O que ainda pesa é o `p-select` do idioma (~110 kB) e o roteador (~66 kB).
 
 ### Cartões, grade e player — [ADR 0013](docs/adr/0013-cartoes-de-faixa-e-player-do-spotify.md), [0015](docs/adr/0015-acabamento-da-interface.md), [0016](docs/adr/0016-barra-de-reproducao-fixa.md), [0017](docs/adr/0017-grade-de-4-colunas-e-cartao-compacto.md), [0018](docs/adr/0018-filtro-copia-e-isrcs-ausentes.md)
 
