@@ -13,7 +13,7 @@ documentadas se perdem; queremos que o **lint** as imponha.
 
 ### Organização por domínio e por tipo de declaração
 
-"Domínio" é a pasta de uma responsabilidade (`src/contract`, `src/bff/spotify`, `src/bff/tracks`, `src/bff/api`, e
+"Domínio" é a pasta de uma responsabilidade (subdividida por camada no ADR 0022) (`src/contract`, `src/bff/spotify`, `src/bff/tracks`, `src/bff/api`, e
 futuramente cada feature do Angular). Dentro dela, cada tipo de declaração tem **um arquivo próprio**, com nome no
 plural no padrão `<domínio>.<tipo>.ts`:
 

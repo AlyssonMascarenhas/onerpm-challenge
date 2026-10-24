@@ -33,7 +33,7 @@ Código da feature em `src/app/features/tracks/`, sem componentes ainda (a UI ve
     carregaram: aviso, não bloqueio).
   - `load()` cancela a requisição anterior (útil para "tentar novamente") e mantém os itens antigos visíveis
     durante o recarregamento; ao destruir o store, a requisição pendente é cancelada.
-- **`CHALLENGE_ISRCS`** (as 10 do enunciado) fica em `tracks.constants.ts`; `load()` as usa por padrão.
+- **`CHALLENGE_ISRCS`** (as 10 do enunciado) fica em `store/store.constants.ts` (pastas: ADR 0022); `load()` as usa por padrão.
 
 ## Alternativas consideradas
 
@@ -48,4 +48,4 @@ Código da feature em `src/app/features/tracks/`, sem componentes ainda (a UI ve
 
 - Positivas: regras de apresentação puras e testadas isoladamente; a UI só liga dados a componentes.
 - Negativas: a ordem "A→Z" segue a colação universal, não o alfabeto de um idioma específico; o _timeout_ de 20 s é uma
-  escolha fixa (constante em `tracks.constants.ts`).
+  escolha fixa (constante em `api/api.constants.ts`).
