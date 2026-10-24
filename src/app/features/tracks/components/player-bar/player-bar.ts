@@ -173,7 +173,7 @@ export class PlayerBar {
       return;
     }
     this._controller = controller;
-    controller.addListener(SpotifyEmbedEvent.Ready, () => {
+    controller.addListener(SpotifyEmbedEvent.READY, () => {
       if (attempt !== this._attempt) {
         return;
       }

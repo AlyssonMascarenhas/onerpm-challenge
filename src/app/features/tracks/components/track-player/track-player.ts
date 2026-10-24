@@ -40,7 +40,7 @@ export class TrackPlayer {
   /** This card's track is the one in the player bar. */
   protected readonly current = computed(() => this._nowPlaying.track()?.id === this.track().id);
   protected readonly icon = computed(() =>
-    this.current() ? ActionIcon.Equalizer : ActionIcon.Play,
+    this.current() ? ActionIcon.EQUALIZER : ActionIcon.PLAY,
   );
   protected readonly label = computed(() => (this.current() ? this._playing() : this._listen()));
 

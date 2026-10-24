@@ -37,8 +37,8 @@ export class TrackCard {
   private readonly _player = viewChild(TrackPlayer);
   private readonly _coverFailed = signal(false);
 
-  protected readonly spotifyIcon = ActionIcon.Spotify;
-  protected readonly playPath = ACTION_ICON_PATHS[ActionIcon.Play] ?? '';
+  protected readonly spotifyIcon = ActionIcon.SPOTIFY;
+  protected readonly playPath = ACTION_ICON_PATHS[ActionIcon.PLAY] ?? '';
 
   /** The play button over the cover is offered for a playable track that is not the one playing already. */
   protected readonly coverPlayable = computed(

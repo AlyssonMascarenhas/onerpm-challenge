@@ -29,6 +29,6 @@ export class ActionButton {
 
   protected readonly iconPath = computed(() => ACTION_ICON_PATHS[this.icon()] ?? '');
   /** The equalizer is drawn as bars that move; every other mark is a still path. */
-  protected readonly animated = computed(() => this.icon() === ActionIcon.Equalizer);
+  protected readonly animated = computed(() => this.icon() === ActionIcon.EQUALIZER);
   protected readonly iconName = computed(() => `action__mark--${this.icon()}`);
 }

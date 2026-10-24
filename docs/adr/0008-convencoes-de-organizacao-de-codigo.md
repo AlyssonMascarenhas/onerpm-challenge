@@ -28,7 +28,7 @@ plural no padrão `<domínio>.<tipo>.ts`:
   usa, ela sobe para o domínio compartilhado (`contract` ou `shared`) em vez de ser duplicada.
 - **Classificação de interfaces:** contrato entre BFF e Angular e DTOs ficam em `contract/`; o formato do Spotify, em
   `spotify/spotify.interfaces.ts`; opções de uso interno, no `.interfaces.ts` do próprio domínio.
-- **Valores fechados são `enum`** (string enum, para serializar em JSON sem mudança): status, códigos de erro, motivos
+- **Valores fechados são `enum`** (membros em `UPPER_SNAKE_CASE`, `@typescript-eslint/naming-convention`; string enum, para serializar em JSON sem mudança): status, códigos de erro, motivos
   de falha, tipo de consulta. Nada de _string literals_ espalhadas. Valores dinâmicos viram campo à parte
   (ex.: `SpotifyUnavailableError.status` em vez de `search_failed_401`).
 - Exceções: arquivos `*.spec.ts` e `testing/` (dados de teste podem declarar o que precisarem) e funções/objetos em

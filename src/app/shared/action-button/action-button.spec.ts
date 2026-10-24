@@ -16,7 +16,7 @@ async function render(inputs: Inputs = {}): Promise<ComponentFixture<ActionButto
   TestBed.configureTestingModule({ imports: [ActionButton] });
   const fixture = TestBed.createComponent(ActionButton);
   fixture.componentRef.setInput('label', inputs.label ?? 'Listen');
-  fixture.componentRef.setInput('icon', inputs.icon ?? ActionIcon.Play);
+  fixture.componentRef.setInput('icon', inputs.icon ?? ActionIcon.PLAY);
   if (inputs.href !== undefined) fixture.componentRef.setInput('href', inputs.href);
   if (inputs.newTabLabel !== undefined) {
     fixture.componentRef.setInput('newTabLabel', inputs.newTabLabel);
@@ -90,7 +90,7 @@ describe('ActionButton', () => {
   });
 
   describe('mark', () => {
-    const STILL = [ActionIcon.Play, ActionIcon.Spotify];
+    const STILL = [ActionIcon.PLAY, ActionIcon.SPOTIFY];
 
     it.each(STILL)(
       'draws the %s mark as a path, hidden from assistive technology',
@@ -113,7 +113,7 @@ describe('ActionButton', () => {
     });
 
     it('draws the equalizer as three bars that move, hidden from assistive technology', async () => {
-      const fixture = await render({ icon: ActionIcon.Equalizer });
+      const fixture = await render({ icon: ActionIcon.EQUALIZER });
 
       const mark = root(fixture).querySelector('svg') as SVGElement;
 

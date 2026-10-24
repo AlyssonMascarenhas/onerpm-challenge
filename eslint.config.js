@@ -132,6 +132,8 @@ module.exports = defineConfig([
           format: ['camelCase'],
           leadingUnderscore: 'require',
         },
+        // Enum members are UPPER_SNAKE_CASE (`LookupStatus.NOT_FOUND`), like the constants.
+        { selector: 'enumMember', format: ['UPPER_CASE'] },
       ],
       'no-restricted-syntax': restrictDeclarations(),
     },

@@ -146,7 +146,7 @@ describe('PlayerBar', () => {
       await play(fixture);
       expect(controllers[0].calls).toEqual([]);
 
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
 
       expect(controllers[0].calls).toEqual(['play']);
     });
@@ -166,7 +166,7 @@ describe('PlayerBar', () => {
       await play(fixture, ID, 'Quase Nua');
       const frame = document.createElement('iframe');
       (root(fixture).querySelector('.bar__mount') as HTMLElement).replaceChildren(frame);
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
       await settle(fixture);
 
       expect(created).toHaveLength(1);
@@ -176,10 +176,10 @@ describe('PlayerBar', () => {
     it('swaps the track in the same player when another is chosen, which starts it too', async () => {
       const { fixture, controllers, created } = await render();
       await play(fixture, ID);
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
 
       await play(fixture, OTHER_ID);
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
 
       expect(created).toHaveLength(1);
       expect(controllers[0].calls).toEqual(['play', `loadUri spotify:track:${OTHER_ID}`, 'play']);
@@ -243,7 +243,7 @@ describe('PlayerBar', () => {
       const { fixture, controllers } = await render();
       await play(fixture);
 
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
       await settle(fixture);
 
       expect(loading(fixture)).toBeNull();
@@ -522,7 +522,7 @@ describe('PlayerBar', () => {
     it('does not fall back once the embed is ready', async () => {
       const { fixture, controllers } = await start();
       await begin(fixture);
-      controllers[0].emit(SpotifyEmbedEvent.Ready);
+      controllers[0].emit(SpotifyEmbedEvent.READY);
 
       await flush(fixture, SPOTIFY_EMBED_READY_TIMEOUT_MS * 2);
 
