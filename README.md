@@ -18,11 +18,14 @@ Página pública que recebe **10 códigos ISRC** que ainda não constam na base,
 ## Sumário
 
 - [O que o projeto resolve](#o-que-o-projeto-resolve)
+- [Extras que escolhi](#extras-que-escolhi-além-do-pedido)
+- [Como usei IA](#como-usei-ia)
 - [Como funciona](#como-funciona)
 - [Decisões de arquitetura](#decisões-de-arquitetura)
 - [Rodando localmente](#rodando-localmente)
 - [Garantindo que está tudo certo](#garantindo-que-está-tudo-certo)
 - [Onde está no ar e como foi implantado](#onde-está-no-ar-e-como-foi-implantado)
+- [Limitações conhecidas](#limitações-conhecidas)
 - [Evolução possível](#evolução-possível)
 - [Documentação e convenções](#documentação-e-convenções)
 - [Enunciado original](#enunciado-original)
@@ -45,8 +48,45 @@ essas?" sem cadastro, sem banco e sem expor credenciais. Cada requisito do enunc
 | Testes unitários e de integração (diferencial) | Vitest com cobertura mínima, e2e com Playwright e auditoria de acessibilidade (axe) | [ADR 0007](docs/adr/0007-estrutura-do-bff-e-testes.md), [0014](docs/adr/0014-testes-e2e-e-acessibilidade.md) |
 | Versionamento | Conventional Commits, commitlint, uma branch e um PR pequeno por etapa | [ADR 0004](docs/adr/0004-commits-semanticos-e-fluxo-de-prs.md) |
 
-Além do pedido: seis idiomas (en, pt, es, ru, fr, tr) com tema claro e escuro, filtro por título ou ISRC, copiar ISRC,
-lista dos ISRCs que o Spotify não tem, e acessibilidade WCAG AA verificada em teste.
+Além do pedido há mais coisa, descrita com seus custos [logo abaixo](#extras-que-escolhi-além-do-pedido).
+
+## Extras que escolhi (além do pedido)
+
+O enunciado pede uma página simples; eu fui além em vários pontos, e vale dizer com franqueza **o que cada extra custa**. Alguns
+passam do que um dia de trabalho sensato entregaria, e estão aqui porque eram uma oportunidade de mostrar processo e cuidado, não porque o problema os exigia.
+
+| Extra | Por quê | O que custa |
+| --- | --- | --- |
+| Seis idiomas, também no servidor | O produtor pode não ler português; o HTML já sai no idioma certo | Todo texto novo vai em seis arquivos; cookie de idioma; `Vary` reduz cache de HTML |
+| Tema claro e escuro | Conforto e contraste (AA testado) | Um script antes da primeira pintura, tokens de cor num só lugar |
+| Filtro, copiar ISRC e lista dos ISRCs ausentes | A tarefa real é conferir quais códigos não voltaram | Mais componentes e estados para testar |
+| Barra de reprodução fixa, com início automático | Um player só, sem dez iframes | Uma máquina de estados sobre a iFrame API de um terceiro |
+| Docker, release por tag e deploy na Vercel | O avaliador precisa de uma URL que funcione | Workflows e segredos para manter; mais ADRs |
+| ADRs, CI com `commitlint`, lint, cobertura mínima e e2e com axe | "Boas práticas de versionamento" é critério de avaliação | Mais cerimônia por mudança do que o tamanho do app pede |
+
+**Com um dia só eu entregaria:** o BFF com as regras de consulta e os testes, a página com os cartões, a ordenação, o alerta de
+indisponibilidade e o player embutido, em português e inglês, com CI de lint, testes e build. O restante (idiomas além desses,
+tema, filtro, barra fixa, Docker, release e e2e) viria depois, nessa ordem, e eu cortaria sem dó o que não fizesse falta.
+
+## Como usei IA
+
+Usei **Claude Code** (a ferramenta de linha de comando da Anthropic) durante todo o projeto, de forma intensa, e prefiro dizer
+isso a deixar parecer o contrário. Os commits do projeto levam o trailer `Co-Authored-By: Claude`.
+
+- **O que foi delegado:** a maior parte da escrita de código, de testes, de ADRs e deste README, a partir de pedidos meus.
+- **O que continua sendo meu:** o escopo, as decisões (Angular LTS, BFF no mesmo servidor, o que entra e o que sai), as
+  convenções que a IA deve seguir, a decisão de aceitar cada PR e o merge. Quando algo não ficou bom, voltei atrás
+  (por exemplo, um `<select>` nativo que economizava ~110 kB foi descartado por destoar do resto da interface).
+- **Como governei:** o [`CLAUDE.md`](CLAUDE.md) diz à IA as regras do projeto (commits, branches, camadas, acessibilidade, o que
+  nunca fazer com segredos); cada decisão relevante vira um ADR no mesmo PR; e o CI barra o que foge disso (commitlint, lint com
+  regras de camada, Prettier, tipos, cobertura mínima, build, e2e e axe). Nenhuma mudança entra na `main` sem passar por PR e
+  pelo `CI OK`.
+- **Como validei o que ela produziu:** os dados de teste do BFF são **respostas reais do Spotify gravadas** (não inventadas), o
+  e2e roda contra o build de produção, a acessibilidade é auditada pelo axe, e os comportamentos importantes foram conferidos
+  também à mão (por exemplo, o servidor renderizando as faixas, a CSP sem violações e o player em outro idioma). Revisões automáticas do
+  GitHub Copilot apareceram em alguns PRs e foram tratadas como as de qualquer pessoa.
+- **O risco que reconheço:** a IA tende a acrescentar camadas e cerimônia (o item anterior é consequência disso), e o código que
+  ela gera passa por testes que ela mesma escreve. Por isso os dados gravados, o axe e o e2e importam mais que a contagem de testes.
 
 ## Como funciona
 
@@ -264,6 +304,23 @@ O projeto da Vercel **não** está ligado ao Git, para ela não implantar a cada
 limite do Spotify, mas várias somam); a função tem limite de tempo do plano; e nada impede publicar uma release de um commit
 sem CI verde, então só se lança a partir da `main` verde. A imagem do contêiner continua publicada como alternativa portátil
 (Render, Railway, Fly.io…), mas não é o caminho de produção.
+
+## Limitações conhecidas
+
+- **Dependência do Spotify.** O app do Spotify em modo de desenvolvimento tem cota baixa e exige Premium do dono. Em 24/10/2026 a
+  demo respondeu 503 porque o Spotify devolveu `429` com `Retry-After` de ~57 minutos. A mitigação é o cache de 6 h com resposta
+  antiga por até 24 h se o Spotify falhar ([ADR 0024](docs/adr/0024-cache-longo-com-resposta-antiga-e-saude-do-spotify.md)); uma
+  instância fria durante um bloqueio ainda não tem o que servir.
+- **Cache e limitador por instância.** Cada instância da função tem o seu cache em memória e o seu limitador de concorrência;
+  várias somam chamadas ao Spotify. O `s-maxage` das respostas faz a CDN dividir uma resposta entre as instâncias, mas o limitador não
+  é global.
+- **A primeira resposta espera o BFF.** O servidor renderiza as faixas, então a primeira resposta espera a busca (até 6 s; se
+  falhar, sai o esqueleto e o navegador refaz). O `rxResource` do Angular 21 ainda é experimental.
+- **Observabilidade mínima.** Cada falha é registrada no log com o motivo (e o `Retry-After`) e `/api/health` diz se as credenciais
+  estão configuradas, mas não há alerta automático; um monitor externo precisaria consultar `/api/tracks`.
+- **Bundle e PrimeNG.** O bundle inicial é de ~706 kB brutos (~169 kB transferidos); o que mais pesa é o `p-select` do idioma e o
+  roteador, que uma página só mal usa.
+- **Acessibilidade.** O axe não substitui um teste com leitor de tela, que não foi feito.
 
 ## Evolução possível
 
