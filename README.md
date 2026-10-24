@@ -51,12 +51,23 @@ lista dos ISRCs que o Spotify não tem, e acessibilidade WCAG AA verificada em t
 ## Como funciona
 
 ```mermaid
-flowchart LR
-  B["Navegador<br/>(Angular 21, SSR)"] -- "GET /api/tracks?isrc=…" --> S["Servidor Express<br/>(BFF + renderização)"]
-  S -- "Client Credentials<br/>+ busca por ISRC" --> P["Spotify Web API"]
-  S -. "HTML já renderizado<br/>no idioma do visitante" .-> B
-  B -- "iframe só ao clicar em ouvir" --> E["Player do Spotify"]
+%%{init: {"flowchart": {"nodeSpacing": 70, "rankSpacing": 90, "padding": 12}}}%%
+flowchart TB
+  B["Navegador<br/>(Angular 21, SSR)"]
+  S["Servidor Express<br/>(BFF + renderização)"]
+  P["Spotify Web API"]
+  E["Player do Spotify"]
+
+  B -- "1 · /api/tracks" --> S
+  S -- "2 · busca por ISRC" --> P
+  S -. "3 · HTML renderizado" .-> B
+  B -- "4 · iframe ao clicar" --> E
 ```
+
+1. O navegador pede `GET /api/tracks?isrc=…` ao servidor.
+2. O servidor usa _Client Credentials_ e busca cada ISRC na Spotify Web API.
+3. O servidor devolve o HTML já renderizado, no idioma do visitante.
+4. O player do Spotify (iframe) só é carregado quando a pessoa clica em ouvir.
 
 - **O segredo nunca vai ao navegador.** O Client Secret do Spotify vive só no servidor, que troca as credenciais por um token
   e faz as buscas. O front chama apenas `/api/tracks`.
