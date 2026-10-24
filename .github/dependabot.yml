@@ -43,6 +43,13 @@ updates:
       - dependency-name: '@angular/cdk'
         update-types: ['version-update:semver-major']
 
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: 'ci(deps)'
+
   - package-ecosystem: github-actions
     directories: ['/', '/.github/actions/*']
     schedule:
