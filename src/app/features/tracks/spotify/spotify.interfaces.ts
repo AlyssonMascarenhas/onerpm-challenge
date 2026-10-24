@@ -24,7 +24,14 @@ export interface SpotifyIframeApiObject {
   ): void;
 }
 
-/** The window, with the hook Spotify's script calls once it is ready. */
+/** What Spotify's script reads from the page when it makes an embed (it creates the object itself). */
+export interface SpotifyIframeConfig {
+  /** The language of the embed, as a tag its `?locale=` takes (`pt-BR`). */
+  locale?: string;
+}
+
+/** The window, with the hook Spotify's script calls once it is ready, and its settings. */
 export interface SpotifyWindow extends Window {
   onSpotifyIframeApiReady?: (api: SpotifyIframeApiObject) => void;
+  SpotifyIframeConfig?: SpotifyIframeConfig;
 }

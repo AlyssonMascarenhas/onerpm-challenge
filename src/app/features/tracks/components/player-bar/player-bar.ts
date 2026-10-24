@@ -12,25 +12,22 @@ import {
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
-import { Track } from '../../../../../contract/tracks.interfaces';
+import { I18n } from '../../../../core/i18n/i18n';
 import { Theme } from '../../../../core/theme/theme';
 import { NowPlaying } from '../../store/now-playing';
 import { buildEmbedUrl, buildTrackUri } from '../../spotify/spotify-embed';
+import { SpotifyEmbedPlayer } from '../../spotify/spotify-embed-player';
 import { SpotifyIframeApi } from '../../spotify/spotify-iframe-api';
-import { SpotifyEmbedEvent } from '../../spotify/spotify.enums';
-import { SpotifyEmbedController } from '../../spotify/spotify.interfaces';
-import {
-  SPOTIFY_EMBED_HEIGHT,
-  SPOTIFY_EMBED_READY_TIMEOUT_MS,
-  SPOTIFY_EMBED_URL,
-} from '../../spotify/spotify.constants';
+import { SpotifyPlayerState } from '../../spotify/spotify.enums';
+import { SPOTIFY_EMBED_HEIGHT, SPOTIFY_EMBED_URL } from '../../spotify/spotify.constants';
 
 /**
  * Audio preview through Spotify's official embed (the API gives no `preview_url`, see ADR 0005), in a bar
  * pinned to the bottom of the window: the visitor can pause or skip around while scrolling the other cards,
  * and there is never more than one player. Nothing from Spotify loads until the visitor asks to listen, and
- * then the music starts by itself (through Spotify's iFrame API). If that cannot be done (script blocked, offline,
- * or a step stalls past a deadline), the plain embed takes over: the visitor presses play in it.
+ * then the music starts by itself (through Spotify's iFrame API, driven by `SpotifyEmbedPlayer`). If that cannot
+ * be done (script blocked, offline, or a step stalls past a deadline), the plain embed takes over: the visitor
+ * presses play in it.
  */
 @Component({
   selector: 'orp-player-bar',
@@ -41,24 +38,20 @@ import {
 })
 export class PlayerBar {
   private readonly _nowPlaying = inject(NowPlaying);
-  private readonly _iframeApi = inject(SpotifyIframeApi);
+  private readonly _i18n = inject(I18n);
   private readonly _theme = inject(Theme);
   private readonly _sanitizer = inject(DomSanitizer);
   private readonly _mount = viewChild<ElementRef<HTMLElement>>('mount');
-  private readonly _ready = signal(false);
-  private readonly _failed = signal(false);
+  private readonly _player = new SpotifyEmbedPlayer(inject(SpotifyIframeApi));
   /** The address of the fallback frame that has finished loading (it changes with the track and the theme). */
   private readonly _loadedFallback = signal<string | null>(null);
-  private _controller: SpotifyEmbedController | null = null;
-  private _creating = false;
-  private _wantedUri: string | null = null;
-  /** Numbers each try to start the player; a try that is no longer the current one is ignored when it answers. */
-  private _attempt = 0;
-  private _deadline: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly height = SPOTIFY_EMBED_HEIGHT;
   protected readonly track = this._nowPlaying.track;
-  protected readonly ready = this._ready.asReadonly();
+  protected readonly ready = computed(() => this._player.state() === SpotifyPlayerState.READY);
+  private readonly _failed = computed(() => this._player.state() === SpotifyPlayerState.FAILED);
+
+  /** The name of the frame: for the plain embed it is bound in the template, for Spotify's own the player writes it. */
   protected readonly playerTitle = translateSignal('tracks.playerTitle', {
     title: computed(() => this._nowPlaying.track()?.title ?? ''),
   });
@@ -66,7 +59,9 @@ export class PlayerBar {
   /** Only when the player could not be started by code: the address of the plain embed of the track. */
   private readonly _fallbackAddress = computed(() => {
     const track = this._nowPlaying.track();
-    return this._failed() && track ? buildEmbedUrl(track.id, this._theme.isDark()) : null;
+    return this._failed() && track
+      ? buildEmbedUrl(track.id, this._theme.isDark(), this._i18n.locale())
+      : null;
   });
 
   protected readonly fallbackUrl = computed(() => {
@@ -79,24 +74,28 @@ export class PlayerBar {
   protected readonly shown = computed(() =>
     this._failed()
       ? this._fallbackAddress() !== null && this._loadedFallback() === this._fallbackAddress()
-      : this._ready(),
+      : this.ready(),
   );
 
   constructor() {
+    // First, so the language is known when the effect below makes the embed.
+    effect(() => this._player.setLocale(this._i18n.locale()));
     effect(() => {
       const track = this._nowPlaying.track();
       const mount = this._mount();
-      untracked(() => this._sync(track, mount?.nativeElement ?? null));
+      untracked(() => {
+        const uri = track ? buildTrackUri(track.id) : null;
+        if (uri === null) {
+          // A closed bar forgets a failure: the next track tries Spotify's script again, and a fallback frame loads anew.
+          this._player.stop();
+          this._loadedFallback.set(null);
+        } else if (mount) {
+          this._player.play(uri, mount.nativeElement);
+        }
+      });
     });
-    effect(() => {
-      const title = this.playerTitle();
-      this._ready();
-      const frame = this._mount()?.nativeElement.querySelector('iframe');
-      if (frame) {
-        frame.title = title;
-      }
-    });
-    inject(DestroyRef).onDestroy(() => this._release());
+    effect(() => this._player.setTitle(this.playerTitle()));
+    inject(DestroyRef).onDestroy(() => this._player.stop());
   }
 
   protected close(): void {
@@ -109,114 +108,5 @@ export class PlayerBar {
     if (src.startsWith(SPOTIFY_EMBED_URL)) {
       this._loadedFallback.set(src);
     }
-  }
-
-  /** Brings the embed in line with the track chosen: creates it, swaps its track, or takes it down. */
-  private _sync(track: Track | null, mount: HTMLElement | null): void {
-    const uri = track ? buildTrackUri(track.id) : null;
-    this._wantedUri = uri;
-    if (!uri) {
-      this._release();
-      // A closed bar forgets a failure: the next track tries Spotify's script again, and a fallback frame loads anew.
-      this._failed.set(false);
-      this._loadedFallback.set(null);
-      return;
-    }
-    if (this._controller) {
-      this._controller.loadUri(uri); // the embed says "ready" again, and the music starts
-      return;
-    }
-    if (!mount || this._creating || this._failed()) {
-      return;
-    }
-    this._creating = true;
-    const attempt = this._startAttempt();
-    this._iframeApi
-      .load()
-      .then((api) => {
-        if (attempt !== this._attempt) {
-          return; // closed (or given up on) while the script was loading
-        }
-        // The embed replaces the element it is given: give it a slot, so our own mount point stays.
-        const slot = mount.ownerDocument.createElement('div');
-        mount.appendChild(slot);
-        api.createController(slot, { uri, width: '100%', height: this.height }, (controller) =>
-          this._adopt(controller, uri, mount, attempt),
-        );
-      })
-      .catch(() => {
-        // Only a try still wanted counts as a failure: one that fails after the bar was closed says nothing
-        // about the next track.
-        if (attempt === this._attempt) {
-          this._giveUp();
-        }
-      });
-  }
-
-  private _adopt(
-    controller: SpotifyEmbedController,
-    createdFor: string,
-    mount: HTMLElement,
-    attempt: number,
-  ): void {
-    if (attempt !== this._attempt) {
-      controller.destroy(); // arrived after the bar was closed, or after the deadline
-      return;
-    }
-    this._creating = false;
-    if (!mount.isConnected) {
-      // Closed and chosen again meanwhile: the bar has a new mount point, so start over there.
-      controller.destroy();
-      this._sync(this._nowPlaying.track(), this._mount()?.nativeElement ?? null);
-      return;
-    }
-    this._controller = controller;
-    controller.addListener(SpotifyEmbedEvent.READY, () => {
-      if (attempt !== this._attempt) {
-        return;
-      }
-      this._clearDeadline();
-      this._ready.set(true);
-      controller.play();
-    });
-    const wanted = this._wantedUri;
-    if (wanted !== null && wanted !== createdFor) {
-      controller.loadUri(wanted); // another track was chosen meanwhile
-    }
-  }
-
-  /** Starts a try, with its deadline: whichever step stalls, the plain embed takes over when it expires. */
-  private _startAttempt(): number {
-    this._clearDeadline();
-    const attempt = ++this._attempt;
-    this._deadline = setTimeout(() => {
-      if (attempt === this._attempt) {
-        this._giveUp();
-      }
-    }, SPOTIFY_EMBED_READY_TIMEOUT_MS);
-    return attempt;
-  }
-
-  private _clearDeadline(): void {
-    if (this._deadline !== null) {
-      clearTimeout(this._deadline);
-      this._deadline = null;
-    }
-  }
-
-  /** Takes down whatever was started and switches to the plain embed. */
-  private _giveUp(): void {
-    this._release();
-    this._failed.set(true);
-  }
-
-  /** Takes the embed down and makes every answer still on its way, from any try, be ignored. */
-  private _release(): void {
-    this._attempt++;
-    this._clearDeadline();
-    this._controller?.destroy();
-    this._controller = null;
-    this._creating = false;
-    this._ready.set(false);
   }
 }

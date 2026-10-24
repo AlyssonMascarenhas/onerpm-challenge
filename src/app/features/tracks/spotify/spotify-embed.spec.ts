@@ -11,6 +11,22 @@ describe('buildEmbedUrl', () => {
     expect(buildEmbedUrl(ID, true)).toBe(`https://open.spotify.com/embed/track/${ID}?theme=0`);
   });
 
+  it('asks for the language of the visitor', () => {
+    expect(buildEmbedUrl(ID, false, 'pt-BR')).toBe(
+      `https://open.spotify.com/embed/track/${ID}?locale=pt-BR`,
+    );
+    expect(buildEmbedUrl(ID, true, 'es')).toBe(
+      `https://open.spotify.com/embed/track/${ID}?theme=0&locale=es`,
+    );
+  });
+
+  it.each([[''], ['pt_BR'], ['pt-BR&x=1'], ['../x'], ['"><script>'], ['english-US'], ['e']])(
+    'leaves out a language that is not a language tag (%j)',
+    (locale) => {
+      expect(buildEmbedUrl(ID, false, locale)).toBe(`https://open.spotify.com/embed/track/${ID}`);
+    },
+  );
+
   it.each([
     '4lwE7ainG51zmxt1xAC7XQ',
     '0kkVPWVKs4MCMbQOOxM6nh',
