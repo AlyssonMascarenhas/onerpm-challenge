@@ -129,7 +129,9 @@ se **paga**.
 
 - **Por quê:** o produtor precisa comparar 10 faixas de relance e ouvir uma de cada vez.
 - **Ganha:** linhas alinhadas (`subgrid`), um único player na barra fixa (carregado só ao clicar, com contingência para o embed
-  simples), cartão compacto no celular, filtro e lista dos ISRCs ausentes; URLs do iframe só saem de funções que validam o id.
+  simples), cartão compacto no celular, filtro e lista dos ISRCs ausentes; URLs do iframe só saem de funções que validam o id. Se o Spotify
+  cair, a página mostra um painel centrado e responsivo (botão "Tentar novamente" que preenche a largura no celular), e não uma
+  barra de largura total.
 - **Paga:** dependência do iframe e da iFrame API do Spotify; o volume não existe na API do embed.
 
 ### Servidor endurecido — [ADR 0019](docs/adr/0019-endurecimento-do-servidor-e-ordem.md)
