@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { TranslocoLoader, Translation } from '@jsverse/transloco';
 import { Observable, from, map } from 'rxjs';
-import { TRANSLATION_IMPORTS } from './i18n.constants';
-import { toSupportedLanguage } from './detect-language';
+import { TRANSLATION_IMPORTS } from '../i18n.constants';
+import { toSupportedLanguage } from '../language/detect-language';
 
 /**
  * Loads translations from lazy chunks instead of HTTP: nothing to fetch on the server render,

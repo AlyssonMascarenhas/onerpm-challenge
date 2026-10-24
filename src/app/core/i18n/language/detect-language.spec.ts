@@ -1,5 +1,5 @@
 import { detectLanguage, parseAcceptLanguage, toSupportedLanguage } from './detect-language';
-import { Language } from './i18n.enums';
+import { Language } from '../i18n.enums';
 
 describe('toSupportedLanguage', () => {
   it.each([

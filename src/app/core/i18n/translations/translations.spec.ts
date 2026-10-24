@@ -1,12 +1,12 @@
 import { Translation } from '@jsverse/transloco';
-import { LANGUAGE_OPTIONS, SUPPORTED_LANGUAGES, TRANSLATION_IMPORTS } from './i18n.constants';
-import { Language } from './i18n.enums';
-import en from './translations/en.json';
-import es from './translations/es.json';
-import fr from './translations/fr.json';
-import pt from './translations/pt.json';
-import ru from './translations/ru.json';
-import tr from './translations/tr.json';
+import { LANGUAGE_OPTIONS, SUPPORTED_LANGUAGES, TRANSLATION_IMPORTS } from '../i18n.constants';
+import { Language } from '../i18n.enums';
+import en from './en.json';
+import es from './es.json';
+import fr from './fr.json';
+import pt from './pt.json';
+import ru from './ru.json';
+import tr from './tr.json';
 
 const FILES: Record<Language, Translation> = {
   [Language.EN]: en,

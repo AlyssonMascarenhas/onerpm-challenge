@@ -3,10 +3,10 @@ import { PLATFORM_ID, REQUEST, Injectable, computed, inject, signal } from '@ang
 import { Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
-import { detectLanguage, parseAcceptLanguage } from './detect-language';
+import { detectLanguage, parseAcceptLanguage } from './language/detect-language';
 import { DEFAULT_LANGUAGE, LANGUAGE_OPTIONS } from './i18n.constants';
 import { Language } from './i18n.enums';
-import { LanguageStorage } from './language-storage';
+import { LanguageStorage } from './language/language-storage';
 
 /** The visitor's language: picks it, loads its translations, and keeps `<html lang>` in sync. */
 @Injectable({ providedIn: 'root' })

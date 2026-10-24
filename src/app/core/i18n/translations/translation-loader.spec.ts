@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { SUPPORTED_LANGUAGES } from './i18n.constants';
+import { SUPPORTED_LANGUAGES } from '../i18n.constants';
 import { TranslationLoader } from './translation-loader';
 
 describe('TranslationLoader', () => {

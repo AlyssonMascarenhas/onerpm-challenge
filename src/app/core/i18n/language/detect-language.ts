@@ -1,5 +1,5 @@
-import { DEFAULT_LANGUAGE, QUALITY_VALUE_PATTERN, SUPPORTED_LANGUAGES } from './i18n.constants';
-import { Language } from './i18n.enums';
+import { DEFAULT_LANGUAGE, QUALITY_VALUE_PATTERN, SUPPORTED_LANGUAGES } from '../i18n.constants';
+import { Language } from '../i18n.enums';
 
 /**
  * Picks the first candidate (a saved choice, then the browser's preferences, in priority order)

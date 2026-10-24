@@ -1,7 +1,7 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { LANGUAGE_STORAGE_KEY } from './i18n.constants';
-import { Language } from './i18n.enums';
+import { LANGUAGE_STORAGE_KEY } from '../i18n.constants';
+import { Language } from '../i18n.enums';
 import { LanguageStorage } from './language-storage';
 
 function create(platform: 'browser' | 'server' = 'browser'): LanguageStorage {

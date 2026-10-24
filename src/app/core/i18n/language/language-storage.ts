@@ -1,8 +1,8 @@
 import { Injectable, inject } from '@angular/core';
-import { SafeStorage } from '../storage/safe-storage';
+import { SafeStorage } from '../../storage/safe-storage';
 import { toSupportedLanguage } from './detect-language';
-import { LANGUAGE_STORAGE_KEY } from './i18n.constants';
-import { Language } from './i18n.enums';
+import { LANGUAGE_STORAGE_KEY } from '../i18n.constants';
+import { Language } from '../i18n.enums';
 
 /** The visitor's saved language. A stored value that is not a supported language is ignored. */
 @Injectable({ providedIn: 'root' })
