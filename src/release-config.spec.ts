@@ -44,15 +44,12 @@ describe('release-please configuration', () => {
     expect(guard.test('v1.2.3\nsomething')).toBe(false);
   });
 
-  it('titles the (grouped) release PR chore(release): <version>, with a scope that commitlint allows', () => {
-    const pattern = config['group-pull-request-title-pattern'];
-
-    expect(pattern).toBe('chore(release): ${version}');
+  it('titles the release PR chore(release): <version>, with a scope that commitlint allows', () => {
+    // A single package is not "grouped": release-please takes the title from the package (the group pattern is
+    // used only when several packages share one PR), so the default `chore(main): release 1.0.0` came out.
+    expect(rootPackage['pull-request-title-pattern']).toBe('chore(release): ${version}');
+    expect(config['group-pull-request-title-pattern']).toBe('chore(release): ${version}');
     expect(read('commitlint.config.js')).toContain("'release'");
-  });
-
-  it('does not set a per-package title, which release-please ignores for the grouped PR', () => {
-    expect(rootPackage['pull-request-title-pattern']).toBeUndefined();
   });
 
   it('is the config and the manifest the workflow gives to release-please', () => {
