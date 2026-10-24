@@ -1,6 +1,6 @@
 # 0008 — Convenções de organização e estilo de código
 
-- **Status:** Aceito
+- **Status:** Aceito; a parte de organização por tipo de declaração foi substituída pelo [ADR 0027](0027-convencoes-de-codigo-menos-rigidas.md)
 - **Data:** 2026-10-23
 
 ## Contexto

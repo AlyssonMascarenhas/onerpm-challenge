@@ -5,56 +5,6 @@ const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 
 /**
- * Code organization rules (ADR 0008): each kind of declaration lives in a dedicated file of its domain.
- * `restrictDeclarations('interface')` bans everything except interfaces, for `*.interfaces.ts` files.
- */
-const CONSTANT_MESSAGE =
-  'Declare UPPER_SNAKE_CASE constants in the domain "*.constants.ts" file (ADR 0008).';
-const CONSTANT_NAME = /^[A-Z][A-Z0-9_]*$/.source;
-
-const DECLARATION_BANS = {
-  interface: [
-    {
-      selector: 'TSInterfaceDeclaration',
-      message: 'Declare interfaces in the domain "*.interfaces.ts" file (ADR 0008).',
-    },
-  ],
-  type: [
-    {
-      selector: 'TSTypeAliasDeclaration',
-      message: 'Declare type aliases in the domain "*.types.ts" file (ADR 0008).',
-    },
-  ],
-  enum: [
-    {
-      selector: 'TSEnumDeclaration',
-      message: 'Declare enums in the domain "*.enums.ts" file (ADR 0008).',
-    },
-  ],
-  constant: [
-    {
-      selector: `Program > VariableDeclaration[kind='const'] > VariableDeclarator[id.name=/${CONSTANT_NAME}/]`,
-      message: CONSTANT_MESSAGE,
-    },
-    {
-      selector: `Program > ExportNamedDeclaration > VariableDeclaration[kind='const'] > VariableDeclarator[id.name=/${CONSTANT_NAME}/]`,
-      message: CONSTANT_MESSAGE,
-    },
-  ],
-};
-
-/**
- * @param {...string} allowed declaration kinds a file may contain
- * @returns {['error', ...unknown[]]}
- */
-const restrictDeclarations = (...allowed) => [
-  'error',
-  ...Object.entries(DECLARATION_BANS)
-    .filter(([kind]) => !allowed.includes(kind))
-    .flatMap(([, bans]) => bans),
-];
-
-/**
  * Layer rules (ADR 0023): a folder only depends on the folders below it, never upwards.
  * `forbid('store', 'pages')` bans importing from any folder with those names.
  */
@@ -135,28 +85,7 @@ module.exports = defineConfig([
         // Enum members are UPPER_SNAKE_CASE (`LookupStatus.NOT_FOUND`), like the constants.
         { selector: 'enumMember', format: ['UPPER_CASE'] },
       ],
-      'no-restricted-syntax': restrictDeclarations(),
     },
-  },
-  {
-    files: ['src/**/*.interfaces.ts'],
-    ignores: ['**/testing/**'],
-    rules: { 'no-restricted-syntax': restrictDeclarations('interface') },
-  },
-  {
-    files: ['src/**/*.types.ts'],
-    ignores: ['**/testing/**'],
-    rules: { 'no-restricted-syntax': restrictDeclarations('type') },
-  },
-  {
-    files: ['src/**/*.enums.ts'],
-    ignores: ['**/testing/**'],
-    rules: { 'no-restricted-syntax': restrictDeclarations('enum') },
-  },
-  {
-    files: ['src/**/*.constants.ts'],
-    ignores: ['**/testing/**'],
-    rules: { 'no-restricted-syntax': restrictDeclarations('constant') },
   },
   // Front: pages → components → store → api / domain; components → spotify.
   layerRule(

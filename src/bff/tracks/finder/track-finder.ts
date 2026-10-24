@@ -2,8 +2,10 @@ import { Track } from '../../../contract/tracks.interfaces';
 import { TrackSearch } from '../../spotify/spotify.interfaces';
 import { selectBestTrack } from '../mapping/select-best-track';
 import { toTrack } from '../mapping/track-mapper';
-import { BRAZIL_MARKET } from './finder.constants';
 import { TrackFinder } from './finder.interfaces';
+
+/** Availability is judged for Brazil only (see ADR 0005). */
+const BRAZIL_MARKET = 'BR';
 
 /**
  * Availability in Brazil comes from searching with `market=BR`: Spotify then flags each

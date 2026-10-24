@@ -8,7 +8,9 @@ import {
   signal,
 } from '@angular/core';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { COPY_FEEDBACK_MS } from './copy-button.constants';
+
+/** How long the button shows that it has copied, before it goes back to offering "copy". */
+export const COPY_FEEDBACK_MS = 1500;
 
 /**
  * Copies a text to the clipboard. Icon only by default (`label` names it for assistive technology and as a

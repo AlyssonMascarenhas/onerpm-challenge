@@ -97,7 +97,7 @@ se **paga**.
 
 - **Por quê:** o enunciado pede a versão LTS e o ambiente (Node 24.3) não roda a 22.
 - **Ganha:** aderência literal ao requisito; _standalone_, _signals_ e _zoneless_ desde o início.
-- **Paga:** uma migração para a 22 mais tarde; exige Node `^22.22.1 || >=24` e npm ≥ 11.6 (o 11.4 falha ao resolver as dependências).
+- **Paga:** uma migração para a 22 mais tarde; exige Node `^22.12 || >=24` e npm ≥ 11.6 (o 11.4 falha ao resolver as dependências); as ferramentas de dev (lint-staged, ESLint) pedem 22.22.1+ e só avisam em versões menores.
 
 ### BFF dentro do servidor do Angular — [ADR 0003](docs/adr/0003-bff-no-angular-ssr.md)
 
@@ -118,11 +118,11 @@ se **paga**.
 - **Ganha:** funções puras rápidas de testar; `TracksStore` (signals) como única fonte do estado da tela.
 - **Paga:** a ordem "A–Z" segue uma colação universal (`en`), não o alfabeto de um idioma específico.
 
-### Organização por domínio e camadas, imposta pelo lint — [ADR 0008](docs/adr/0008-convencoes-de-organizacao-de-codigo.md), [0023](docs/adr/0023-organizacao-de-pastas-por-responsabilidade.md)
+### Organização por domínio e camadas — [ADR 0008](docs/adr/0008-convencoes-de-organizacao-de-codigo.md), [0023](docs/adr/0023-organizacao-de-pastas-por-responsabilidade.md), [0027](docs/adr/0027-convencoes-de-codigo-menos-rigidas.md)
 
-- **Por quê:** convenção que só está escrita se perde; o ESLint recusa código fora do padrão e importações que sobem de camada.
-- **Ganha:** dá para saber onde cada coisa fica e o que ela pode usar; interfaces, tipos, enums e constantes em arquivos próprios.
-- **Paga:** caminhos de importação mais longos e a regra de decidir a camada certa para cada arquivo novo.
+- **Por quê:** convenção que só está escrita se perde; o ESLint recusa importações que sobem de camada, `any`, acesso implícito e nomes fora do padrão.
+- **Ganha:** dá para saber o que cada pasta pode usar; declarações ficam junto de quem as usa e só vão para `*.constants|enums|interfaces|types.ts` quando compartilhadas.
+- **Paga:** a regra "um arquivo por tipo de declaração" do ADR 0008 foi **abandonada** (gerava arquivos de uma linha); onde cada declaração mora agora depende da revisão. Conjuntos fechados que cruzam uma fronteira continuam sendo `enum`.
 
 ### Internacionalização com Transloco, também no servidor — [ADR 0011](docs/adr/0011-i18n-com-transloco.md), [0026](docs/adr/0026-idioma-salvo-em-cookie.md)
 
@@ -172,7 +172,7 @@ se **paga**.
 
 ## Rodando localmente
 
-**Pré-requisitos:** Node `^22.22.1 || >=24` (o `.nvmrc` usa 24), npm ≥ 11.6 e um app no
+**Pré-requisitos:** Node `^22.12 || >=24` (o `.nvmrc` usa 24), npm ≥ 11.6 e um app no
 [dashboard do Spotify](https://developer.spotify.com/dashboard) para obter `Client ID` e `Client Secret` (segundo a documentação do Spotify, um
 app em modo de desenvolvimento exige que o dono da conta tenha Premium).
 

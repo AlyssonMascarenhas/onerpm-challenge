@@ -1,6 +1,7 @@
 /**
- * Contract shared by the BFF (`src/bff`) and the Angular app. Types only: it must
- * stay free of runtime dependencies on either side.
+ * Contract shared by the BFF (`src/bff`) and the Angular app. It must stay free of
+ * dependencies on either side (no Angular, no Express, nothing from `src/bff` or `src/app`).
+ * Its enums (`tracks.enums.ts`) are plain values that exist at runtime on both sides.
  */
 import { ApiErrorCode, ReleaseDatePrecision } from './tracks.enums';
 import { TrackLookupResult } from './tracks.types';
