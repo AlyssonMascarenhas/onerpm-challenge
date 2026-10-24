@@ -4,8 +4,9 @@ import { Clock } from '../../shared/shared.types';
 import { CacheEntry, CachingOptions, TrackFinder } from './finder.interfaces';
 
 /**
- * Short-lived in-memory cache (Decorator). It only shields Spotify's rate limits and
- * de-duplicates concurrent lookups; nothing is persisted. Failures are never cached.
+ * Short-lived in-memory cache (Decorator). It shields Spotify's rate limits and de-duplicates concurrent
+ * lookups; nothing is persisted. Failures are never cached, but when Spotify is down (or rate limiting us for
+ * a long while) an answer that has just expired is served instead of an error, for `staleIfErrorMs` more.
  */
 export class CachingTrackFinder implements TrackFinder {
   private readonly _entries = new Map<string, CacheEntry>();
@@ -19,19 +20,30 @@ export class CachingTrackFinder implements TrackFinder {
   }
 
   public findByIsrc(isrc: string): Promise<Track | null> {
+    const now = this._now();
     const cached = this._entries.get(isrc);
-    if (cached && cached.expiresAt > this._now()) {
+    if (cached && cached.expiresAt > now) {
       return cached.result;
     }
 
-    const result = this._inner.findByIsrc(isrc);
-    this._store(isrc, { result, expiresAt: this._now() + this._options.ttlMs });
-    result.catch(() => {
-      if (this._entries.get(isrc)?.result === result) {
+    const lookup = this._inner.findByIsrc(isrc);
+    const fallback = cached && cached.staleUntil > now ? cached : null;
+    const entry: CacheEntry = {
+      result: fallback ? lookup.catch(() => fallback.result) : lookup,
+      expiresAt: now + this._options.ttlMs,
+      staleUntil: now + this._options.ttlMs + (this._options.staleIfErrorMs ?? 0),
+    };
+    this._store(isrc, entry);
+    lookup.catch(() => {
+      if (this._entries.get(isrc) === entry) {
         this._entries.delete(isrc);
+        if (fallback) {
+          // Keep the old answer for the next try, which will ask Spotify again.
+          this._store(isrc, fallback);
+        }
       }
     });
-    return result;
+    return entry.result;
   }
 
   private _store(isrc: string, entry: CacheEntry): void {

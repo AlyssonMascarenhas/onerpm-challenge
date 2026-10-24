@@ -80,6 +80,7 @@ export class SpotifyClient implements TrackSearch {
       }
       throw new SpotifyUnavailableError(SpotifyFailureReason.SEARCH_FAILED, {
         status: response.status,
+        retryAfterMs: response.status === 429 ? this._cooldownRemainingMs() : undefined,
       });
     }
   }
@@ -103,14 +104,21 @@ export class SpotifyClient implements TrackSearch {
 
   /** Honors a cooldown set by any earlier search: wait if it is short, fail locally if it is not. */
   private async _awaitCooldown(): Promise<void> {
-    const remainingMs = this._rateLimitedUntil - this._now();
+    const remainingMs = this._cooldownRemainingMs();
     if (remainingMs <= 0) {
       return;
     }
     if (remainingMs > MAX_RATE_LIMIT_WAIT_MS) {
-      throw new SpotifyUnavailableError(SpotifyFailureReason.RATE_LIMITED, { status: 429 });
+      throw new SpotifyUnavailableError(SpotifyFailureReason.RATE_LIMITED, {
+        status: 429,
+        retryAfterMs: remainingMs,
+      });
     }
     await this._sleep(remainingMs);
+  }
+
+  private _cooldownRemainingMs(): number {
+    return Math.max(0, this._rateLimitedUntil - this._now());
   }
 
   private async _get(url: string): Promise<Response> {

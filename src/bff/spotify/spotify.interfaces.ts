@@ -89,4 +89,6 @@ export interface SpotifyClientOptions {
 export interface SpotifyErrorDetails extends ErrorOptions {
   /** HTTP status of the failed response, when there was one. */
   readonly status?: number;
+  /** How long Spotify (or its cooldown) asked us to wait, when it said so. */
+  readonly retryAfterMs?: number;
 }

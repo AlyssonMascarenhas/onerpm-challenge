@@ -12,7 +12,11 @@ import { CachingTrackFinder } from '../tracks/finder/caching-track-finder';
 import { SpotifyTrackFinder } from '../tracks/finder/track-finder';
 import { TrackFinder } from '../tracks/finder/finder.interfaces';
 import { TracksService } from '../tracks/tracks-service';
-import { TRACK_CACHE_MAX_ENTRIES, TRACK_CACHE_TTL_MS } from './api.constants';
+import {
+  TRACK_CACHE_MAX_ENTRIES,
+  TRACK_CACHE_STALE_IF_ERROR_MS,
+  TRACK_CACHE_TTL_MS,
+} from './api.constants';
 import { ApiRouterOptions } from './api.interfaces';
 import { createHealthRouter } from './health-router';
 import { apiNotFound, createApiErrorHandler, createTracksRouter } from './tracks-router';
@@ -23,7 +27,7 @@ export function createApiRouter(options: ApiRouterOptions): Router {
   const service = new TracksService(createTrackFinder(options, logger), logger);
 
   const router = Router();
-  router.use(createHealthRouter());
+  router.use(createHealthRouter(readSpotifyCredentials(options.env) !== null));
   router.use(createTracksRouter(service));
   router.use(apiNotFound);
   router.use(createApiErrorHandler(logger));
@@ -55,6 +59,7 @@ function createTrackFinder(options: ApiRouterOptions, logger: Logger): TrackFind
   const search = new LimitedTrackSearch(client, new ConcurrencyLimiter(MAX_CONCURRENT_SEARCHES));
   return new CachingTrackFinder(new SpotifyTrackFinder(search), {
     ttlMs: TRACK_CACHE_TTL_MS,
+    staleIfErrorMs: TRACK_CACHE_STALE_IF_ERROR_MS,
     maxEntries: TRACK_CACHE_MAX_ENTRIES,
     now: options.now,
   });
