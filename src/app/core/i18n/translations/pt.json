@@ -41,7 +41,10 @@
     "stopPreview": "Parar a prévia",
     "failedShort": "Não carregado",
     "notFoundShort": "Não encontrado",
-    "listLabel": "Faixas"
+    "listLabel": "Faixas",
+    "releaseDatesFound": "{{count}} datas encontradas",
+    "releaseDatesTitle": "Datas de lançamento encontradas",
+    "releaseDateShown": "exibida"
   },
   "status": {
     "loading": "Carregando faixas…",

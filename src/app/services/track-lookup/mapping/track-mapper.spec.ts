@@ -2,7 +2,10 @@ import { ReleaseDatePrecision } from '../../../models/tracks.enums';
 import { spotifyAlbum, spotifyTrack } from '../../../api/spotify-web/testing/builders';
 import { toTrack } from './track-mapper';
 
-const CONTEXT = { isrc: 'BR1SP1200071', availableInBR: true };
+const CONTEXT = { isrc: 'BR1SP1200071', availableInBR: true, releases: [] };
+const DAY = ReleaseDatePrecision.DAY;
+const releasedOn = (release_date: string, release_date_precision = DAY) =>
+  spotifyTrack({ album: spotifyAlbum({ release_date, release_date_precision }) });
 
 describe('toTrack', () => {
   it('maps every field the UI needs', () => {
@@ -30,9 +33,44 @@ describe('toTrack', () => {
       albumName: 'Gó Gó Boys',
       coverUrl: 'https://img.test/300.jpg',
       releaseDate: { value: '2014-05-12', precision: ReleaseDatePrecision.DAY },
+      releaseDates: [{ value: '2014-05-12', precision: ReleaseDatePrecision.DAY }],
       durationMs: 177_626,
       spotifyUrl: 'https://open.spotify.com/track/7q7QtMiK9jhob0Md7p715D',
       availableInBR: true,
+    });
+  });
+
+  describe('release dates', () => {
+    it('lists every distinct date of the releases, oldest first, the shown one included', () => {
+      const shown = releasedOn('2014-03-25');
+      const releases = [releasedOn('2014-05-12'), shown, releasedOn('2014-05-12')];
+
+      expect(toTrack(shown, { ...CONTEXT, releases }).releaseDates).toEqual([
+        { value: '2014-03-25', precision: DAY },
+        { value: '2014-05-12', precision: DAY },
+      ]);
+    });
+
+    it('has only the shown date when the releases agree', () => {
+      const shown = releasedOn('2019-10-04');
+
+      expect(
+        toTrack(shown, { ...CONTEXT, releases: [shown, releasedOn('2019-10-04')] }).releaseDates,
+      ).toEqual([{ value: '2019-10-04', precision: DAY }]);
+    });
+
+    it('keeps the precision of each date', () => {
+      const shown = releasedOn('2014', ReleaseDatePrecision.YEAR);
+
+      expect(
+        toTrack(shown, {
+          ...CONTEXT,
+          releases: [releasedOn('2014-05', ReleaseDatePrecision.MONTH)],
+        }).releaseDates,
+      ).toEqual([
+        { value: '2014', precision: ReleaseDatePrecision.YEAR },
+        { value: '2014-05', precision: ReleaseDatePrecision.MONTH },
+      ]);
     });
   });
 

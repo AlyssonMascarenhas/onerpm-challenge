@@ -41,7 +41,10 @@
     "stopPreview": "Остановить фрагмент",
     "failedShort": "Не загружен",
     "notFoundShort": "Не найден",
-    "listLabel": "Треки"
+    "listLabel": "Треки",
+    "releaseDatesFound": "Найдено дат: {{count}}",
+    "releaseDatesTitle": "Найденные даты выпуска",
+    "releaseDateShown": "показана"
   },
   "status": {
     "loading": "Загрузка треков…",

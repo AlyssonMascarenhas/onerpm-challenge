@@ -18,6 +18,8 @@ abaixo, a tabela filtrável e o detalhe da faixa com a prévia.
 
 - **Desktop:** cartões de resumo, tabela (faixa, ISRC, lançamento, duração, Brasil) e painel de detalhe ao lado.
 - **Celular:** cartões em duas colunas, chips de situação roláveis, tabela enxuta e o detalhe numa _bottom sheet_.
+- **Datas divergentes:** quando o Spotify tem mais de um lançamento para o ISRC (álbum e single, por exemplo), a página
+  mostra a data mais antiga e, no detalhe, um aviso "x datas encontradas" que lista todas ao clicar.
 - **Claro e escuro**, seis idiomas, WCAG AA verificado pelo axe.
 
 ## Como funciona

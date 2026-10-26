@@ -41,7 +41,10 @@
     "stopPreview": "Önizlemeyi durdur",
     "failedShort": "Yüklenemedi",
     "notFoundShort": "Bulunamadı",
-    "listLabel": "Parçalar"
+    "listLabel": "Parçalar",
+    "releaseDatesFound": "{{count}} tarih bulundu",
+    "releaseDatesTitle": "Bulunan yayın tarihleri",
+    "releaseDateShown": "gösterilen"
   },
   "status": {
     "loading": "Parçalar yükleniyor…",

@@ -3,6 +3,10 @@ import { Track } from '../../../models/tracks.interfaces';
 import { TrackLookupResult } from '../../../models/tracks.types';
 
 export function track(overrides: Partial<Track> = {}): Track {
+  const releaseDate = overrides.releaseDate ?? {
+    value: '2020-01-02',
+    precision: ReleaseDatePrecision.DAY,
+  };
   return {
     id: 'track-id',
     isrc: 'BR1SP1200071',
@@ -10,7 +14,8 @@ export function track(overrides: Partial<Track> = {}): Track {
     artists: ['Artist One'],
     albumName: 'Album Name',
     coverUrl: 'https://img.test/300.jpg',
-    releaseDate: { value: '2020-01-02', precision: ReleaseDatePrecision.DAY },
+    releaseDate,
+    releaseDates: [releaseDate],
     durationMs: 215_491,
     spotifyUrl: 'https://open.spotify.com/track/track-id',
     availableInBR: true,

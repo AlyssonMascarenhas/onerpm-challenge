@@ -16,6 +16,7 @@ import { formatDuration } from '../../domain/format-duration';
 import { formatReleaseDate } from '../../domain/format-release-date';
 import { NowPlayingService } from '../../store/now-playing.service';
 import { TracksStore } from '../../store/tracks.store';
+import { ReleaseDatesComponent } from '../release-dates/release-dates.component';
 import { SpotifyPreviewComponent } from '../spotify-preview/spotify-preview.component';
 import { TrackCoverComponent } from '../track-cover/track-cover.component';
 
@@ -32,6 +33,7 @@ import { TrackCoverComponent } from '../track-cover/track-cover.component';
     CopyButtonComponent,
     TrackCoverComponent,
     SpotifyPreviewComponent,
+    ReleaseDatesComponent,
   ],
   templateUrl: './track-detail.component.html',
   styleUrl: './track-detail.component.scss',

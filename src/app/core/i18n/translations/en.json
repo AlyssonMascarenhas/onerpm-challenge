@@ -41,7 +41,10 @@
     "stopPreview": "Stop the preview",
     "failedShort": "Not loaded",
     "notFoundShort": "Not found",
-    "listLabel": "Tracks"
+    "listLabel": "Tracks",
+    "releaseDatesFound": "{{count}} dates found",
+    "releaseDatesTitle": "Release dates found",
+    "releaseDateShown": "shown"
   },
   "status": {
     "loading": "Loading tracks…",

@@ -79,6 +79,21 @@ test('shows the picked track in detail (a panel, or a sheet on phones)', async (
   }
 });
 
+test('warns when Spotify has two release dates, and lists them on click', async ({ page }) => {
+  await mockSpotify(page);
+  await openLoaded(page);
+  await page.getByRole('button', { name: 'Show details of Quem Diria' }).click();
+
+  const warning = page.getByRole('button', { name: '2 dates found' });
+  await warning.click();
+  const dates = page.getByRole('dialog', { name: 'Release dates found' });
+  await expect(dates.getByRole('listitem')).toHaveText(['May 12, 2014 shown', 'July 28, 2014']);
+
+  await page.keyboard.press('Escape');
+  await expect(dates).toHaveCount(0);
+  await expect(warning).toBeFocused();
+});
+
 test('plays a preview through the Spotify player, started by the click', async ({ page }) => {
   await mockSpotify(page);
   await openLoaded(page);

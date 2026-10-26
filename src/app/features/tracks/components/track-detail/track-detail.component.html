@@ -67,7 +67,10 @@
       </div>
       <div>
         <dt>{{ 'tracks.released' | transloco }}</dt>
-        <dd>{{ released() }}</dd>
+        <dd class="released">
+          {{ released() }}
+          <orp-release-dates [dates]="track.releaseDates" [shown]="track.releaseDate" />
+        </dd>
       </div>
       <div>
         <dt>{{ 'tracks.duration' | transloco }}</dt>

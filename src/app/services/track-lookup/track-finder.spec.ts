@@ -87,4 +87,37 @@ describe('SpotifyTrackFinder', () => {
 
     await expect(finder.findByIsrc(ISRC)).rejects.toBeInstanceOf(SpotifyApiError);
   });
+
+  describe('release dates', () => {
+    it('carries the dates of every release found in Brazil, playable or not', async () => {
+      const { finder } = setup({
+        withMarket: [
+          released('album', '2014-05-12', true),
+          released('single', '2014-03-25', true),
+          released('blocked', '2010-01-01', false),
+        ],
+      });
+
+      const track = await finder.findByIsrc(ISRC);
+
+      expect(track?.releaseDate.value).toBe('2014-03-25');
+      expect(track?.releaseDates.map((date) => date.value)).toEqual([
+        '2010-01-01',
+        '2014-03-25',
+        '2014-05-12',
+      ]);
+    });
+
+    it('carries the dates of the search without market when Brazil returns nothing', async () => {
+      const { finder } = setup({
+        withMarket: [],
+        withoutMarket: [released('a', '2018-06-01', true), released('b', '2018-07-01', true)],
+      });
+
+      expect((await finder.findByIsrc(ISRC))?.releaseDates.map((date) => date.value)).toEqual([
+        '2018-06-01',
+        '2018-07-01',
+      ]);
+    });
+  });
 });

@@ -49,6 +49,9 @@ e **não deve ser alterada a partir daqui** (nem o deploy da Vercel).
 - **Detalhe e prévia**: `TrackDetailComponent` mostra a faixa em foco; no desktop é um painel, abaixo de 64rem uma _bottom sheet_
   (`DetailSheetComponent`, CDK Dialog). O player do Spotify (`SpotifyPreviewComponent`, via `SpotifyPlayerService`/`SpotifyEmbedPlayer`) só é criado
   após o clique; trocar de faixa ou fechar a sheet para a prévia. URLs do embed só saem de `buildEmbedUrl`/`buildTrackUri`.
+- **Datas de lançamento**: `Track.releaseDate` é a mais antiga; `Track.releaseDates` traz todas as datas distintas
+  que o Spotify retornou para o ISRC (mercado BR, tocáveis ou não). Com mais de uma, o detalhe mostra o aviso
+  `ReleaseDatesComponent` ("x datas encontradas"), que abre um popover (CDK Overlay) com as datas, a exibida marcada.
 - **CSP-friendly**: nenhum `<script>` em linha no `index.html` (o tema é `public/theme-init.js`) e `inlineCritical`
   desligado, para que a hospedagem possa usar `script-src 'self'` + Spotify.
 - **Acessibilidade**: WCAG AA e axe limpo (e2e em claro, escuro e celular). Botões só com ícone têm `aria-label`; o nome

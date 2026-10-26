@@ -39,6 +39,27 @@ describe('TrackDetailComponent', () => {
     expect(text(root.querySelector('dl'))).toContain('BXKZM1900345');
   });
 
+  it('warns when Spotify has more than one release date', async () => {
+    const twoDates = foundResult('Quem Diria', {
+      isrc: 'BR1SP1200070',
+      releaseDate: { value: '2014-05-12', precision: ReleaseDatePrecision.DAY },
+      releaseDates: [
+        { value: '2014-05-12', precision: ReleaseDatePrecision.DAY },
+        { value: '2014-07-28', precision: ReleaseDatePrecision.DAY },
+      ],
+    });
+    const { root, store, fixture } = await renderWithTracks(TrackDetailComponent, [
+      LOUCA,
+      twoDates,
+    ]);
+    expect(root.querySelector('orp-release-dates button')).toBeNull();
+
+    store.select('BR1SP1200070');
+    await settle(fixture);
+
+    expect(text(root.querySelector('orp-release-dates button'))).toBe('2 dates found');
+  });
+
   it('says when the track does not play in Brazil', async () => {
     const { root, store, fixture } = await renderWithTracks(TrackDetailComponent, [LOUCA, REPENTE]);
 

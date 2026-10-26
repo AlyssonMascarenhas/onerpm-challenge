@@ -35,6 +35,25 @@ describe('TrackLookup', () => {
     });
   });
 
+  it('carries every release date of the recorded answers: 3 ISRCs have two', async () => {
+    const { lookup } = setup(recorded);
+
+    const results = await firstValueFrom(lookup.lookup(CHALLENGE_ISRCS));
+
+    const dates = Object.fromEntries(
+      results.map((result) => [
+        result.isrc,
+        result.status === LookupStatus.FOUND
+          ? result.track.releaseDates.map((date) => date.value)
+          : [],
+      ]),
+    );
+    expect(dates['BR1SP1200070']).toEqual(['2014-05-12', '2014-07-28']);
+    expect(dates['BR1SP1200071']).toEqual(['2014-03-25', '2014-05-12']);
+    expect(dates['BXKZM1900345']).toEqual(['2019-10-04', '2019-10-05']);
+    expect(Object.values(dates).filter((values) => values.length > 1)).toHaveLength(3);
+  });
+
   it('says which ISRCs Spotify does not know', async () => {
     const { lookup } = setup(async (isrc) => (isrc === 'XX1AA2600001' ? [] : recordedTracks(isrc)));
 

@@ -66,6 +66,15 @@ for (const theme of ['light', 'dark'] as const) {
       await expectNoViolations(page);
 
       await page.keyboard.press('Escape');
+      await page.getByRole('button', { name: 'Show details of Quem Diria' }).click();
+      await page.getByRole('button', { name: '2 dates found' }).click();
+      await expect(page.getByRole('dialog', { name: 'Release dates found' })).toBeVisible();
+      await expectNoViolations(page);
+
+      await page.keyboard.press('Escape');
+      if (isPhone(page)) {
+        await page.keyboard.press('Escape');
+      }
       await page.locator('orp-language-menu button').first().click();
       await expect(page.getByRole('menu')).toBeVisible();
       await expectNoViolations(page);

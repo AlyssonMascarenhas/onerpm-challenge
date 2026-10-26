@@ -16,12 +16,12 @@ export class SpotifyTrackFinder {
 
     const playable = selectBestTrack(inBrazil.filter((track) => track.is_playable === true));
     if (playable) {
-      return toTrack(playable, { isrc, availableInBR: true });
+      return toTrack(playable, { isrc, availableInBR: true, releases: inBrazil });
     }
 
     // Not playable in BR: still show what we know, flagged as unavailable.
     const elsewhere = inBrazil.length > 0 ? inBrazil : await this._search.searchByIsrc(isrc);
     const known = selectBestTrack(elsewhere);
-    return known ? toTrack(known, { isrc, availableInBR: false }) : null;
+    return known ? toTrack(known, { isrc, availableInBR: false, releases: elsewhere }) : null;
   }
 }

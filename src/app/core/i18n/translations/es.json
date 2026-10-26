@@ -41,7 +41,10 @@
     "stopPreview": "Detener la vista previa",
     "failedShort": "No cargado",
     "notFoundShort": "No encontrado",
-    "listLabel": "Pistas"
+    "listLabel": "Pistas",
+    "releaseDatesFound": "{{count}} fechas encontradas",
+    "releaseDatesTitle": "Fechas de lanzamiento encontradas",
+    "releaseDateShown": "mostrada"
   },
   "status": {
     "loading": "Cargando pistas…",

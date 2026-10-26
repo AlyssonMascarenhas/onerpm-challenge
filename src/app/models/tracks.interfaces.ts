@@ -17,7 +17,13 @@ export interface Track {
   readonly artists: readonly string[];
   readonly albumName: string;
   readonly coverUrl: string | null;
+  /** The date shown: the earliest release of the ISRC. */
   readonly releaseDate: ReleaseDate;
+  /**
+   * Every distinct date Spotify has for the ISRC (album, single, reissue…), oldest first; it includes
+   * `releaseDate`. More than one means the releases disagree.
+   */
+  readonly releaseDates: readonly ReleaseDate[];
   readonly durationMs: number;
   readonly spotifyUrl: string;
   readonly availableInBR: boolean;

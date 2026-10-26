@@ -41,7 +41,10 @@
     "stopPreview": "Arrêter l'extrait",
     "failedShort": "Non chargé",
     "notFoundShort": "Introuvable",
-    "listLabel": "Titres"
+    "listLabel": "Titres",
+    "releaseDatesFound": "{{count}} dates trouvées",
+    "releaseDatesTitle": "Dates de sortie trouvées",
+    "releaseDateShown": "affichée"
   },
   "status": {
     "loading": "Chargement des titres…",
