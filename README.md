@@ -8,6 +8,11 @@ A página consulta na **Spotify Web API**, direto do navegador, os **10 ISRCs** 
 data de lançamento, título, artistas, duração `mm:ss`, prévia do áudio, link no Spotify e se está disponível no Brasil,
 **ordenadas por título**, sem guardar nada. Se o Spotify não puder ser usado, o visitante vê um alerta.
 
+**No ar:** https://alyssonmascarenhas.github.io/onerpm-challenge/
+
+> **Atenção:** esta versão é uma demonstração. Sem servidor, as credenciais do Spotify vão no JavaScript publicado e
+> qualquer pessoa pode usá-las. Veja [Segurança](#seguranca) para os riscos e para como deveria ser em produção.
+
 > O enunciado original está no fim deste arquivo, [intacto](#enunciado-original).
 
 ## O design
@@ -108,9 +113,67 @@ Configuração, uma vez só:
 
 Para publicar: **Actions → Deploy to GitHub Pages → Run workflow**, escolhendo a branch `main-spa`.
 
+<a id="seguranca"></a>
+
+## Segurança
+
+Chamar o Spotify direto do navegador, sem servidor, foi uma escolha para a demonstração
+([ADR 0002](docs/adr/0002-spa-estatica-com-spotify-chamado-do-navegador.md)). Ela **não serve para produção**.
+
+### O que esta versão expõe
+
+- **Client ID e Client Secret públicos.** Os dois estão no JavaScript publicado; basta abrir o DevTools. Com eles,
+  qualquer pessoa pede tokens em nome do nosso app, fora desta página. Os termos do Spotify proíbem expor o segredo,
+  e o app pode ser bloqueado.
+- **Sem autenticação nem autorização.** Qualquer visitante usa a página, e não há como dizer quem pode ver o quê.
+- **Cota compartilhada e sem defesa contra abuso.** O limite de requisições do Spotify é do app, não de cada
+  visitante. Quem copiar o segredo pode esgotá-lo (429) para todos, e não há limite por usuário, cache ou bloqueio.
+- **Trocar o segredo exige novo build.** Se ele vazar, é preciso trocá-lo no Spotify e publicar de novo; até lá, a
+  página fica sem dados.
+- **Nenhum controle no servidor.** Não há log de quem consultou, auditoria, alerta de uso fora do normal, nem
+  cabeçalhos de segurança (o GitHub Pages não permite CSP por cabeçalho).
+- **Resposta inteira do Spotify no navegador.** O front recebe e filtra o JSON completo, em vez de só os campos que
+  usa.
+
+Mitigação adotada enquanto for só demonstração: um app do Spotify exclusivo para esta página, sem dados de usuário,
+com o segredo trocado se houver abuso.
+
+### Como deveria ser em produção
+
+O navegador nunca fala com o Spotify. Ele fala só com **nosso backend**, levando o token do **próprio usuário**,
+emitido depois do login. O backend valida esse token, confere as permissões e só então busca no Spotify o necessário.
+
+```text
+Navegador (Angular)
+  ├─ login no provedor de identidade (OAuth 2.0 / OpenID Connect, Authorization Code + PKCE)
+  │    └─ recebe o access token do usuário (JWT)
+  └─ GET /api/tracks?isrc=…   Authorization: Bearer <JWT do usuário>
+        │
+        ▼
+Nosso backend (API / BFF)
+  ├─ valida o JWT: assinatura (JWKS), emissor, audiência, validade
+  ├─ autoriza: o usuário tem a permissão (ex.: escopo `catalog:read`) e acesso a este contrato?
+  ├─ limita requisições por usuário e registra quem consultou o quê
+  ├─ pede e guarda em cache o token de app do Spotify (Client Credentials; o segredo só existe aqui)
+  ├─ consulta o Spotify, guarda as respostas em cache por um tempo
+  └─ devolve só o que a tela usa (o modelo `Track`), nunca o JSON do Spotify
+```
+
+O que muda no front: o `environment` passa a ter só a URL da nossa API, sem credenciais. O `spotifyAuthInterceptor`
+dá lugar a um interceptor que envia o token do usuário (guardado em memória, nunca no `localStorage`) e o renova ou
+leva ao login quando ele vence. Os serviços em `src/app/api/` passam a chamar a nossa API, e os de `services/`
+continuam iguais para o resto do app.
+
+O que se ganha: o segredo nunca sai do servidor; só usuários autenticados e autorizados consultam; o limite e o uso
+são controlados por usuário; o cache serve muitos visitantes com poucas chamadas ao Spotify; trocar o segredo não
+exige novo deploy do front.
+
+A versão SSR da [`main`](https://github.com/AlyssonMascarenhas/onerpm-challenge/tree/main) já dá o primeiro passo:
+um BFF guarda o segredo e faz cache. Faltaria o login e a validação do JWT do usuário.
+
 ## Limitações conhecidas
 
-- O Client Secret fica visível no JavaScript publicado (ver ADR 0002).
+- O Client Secret fica visível no JavaScript publicado (ver [Segurança](#seguranca)).
 - Sem cache entre visitantes: cada visita faz suas buscas, então um limite do Spotify (429) aparece mais cedo.
 - A prévia depende do player oficial do Spotify (iframe); o volume não existe na API do embed.
 

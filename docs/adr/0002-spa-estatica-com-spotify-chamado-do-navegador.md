@@ -33,3 +33,6 @@ app está em modo de desenvolvimento), ou o próprio app pede um token de app co
 - Negativas: **o Client Secret vai no JavaScript publicado** e qualquer pessoa pode lê-lo (os termos do Spotify
   pedem que ele não seja exposto). Mitigação: um app Spotify só para esta página, sem dados de usuário, com o segredo
   trocado se vazar. Sem cache entre visitantes: cada visita faz suas buscas.
+- Não é o desenho para produção: lá, o navegador falaria só com um backend nosso, autenticado pelo JWT do usuário
+  (login via OAuth 2.0 / OIDC), que validaria permissões e faria as chamadas ao Spotify. Detalhes e riscos na seção
+  "Segurança" do `README.md`.
