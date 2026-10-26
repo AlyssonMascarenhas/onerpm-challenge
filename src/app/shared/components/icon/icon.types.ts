@@ -1,0 +1,18 @@
+export type IconName =
+  | 'search'
+  | 'chevron-right'
+  | 'chevron-down'
+  | 'globe'
+  | 'moon'
+  | 'sun'
+  | 'copy'
+  | 'check'
+  | 'external'
+  | 'sort'
+  | 'play'
+  | 'stop'
+  | 'close'
+  | 'alert'
+  | 'retry'
+  | 'disc'
+  | 'signal-off';
