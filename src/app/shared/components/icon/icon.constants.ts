@@ -23,7 +23,6 @@ export const ICON_PATHS: Readonly<Record<IconName, readonly string[]>> = {
   external: ['M14 4h6v6', 'm20 4-9 9', 'M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5'],
   sort: ['M7 4v16', 'm3 16 4 4 4-4', 'M14 6h7', 'M14 12h5', 'M14 18h3'],
   play: ['M7 4.5v15l12.5-7.5z'],
-  stop: ['M7 6h10v12H7z'],
   close: ['M6 6l12 12', 'M18 6 6 18'],
   alert: ['M12 3 22 21H2z', 'M12 10v5', 'M12 18h.01'],
   retry: ['M20 11a8 8 0 1 0-2.3 5.7', 'M20 4v7h-7'],

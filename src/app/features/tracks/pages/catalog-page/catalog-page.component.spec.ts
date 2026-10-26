@@ -373,7 +373,7 @@ describe('CatalogPage', () => {
       button(fixture, 'Listen to a preview').click();
       await settle(fixture);
 
-      button(fixture, 'Stop the preview').click();
+      button(fixture, "Close Spotify's official player").click();
       await settle(fixture);
 
       expect(TestBed.inject(NowPlayingService).track()).toBeNull();

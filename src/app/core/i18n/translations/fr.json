@@ -38,7 +38,7 @@
     "closeDetails": "Fermer les détails",
     "noSelection": "Choisissez un titre pour voir ses détails.",
     "previewNote": "Extrait via le lecteur officiel de Spotify",
-    "stopPreview": "Arrêter l'extrait",
+    "closePlayer": "Fermer le lecteur officiel de Spotify",
     "failedShort": "Non chargé",
     "notFoundShort": "Introuvable",
     "listLabel": "Titres",

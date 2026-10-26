@@ -38,7 +38,7 @@
     "closeDetails": "Cerrar los detalles",
     "noSelection": "Elige una pista para ver sus detalles.",
     "previewNote": "Vista previa del reproductor oficial de Spotify",
-    "stopPreview": "Detener la vista previa",
+    "closePlayer": "Cerrar el reproductor oficial de Spotify",
     "failedShort": "No cargado",
     "notFoundShort": "No encontrado",
     "listLabel": "Pistas",

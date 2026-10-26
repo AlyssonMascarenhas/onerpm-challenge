@@ -38,7 +38,7 @@
     "closeDetails": "Close the details",
     "noSelection": "Pick a track to see its details.",
     "previewNote": "Preview from Spotify's official player",
-    "stopPreview": "Stop the preview",
+    "closePlayer": "Close Spotify's official player",
     "failedShort": "Not loaded",
     "notFoundShort": "Not found",
     "listLabel": "Tracks",

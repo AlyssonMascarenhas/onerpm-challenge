@@ -82,7 +82,7 @@ export class TrackDetailComponent {
     }
   }
 
-  protected stop(): void {
+  protected closePlayer(): void {
     this._nowPlaying.stop(false);
   }
 }

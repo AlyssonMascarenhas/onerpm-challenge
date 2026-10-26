@@ -45,9 +45,9 @@
     <section class="preview" [attr.aria-label]="'tracks.listen' | transloco">
       @if (playing()) {
         <orp-spotify-preview [track]="track" />
-        <button type="button" class="btn stop" (click)="stop()">
-          <orp-icon name="stop" [size]="14" />
-          {{ 'tracks.stopPreview' | transloco }}
+        <button type="button" class="btn close-player" (click)="closePlayer()">
+          <orp-icon name="close" [size]="14" />
+          {{ 'tracks.closePlayer' | transloco }}
         </button>
       } @else {
         <button type="button" class="listen" (click)="listen($any($event.currentTarget))">

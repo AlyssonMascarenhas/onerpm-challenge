@@ -38,7 +38,7 @@
     "closeDetails": "Fechar os detalhes",
     "noSelection": "Escolha uma faixa para ver os detalhes.",
     "previewNote": "Prévia pelo player oficial do Spotify",
-    "stopPreview": "Parar a prévia",
+    "closePlayer": "Fechar player oficial do Spotify",
     "failedShort": "Não carregado",
     "notFoundShort": "Não encontrado",
     "listLabel": "Faixas",

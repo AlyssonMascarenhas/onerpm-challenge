@@ -86,7 +86,7 @@ describe('TrackDetailComponent', () => {
     expect(copy).toHaveBeenCalledWith('BXKZM1900345');
   });
 
-  it('plays a preview on request and stops it on request', async () => {
+  it('plays a preview on request and closes the player on request', async () => {
     const { root, fixture, spotify } = await renderWithTracks(TrackDetailComponent, [LOUCA]);
 
     button(root, 'Listen to a preview').click();
@@ -94,7 +94,7 @@ describe('TrackDetailComponent', () => {
     expect(root.querySelector('orp-spotify-preview')).not.toBeNull();
     expect(spotify.load).toHaveBeenCalled();
 
-    button(root, 'Stop the preview').click();
+    button(root, "Close Spotify's official player").click();
     await settle(fixture);
     expect(root.querySelector('orp-spotify-preview')).toBeNull();
   });

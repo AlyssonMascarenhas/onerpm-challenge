@@ -107,7 +107,7 @@ test('plays a preview through the Spotify player, started by the click', async (
       () => (window as unknown as { __spotify?: { played: string[] } }).__spotify?.played ?? [],
     );
   await expect.poll(played).toEqual(['spotify:track:1Esxp6lXJWU7TaOQM2JsQn']);
-  await page.getByRole('button', { name: 'Stop the preview' }).click();
+  await page.getByRole('button', { name: "Close Spotify's official player" }).click();
   await expect(page.getByRole('button', { name: /Listen to a preview/ })).toBeVisible();
 });
 

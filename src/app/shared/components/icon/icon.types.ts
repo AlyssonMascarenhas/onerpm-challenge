@@ -10,7 +10,6 @@ export type IconName =
   | 'external'
   | 'sort'
   | 'play'
-  | 'stop'
   | 'close'
   | 'alert'
   | 'retry'

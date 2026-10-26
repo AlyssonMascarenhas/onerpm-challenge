@@ -38,7 +38,7 @@
     "closeDetails": "Закрыть подробности",
     "noSelection": "Выберите трек, чтобы увидеть подробности.",
     "previewNote": "Фрагмент в официальном плеере Spotify",
-    "stopPreview": "Остановить фрагмент",
+    "closePlayer": "Закрыть официальный плеер Spotify",
     "failedShort": "Не загружен",
     "notFoundShort": "Не найден",
     "listLabel": "Треки",
