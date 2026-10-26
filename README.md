@@ -59,6 +59,8 @@ Convenção clássica do Angular: `xxx.component.ts|html|scss|spec.ts`, `xxx.ser
 - **Convenções do Angular e camadas `api` / `services`** ([0004](docs/adr/0004-convencoes-angular-e-camadas.md)).
 - **Testes** ([0005](docs/adr/0005-testes-unitarios-e2e-e-acessibilidade.md)): Vitest com cobertura mínima, Playwright
   (desktop e celular) e axe nos dois temas.
+- **Deploy no GitHub Pages, à mão** ([0006](docs/adr/0006-deploy-no-github-pages.md)): lint, testes e build antes de
+  publicar; as credenciais vêm dos secrets do repositório.
 
 ## Rodando localmente
 
@@ -79,7 +81,7 @@ npm start              # http://localhost:4200
 | `environment.local.ts`          | `npm start` (`ng serve`)             | as suas (ignorado pelo Git)       |
 | `environment.development.ts`    | testes e build de desenvolvimento    | vazias                            |
 | `environment.e2e.ts`            | `npm run e2e`                        | falsas (o Spotify é simulado)     |
-| `environment.ts`                | `npm run build` (produção)           | vazias no Git; o deploy as escreve |
+| `environment.ts`                | `npm run build` (produção)           | vazias no Git; o deploy as escreve a partir dos secrets |
 
 Sem credenciais a página abre do mesmo jeito e mostra o alerta de dados indisponíveis.
 
@@ -93,12 +95,24 @@ npm run e2e            # Playwright (desktop e Pixel 7) + axe; navegador: npm ru
 
 O CI (`.github/workflows/ci.yml`) roda tudo isso em PRs para `main-spa`.
 
+## Deploy (GitHub Pages)
+
+Publicado em https://alyssonmascarenhas.github.io/onerpm-challenge/ pelo workflow
+`.github/workflows/deploy-pages.yml`, só quando disparado à mão.
+
+Configuração, uma vez só:
+
+1. **Settings → Pages → Build and deployment → Source:** "GitHub Actions".
+2. **Settings → Environments → `github-pages` → Deployment branches and tags:** adicione `main-spa`.
+3. **Settings → Secrets and variables → Actions:** crie `SPOTIFY_CLIENT_ID` e `SPOTIFY_CLIENT_SECRET`.
+
+Para publicar: **Actions → Deploy to GitHub Pages → Run workflow**, escolhendo a branch `main-spa`.
+
 ## Limitações conhecidas
 
 - O Client Secret fica visível no JavaScript publicado (ver ADR 0002).
 - Sem cache entre visitantes: cada visita faz suas buscas, então um limite do Spotify (429) aparece mais cedo.
 - A prévia depende do player oficial do Spotify (iframe); o volume não existe na API do embed.
-- A hospedagem desta versão ainda não foi escolhida.
 
 ---
 

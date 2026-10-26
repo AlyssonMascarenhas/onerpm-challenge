@@ -17,6 +17,8 @@ e **não deve ser alterada a partir daqui** (nem o deploy da Vercel).
 
 - `npm start` — `ng serve` com `environment.local.ts` (copie de `environment.local.example.ts`).
 - `npm run build` — build de produção com `environment.ts` (sem credenciais no Git).
+- Deploy: GitHub Pages, só manual (Actions → "Deploy to GitHub Pages" na `main-spa`); credenciais pelos secrets
+  `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET`. ADR 0006.
 - Antes de abrir PR: `npm run lint && npm run format:check && npm run typecheck && npm run test:ci && npm run build && npm run e2e`.
 
 ## Convenções
